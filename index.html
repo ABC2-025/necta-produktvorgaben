@@ -73,12 +73,14 @@ thead th.s{cursor:pointer}thead th.s:hover{background:#D6E8F8}thead th.sorted{ba
 .sa{font-size:8px;margin-left:1px;opacity:.6}
 .csep{border-left:2px solid #B8CCE4}
 tbody tr{border-bottom:1px solid #f0f4f8}tbody tr:last-child{border-bottom:none}tbody tr:hover{background:#f2f7ff}
-tbody tr.row-definiert{background:#f0fff4}
-tbody tr.row-definiert:hover{background:#e0f5e9}
-tbody tr.row-gesperrt{background:#f9f9f9;opacity:0.55}
-tbody tr.row-gesperrt td{color:#aaa}
-tbody tr.row-gesperrt .pill.gesperrt{opacity:1}
-tbody tr.row-gesperrt:hover{background:#f5f5f5;opacity:0.7}
+tbody tr.row-definiert td{background:#edfbf1 !important}
+tbody tr.row-definiert:hover td{background:#dff5e8 !important}
+tbody tr.row-gesperrt td:not(:last-child){background:#f4f4f4 !important;color:#b0b0b0 !important}
+tbody tr.row-gesperrt td:last-child{background:#f4f4f4 !important}
+tbody tr.row-gesperrt:hover td:not(:last-child){background:#eeeeee !important}
+tbody tr.row-gesperrt:hover td:last-child{background:#eeeeee !important}
+tbody tr.row-gesperrt .pill{opacity:0.6}
+tbody tr.row-gesperrt .pill.gesperrt{opacity:1 !important;background:#f8d7da !important;color:#721c24 !important}
 td{padding:4px 6px;vertical-align:middle;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 td.r{text-align:right;font-variant-numeric:tabular-nums}td.c{text-align:center}
 .pill{display:inline-block;font-size:9px;padding:2px 6px;border-radius:3px;font-weight:700;white-space:nowrap}
@@ -546,8 +548,8 @@ function buildTable(gname, articles) {
     var st = a.status || 'offen';
     var pct = a.pct_bio_vs_conv;
     var pctH = pct != null ? '<span class="pct ' + (pct>0?'pos':'neg') + '">' + (pct>0?'+':'') + pct + '%</span>' : '\u2013';
-    var key = a._key || a.name;
-    var keyEsc = key.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+        var key = a._key || a.name;
+    var keyEsc = String(key).replace(/'/g, "\\'");
     return '<tr class="' + (st==='definiert'?'row-definiert':st==='gesperrt'?'row-gesperrt':'') + '">' +
       '<td style="width:25%" title="'+a.name+'">' + a.name + (a.bemerkungen ? ' <span title="'+String(a.bemerkungen).replace(/"/g,"&quot;")+'" style="cursor:help;font-size:12px;opacity:.8">&#x1F4AC;</span>' : '') + '</td>' +
       '<td style="width:7%" class="c"><span class="pill '+st+'">'+st+'</span></td>' +
