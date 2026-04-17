@@ -339,7 +339,7 @@ function buildArtFromDB(rows) {
   ART = {};
   var groupMap = {};
   rows.forEach(function(r) {
-    var key = r.necta_id || r.name;
+    var key = r.id;  // always unique UUID from Supabase
     ART[key] = Object.assign({}, r, {_key: key});
     if (!groupMap[r.kategorie]) groupMap[r.kategorie] = [];
     groupMap[r.kategorie].push(key);
@@ -394,7 +394,8 @@ function getFiltered() {
 }
 
 function renderDash() {
-  var all = Object.values(ART);
+  var all = [];
+  GROUPS.forEach(function(g) { g.articles.forEach(function(a) { all.push(a); }); });
   var counts = {offen:0, definiert:0, gesperrt:0};
   all.forEach(function(a) { var s = a.status || 'offen'; counts[s] = (counts[s]||0) + 1; });
   var total = all.length;
@@ -493,7 +494,7 @@ function toggleGroup(gh) {
 }
 
 function buildTable(gname, articles) {
-  var s = sortState[gname] || {col:'spend_2025', dir:-1};
+  var s = sortState[gname] || {col:'name', dir:1};
   var sorted = articles.slice().sort(function(a,b) {
     if (s.col === 'name') return s.dir * a.name.localeCompare(b.name, 'de');
     var av = a[s.col] != null ? a[s.col] : (s.dir < 0 ? -Infinity : Infinity);
