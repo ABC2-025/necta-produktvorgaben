@@ -87,6 +87,21 @@ td.r{text-align:right;font-variant-numeric:tabular-nums}td.c{text-align:center}
 .pct{font-size:10px;padding:1px 4px;border-radius:3px;font-weight:700}
 .pct.pos{background:#fde8e8;color:#a00}.pct.neg{background:#e8f5e9;color:#1a6b1a}
 .no-res{text-align:center;padding:40px;color:#607080}
+.sel-bar{background:#0D3352;color:#fff;padding:7px 16px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;min-height:38px;border-bottom:2px solid #2E75B6}
+.sel-bar-info{font-size:12px;font-weight:700;flex:1}
+.sel-bar-info span{opacity:.7;font-weight:400;margin-left:6px;font-size:11px}
+.sel-actions{display:flex;gap:6px;align-items:center}
+.sel-label{font-size:11px;opacity:.7}
+.sel-status-btn{padding:3px 10px;border-radius:4px;border:1.5px solid rgba(255,255,255,.4);background:transparent;color:#fff;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap}
+.sel-status-btn:hover{background:rgba(255,255,255,.15)}
+.sel-status-btn.s-offen{border-color:#ffc107;color:#ffc107}
+.sel-status-btn.s-definiert{border-color:#6fcf6f;color:#6fcf6f}
+.sel-status-btn.s-gesperrt{border-color:#ff8080;color:#ff8080}
+.sel-clear{padding:3px 10px;border-radius:4px;border:1.5px solid rgba(255,255,255,.3);background:transparent;color:#fff;font-size:11px;cursor:pointer}
+.sel-clear:hover{background:rgba(255,255,255,.1)}
+.row-chk{width:14px;height:14px;cursor:pointer;accent-color:#2E75B6}
+.chk-cell{width:30px;text-align:center}
+tbody tr.row-selected td{outline:2px solid #2E75B6;outline-offset:-1px}
 .edit-btn{background:#EBF3FB;border:1px solid #B8CCE4;border-radius:4px;cursor:pointer;color:#1F4E79;font-size:10px;padding:2px 8px;white-space:nowrap;font-weight:700}
 .edit-btn:hover{background:#d0e4f7}
 .modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:500;overflow-y:auto;padding:40px 16px}
@@ -160,6 +175,16 @@ td.r{text-align:right;font-variant-numeric:tabular-nums}td.c{text-align:center}
   <button class="xls-btn" onclick="exportExcel()">&#8595; Excel Export</button>
 </div>
 
+<div class="sel-bar" id="sel-bar" style="display:none">
+  <div class="sel-bar-info" id="sel-info">0 Artikel ausgewählt</div>
+  <div class="sel-actions">
+    <span class="sel-label">Status setzen:</span>
+    <button class="sel-status-btn s-offen" onclick="bulkSetStatus('offen')">Offen</button>
+    <button class="sel-status-btn s-definiert" onclick="bulkSetStatus('definiert')">Definiert</button>
+    <button class="sel-status-btn s-gesperrt" onclick="bulkSetStatus('gesperrt')">Gesperrt</button>
+    <button class="sel-clear" onclick="clearSelection()">&#10005; Auswahl l&ouml;schen</button>
+  </div>
+</div>
 <div class="container">
   <div id="view-dashboard">
     <div class="dash-grid" id="dash-cards"></div>
@@ -288,7 +313,8 @@ let activeStatus = 'all';
 let sortState = {};
 let openGroups = {};
 let editKey = null;
-let artList = [];   // flat list of ids for nav
+let artList = [];
+let selectedIds = new Set();
 
 function fmt(n, d) {
   if (n == null || isNaN(n)) return '\u2013';
@@ -538,7 +564,8 @@ function buildTable(gname, articles) {
     const pct = a.pct_bio_vs_conv;
     const pctH = pct != null ? '<span class="pct '+(pct>0?'pos':'neg')+'">'+(pct>0?'+':'')+pct+'%</span>' : '\u2013';
     const comment = a.bemerkungen ? ' <span title="'+String(a.bemerkungen).replace(/"/g,'&quot;')+'" style="cursor:help">&#x1F4AC;</span>' : '';
-    return '<tr class="'+rowCls+'">'
+    const isSelected = selectedIds.has(a.id);
+    return '<tr class="'+rowCls+(isSelected?' row-selected':'')+'">' + '<td class="chk-cell"><input type="checkbox" class="row-chk art-chk" data-id="'+a.id+'" '+(isSelected?'checked':'')+' onchange="toggleRowSelect(this)"></td>'
       + '<td style="width:25%"><span class="art-name">'+a.name+'</span>'+comment+'</td>'
       + '<td style="width:7%" class="c"><span class="pill '+st+'">'+st+'</span></td>'
       + '<td style="width:4%" class="c">'+bpill(a.bio_pflicht)+'</td>'
@@ -558,6 +585,7 @@ function buildTable(gname, articles) {
 
   const gn = gname.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
   return '<table><thead><tr>'
+    + '<th class="chk-cell"><input type="checkbox" class="row-chk" id="chk-all-'+gname.replace(/[^a-z0-9]/gi,\'_\')+\'" title="Alle w\u00e4hlen" onchange="toggleSelectAll(this,sorted)"></th>'
     + th('name','Artikel')
     + th('status','Status','c')
     + '<th class="c">Bio</th><th class="c">Vegan</th><th class="c">Veg.</th><th class="c">GF</th>'
@@ -570,6 +598,67 @@ function buildTable(gname, articles) {
     + '<th class="c">Bio/Konv</th>'
     + '<th class="c">Aktion</th>'
     + '</tr></thead><tbody>'+rows+'</tbody></table>';
+}
+
+function toggleRowSelect(cb) {
+  const id = cb.getAttribute('data-id');
+  if (!id) return;
+  if (cb.checked) selectedIds.add(id); else selectedIds.delete(id);
+  cb.closest('tr').classList.toggle('row-selected', cb.checked);
+  updateSelBar();
+}
+
+function toggleSelectAll(cb, arts) {
+  arts.forEach(function(a) {
+    if (cb.checked) selectedIds.add(a.id); else selectedIds.delete(a.id);
+  });
+  updateSelBar();
+  render();
+}
+
+function updateSelBar() {
+  const n = selectedIds.size;
+  const bar = document.getElementById('sel-bar');
+  bar.style.display = n > 0 ? 'flex' : 'none';
+  document.getElementById('sel-info').innerHTML =
+    '<strong>' + n + '</strong> Artikel ausgew&auml;hlt';
+}
+
+function clearSelection() {
+  selectedIds.clear();
+  updateSelBar();
+  render();
+}
+
+async function bulkSetStatus(status) {
+  if (selectedIds.size === 0) return;
+  const ids = Array.from(selectedIds);
+  const now = new Date().toISOString();
+  // Update locally first
+  ids.forEach(function(id) {
+    if (ART[id]) { ART[id].status = status; ART[id].updated_at = now; }
+  });
+  render();
+  setSyncStatus('saving', 'Speichert ' + ids.length + ' Artikel...');
+  try {
+    // Supabase: update in batch using IN filter
+    const res = await fetch(SUPA_URL + '/rest/v1/produktvorgaben?id=in.(' + ids.join(',') + ')', {
+      method: 'PATCH',
+      headers: {
+        'apikey': SUPA_KEY,
+        'Authorization': 'Bearer ' + SUPA_KEY,
+        'Content-Type': 'application/json',
+        'Prefer': 'return=minimal'
+      },
+      body: JSON.stringify({ status: status, updated_at: now })
+    });
+    if (!res.ok) throw new Error(await res.text());
+    setSyncStatus('ok', ids.length + ' gespeichert \u2713');
+    setTimeout(function(){ setSyncStatus('ok', 'Verbunden'); }, 2500);
+  } catch(e) {
+    setSyncStatus('error', 'Fehler beim Speichern');
+    console.error(e);
+  }
 }
 
 function sortTbl(gname, col) {
