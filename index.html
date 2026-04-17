@@ -487,10 +487,19 @@ function render() {
   document.getElementById('no-res').style.display = vis === 0 ? 'block' : 'none';
 }
 
-// Group toggle via event delegation
+// Single click handler - edit-btn checked FIRST
 document.addEventListener('click', function(e) {
+  // Check edit button first
+  const btn = e.target.closest('.edit-btn');
+  if (btn) {
+    e.stopPropagation();
+    const id = btn.getAttribute('data-id');
+    if (id) openEdit(id);
+    return;
+  }
+  // Then check group header
   const gh = e.target.closest('.gh');
-  if (gh && !e.target.closest('.edit-btn')) {
+  if (gh) {
     const k = gh.getAttribute('data-kat');
     const gt = gh.querySelector('.gt');
     const gb = gh.nextElementSibling;
@@ -499,16 +508,6 @@ document.addEventListener('click', function(e) {
     openGroups[k] = nowOpen;
     gt.classList.toggle('open', nowOpen);
     gb.classList.toggle('open', nowOpen);
-  }
-});
-
-// Edit button via event delegation
-document.addEventListener('click', function(e) {
-  const btn = e.target.closest('.edit-btn');
-  if (btn) {
-    e.stopPropagation();
-    const id = btn.getAttribute('data-id');
-    if (id) openEdit(id);
   }
 });
 
