@@ -482,7 +482,7 @@ function render(){
     const block=document.createElement('div');
     block.className='group-block';
     block.innerHTML=`
-      <div class="gh" data-grp="${k.replace(/"/g,'&quot;')}">
+      <div class="gh" onclick="toggleGroup(this)">
         <span class="gt ${isOpen?'open':''}">&#9654;</span>
         <span class="gname">${k}</span>
         <span class="gbadge">${arts.length}</span>
@@ -495,21 +495,9 @@ function render(){
     gc.appendChild(block);
   });
   document.getElementById('no-res').style.display=vis===0?'block':'none';
-  document.querySelectorAll('.gh').forEach(gh=>{
-    gh.addEventListener('click',function(){
-      const k=this.dataset.grp;
-      const gt=this.querySelector('.gt');
-      const gb=document.querySelector(`.gb[data-tbody="${k.replace(/"/g,'\"')}"]`);
-      if(!gb)return;
-      const nowOpen=!gb.classList.contains('open');
-      openGroups[k]=nowOpen;
-      gt.classList.toggle('open',nowOpen);
-      gb.classList.toggle('open',nowOpen);
-    });
+  document.// group toggles handled by inline onclick
   });
-  document.querySelectorAll('.edit-btn').forEach(btn=>{
-    btn.addEventListener('click',function(e){e.stopPropagation();openEdit(this.dataset.key);});
-  });
+  // edit buttons use inline onclick
 }
 
 function buildTable(gname,articles){
@@ -546,7 +534,7 @@ function buildTable(gname,articles){
       <td style="width:8%" class="r">${a.all_conv?fmtE(a.all_conv):'–'}</td>
       <td style="width:8%" class="r">${a.all_bio?fmtE(a.all_bio):'–'}</td>
       <td style="width:5%" class="c">${pctH}</td>
-      <td style="width:5%" class="c"><button class="edit-btn" data-key="${(a._key||'').replace(/"/g,'&quot;')}">&#9998; Bearb.</button></td>
+      <td style="width:5%" class="c"><button class="edit-btn" onclick="event.stopPropagation();openEdit('"+encodeKey(a._key||a.name)+"')">&#9998; Bearb.</button></td>
     </tr>`;
   }).join('');
   const gn=gname.replace(/'/g,"\'");
@@ -560,6 +548,19 @@ function buildTable(gname,articles){
   </tr></thead><tbody>${rows}</tbody></table>`;
 }
 
+function toggleGroup(gh){
+  const gt=gh.querySelector('.gt');
+  const gb=gh.nextElementSibling;
+  if(!gb)return;
+  const nowOpen=!gb.classList.contains('open');
+  // find group name from gname span
+  const gnameEl=gh.querySelector('.gname');
+  const k=gnameEl?gnameEl.textContent:'';
+  openGroups[k]=nowOpen;
+  gt.classList.toggle('open',nowOpen);
+  gb.classList.toggle('open',nowOpen);
+}
+
 function sortTbl(gname,col){
   const s=sortState[gname]||{col:'spend_2025',dir:-1};
   sortState[gname]=s.col===col?{col,dir:-s.dir}:{col,dir:-1};
@@ -567,6 +568,7 @@ function sortTbl(gname,col){
 }
 
 // ── EDIT MODAL ──
+function encodeKey(k){ return (k||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'"); }
 function openEdit(key){
   editKey=key;
   const a=ART[key];
