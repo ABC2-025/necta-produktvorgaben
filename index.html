@@ -215,7 +215,30 @@ async function sbFetch(path, opts) {
   return res.status === 204 ? null : res.json();
 }
 
-async function sbSelect() { return sbFetch('produktvorgaben?select=*&order=kategorie,name'); }
+async function sbSelect() {
+  var allRows = [];
+  var from = 0;
+  var pageSize = 500;
+  while (true) {
+    var to = from + pageSize - 1;
+    var res = await fetch(SUPA_URL + '/rest/v1/produktvorgaben?select=*&order=kategorie,name', {
+      headers: {
+        'apikey': SUPA_KEY,
+        'Authorization': 'Bearer ' + SUPA_KEY,
+        'Range': from + '-' + to,
+        'Range-Unit': 'items',
+        'Prefer': 'count=none'
+      }
+    });
+    if (!res.ok) { var t = await res.text(); throw new Error(t); }
+    var batch = await res.json();
+    if (!batch || batch.length === 0) break;
+    allRows = allRows.concat(batch);
+    if (batch.length < pageSize) break;
+    from += pageSize;
+  }
+  return allRows;
+}
 async function sbUpdate(id, data) {
   return sbFetch('produktvorgaben?id=eq.' + id, {method:'PATCH', prefer:'return=minimal', body:JSON.stringify(data)});
 }
@@ -257,13 +280,13 @@ async function init() {
   try {
     var rows = await sbSelect();
     if (!rows || rows.length === 0) {
-      document.getElementById('loading-msg').textContent = 'Erste Nutzung: Daten werden hochgeladen...';
-      await seedDatabase();
-      rows = await sbSelect();
+      document.getElementById('loading-msg').textContent = 'Keine Daten gefunden. Bitte SQL-Import durchführen.';
+      setSyncStatus('error', 'Keine Daten');
+      return;
     }
     buildArtFromDB(rows);
     document.getElementById('loading').style.display = 'none';
-    setSyncStatus('ok', 'Verbunden');
+    setSyncStatus('ok', 'Verbunden · ' + rows.length + ' Artikel');
     render();
   } catch(e) {
     document.getElementById('loading-msg').textContent = 'Fehler: ' + e.message;
