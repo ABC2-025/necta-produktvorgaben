@@ -149,6 +149,16 @@ tbody tr.row-selected td{outline:2px solid #2E75B6;outline-offset:-1px}
 .btn-next:hover{background:#1F4E79}
 .btn-cancel{padding:7px 14px;background:#f0f4f8;color:#1a2332;border:1px solid #c8d8e8;border-radius:6px;font-size:12px;cursor:pointer}
 .btn-cancel:hover{background:#e2eaf2}
+.import-table{width:100%;border-collapse:collapse;font-size:11px;max-height:400px;overflow-y:auto;display:block}
+.import-table thead th{background:#EBF3FB;font-size:10px;font-weight:700;color:#1F4E79;padding:5px 6px;border-bottom:2px solid #B8CCE4;text-align:left;position:sticky;top:0}
+.import-table tbody tr{border-bottom:1px solid #f0f4f8}
+.import-table tbody tr:hover{background:#f2f7ff}
+.import-table td{padding:4px 6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:200px}
+.import-new{background:#edfbf1}
+.import-badge-new{background:#d4edda;color:#155724;font-size:9px;padding:1px 6px;border-radius:3px;font-weight:700}
+.import-summary{display:flex;gap:12px;margin-bottom:12px;flex-wrap:wrap}
+.import-sum-box{background:#f0f4f8;border-radius:6px;padding:8px 12px;font-size:12px}
+.import-sum-box strong{font-size:18px;font-weight:700;color:#1F4E79;display:block}
 </style>
 </head>
 <body>
@@ -184,6 +194,8 @@ tbody tr.row-selected td{outline:2px solid #2E75B6;outline-offset:-1px}
   <div class="tb-sep"></div>
   <div class="sync-indicator"><div class="sync-dot" id="sync-dot"></div><span id="sync-label">Verbinden...</span></div>
   <button class="xls-btn" onclick="exportExcel()">&#8595; Excel Export</button>
+  <button class="xls-btn" style="background:#17a2b8" onclick="document.getElementById('import-file').click()">&#8593; Excel Import</button>
+  <input type="file" id="import-file" accept=".xlsx,.xls" style="display:none" onchange="handleImport(this)">
 </div>
 
 <div class="sel-bar" id="sel-bar" style="display:none">
@@ -279,6 +291,25 @@ tbody tr.row-selected td{outline:2px solid #2E75B6;outline-offset:-1px}
       <button class="btn-cancel" onclick="closeModal()">Abbrechen</button>
       <button class="btn-save" onclick="saveModal()">&#10003; Speichern</button>
       <button class="btn-next" onclick="saveAndNext()">Speichern &amp; N&auml;chster &#8594;</button>
+    </div>
+  </div>
+</div>
+
+<!-- Import Modal -->
+<div class="modal-bg" id="import-modal-bg">
+  <div class="modal" style="max-width:700px">
+    <div class="mh">
+      <h2>&#8593; Excel Import – Neue Artikel</h2>
+      <button class="mh-close" onclick="closeImportModal()">&#10005;</button>
+    </div>
+    <div class="mb" style="padding:16px 20px">
+      <div id="import-status" style="font-size:13px;color:#607080;margin-bottom:12px">Datei wird analysiert...</div>
+      <div id="import-preview"></div>
+    </div>
+    <div class="mf">
+      <span class="mf-nav" id="import-nav"></span>
+      <button class="btn-cancel" onclick="closeImportModal()">Abbrechen</button>
+      <button class="btn-save" id="import-confirm-btn" onclick="confirmImport()" style="display:none">&#10003; Neue Artikel importieren</button>
     </div>
   </div>
 </div>
@@ -951,6 +982,180 @@ function updateSelBarTop() {
 }
 window.addEventListener('resize', updateSelBarTop);
 updateSelBarTop();
+
+
+let pendingImportRows = [];
+
+function closeImportModal() {
+  document.getElementById('import-modal-bg').classList.remove('open');
+  pendingImportRows = [];
+  document.getElementById('import-file').value = '';
+}
+
+async function handleImport(input) {
+  const file = input.files[0];
+  if (!file) return;
+  document.getElementById('import-modal-bg').classList.add('open');
+  document.getElementById('import-status').textContent = 'Datei wird eingelesen...';
+  document.getElementById('import-preview').innerHTML = '';
+  document.getElementById('import-confirm-btn').style.display = 'none';
+
+  try {
+    const buf = await file.arrayBuffer();
+    const wb = XLSX.read(buf, {type:'array'});
+    // Find Produktvorgaben sheet
+    const sheetName = wb.SheetNames.find(function(n){ return n.toLowerCase().indexOf('produkt') >= 0; }) || wb.SheetNames[0];
+    const ws = wb.Sheets[sheetName];
+    const raw = XLSX.utils.sheet_to_json(ws, {header:1, defval:''});
+
+    // Find header row (look for 'Grundprodukt' or 'Kategorie')
+    let headerRow = 0;
+    for (let i = 0; i < Math.min(5, raw.length); i++) {
+      if (raw[i].some(function(cell){ return String(cell).indexOf('Grundprodukt') >= 0 || String(cell).indexOf('Kategorie') >= 0; })) {
+        headerRow = i; break;
+      }
+    }
+    const headers = raw[headerRow].map(function(h){ return String(h).trim(); });
+    const colIdx = function(name) { return headers.findIndex(function(h){ return h.toLowerCase().indexOf(name.toLowerCase()) >= 0; }); };
+
+    const iKat = colIdx('Kategorie'), iName = colIdx('Grundprodukt'), iId = colIdx('necta'), iWg = colIdx('Warengruppe');
+    const iBio = colIdx('Bio Pflicht'), iVegan = colIdx('Vegan'), iVeg = colIdx('Vegetarisch');
+    const iMhd = colIdx('MHD'), iZert = colIdx('Zertifizierung'), iGroesse = colIdx('Grössen'), iVerpk = colIdx('Verpackung');
+    const iAus = colIdx('Ausschluss'), iBev = colIdx('Bevorzugter'), iHerk = colIdx('Herkunft'), iBem = colIdx('Bemerkungen');
+    const iStatus = colIdx('Status'), iKiosk = colIdx('Kiosk');
+
+    if (iName < 0 || iKat < 0) {
+      document.getElementById('import-status').textContent = 'Fehler: Spalten "Kategorie" und "Grundprodukt" nicht gefunden.';
+      return;
+    }
+
+    // Build set of existing articles (by necta_id and by name+kategorie)
+    const existingByNectaId = {};
+    const existingByKey = {};
+    Object.values(ART).forEach(function(a) {
+      if (a.necta_id) existingByNectaId[String(a.necta_id).trim()] = true;
+      existingByKey[(a.name+'|'+a.kategorie).toLowerCase()] = true;
+    });
+
+    const newRows = [];
+    for (let i = headerRow + 1; i < raw.length; i++) {
+      const row = raw[i];
+      const name = String(row[iName]||'').trim();
+      const kat = String(row[iKat]||'').trim();
+      if (!name || !kat || kat.indexOf('══') >= 0) continue;
+      const nectaId = iId >= 0 ? String(row[iId]||'').trim() : '';
+
+      // Check if already exists
+      const existsById = nectaId && existingByNectaId[nectaId];
+      const existsByKey = existingByKey[(name+'|'+kat).toLowerCase()];
+      if (existsById || existsByKey) continue;
+
+      newRows.push({
+        name: name,
+        kategorie: kat,
+        necta_id: nectaId || null,
+        warengruppe: iWg >= 0 ? String(row[iWg]||'').trim() || null : null,
+        kiosk: iKiosk >= 0 ? String(row[iKiosk]||'').trim() || 'Nein' : 'Nein',
+        status: iStatus >= 0 ? String(row[iStatus]||'offen').trim() || 'offen' : 'offen',
+        bio_pflicht: iBio >= 0 ? String(row[iBio]||'keine Vorgabe').trim() || 'keine Vorgabe' : 'keine Vorgabe',
+        vegan_pflicht: iVegan >= 0 ? String(row[iVegan]||'keine Vorgabe').trim() || 'keine Vorgabe' : 'keine Vorgabe',
+        veg_pflicht: iVeg >= 0 ? String(row[iVeg]||'keine Vorgabe').trim() || 'keine Vorgabe' : 'keine Vorgabe',
+        glutenfrei_pflicht: 'keine Vorgabe',
+        mhd: iMhd >= 0 ? String(row[iMhd]||'').trim() || null : null,
+        zertifizierung: iZert >= 0 ? String(row[iZert]||'').trim() || null : null,
+        groesse: iGroesse >= 0 ? String(row[iGroesse]||'').trim() || null : null,
+        verpackung: iVerpk >= 0 ? String(row[iVerpk]||'').trim() || null : null,
+        ausschluss: iAus >= 0 ? String(row[iAus]||'').trim() || null : null,
+        bevorzugt: iBev >= 0 ? String(row[iBev]||'').trim() || null : null,
+        herkunft: iHerk >= 0 ? String(row[iHerk]||'').trim() || null : null,
+        bemerkungen: iBem >= 0 ? String(row[iBem]||'').trim() || null : null,
+      });
+    }
+
+    pendingImportRows = newRows;
+    const total = raw.length - headerRow - 1;
+    const existing = total - newRows.length;
+
+    document.getElementById('import-nav').textContent = file.name + ' · Blatt: ' + sheetName;
+    document.getElementById('import-status').innerHTML =
+      '<div class="import-summary">'
+      + '<div class="import-sum-box"><strong>' + total + '</strong>Artikel in Datei</div>'
+      + '<div class="import-sum-box"><strong style="color:#607080">' + existing + '</strong>Bereits vorhanden</div>'
+      + '<div class="import-sum-box"><strong style="color:#155724">' + newRows.length + '</strong>Neu (werden importiert)</div>'
+      + '</div>';
+
+    if (newRows.length === 0) {
+      document.getElementById('import-preview').innerHTML = '<div style="text-align:center;padding:20px;color:#607080">Alle Artikel sind bereits in der Datenbank vorhanden.</div>';
+      return;
+    }
+
+    document.getElementById('import-confirm-btn').style.display = 'inline-block';
+    document.getElementById('import-confirm-btn').textContent = '\u2713 ' + newRows.length + ' neue Artikel importieren';
+
+    // Show preview table
+    let html = '<div style="max-height:350px;overflow-y:auto"><table class="import-table"><thead><tr>'
+      + '<th>Kategorie</th><th>Grundprodukt</th><th>Necta ID</th><th>Warengruppe</th><th>Status</th>'
+      + '</tr></thead><tbody>';
+    newRows.forEach(function(r) {
+      html += '<tr class="import-new">'
+        + '<td>'+r.kategorie+'</td>'
+        + '<td><strong>'+r.name+'</strong></td>'
+        + '<td>'+(r.necta_id||'–')+'</td>'
+        + '<td>'+(r.warengruppe||'–')+'</td>'
+        + '<td><span class="import-badge-new">'+(r.status||'offen')+'</span></td>'
+        + '</tr>';
+    });
+    html += '</tbody></table></div>';
+    document.getElementById('import-preview').innerHTML = html;
+
+  } catch(e) {
+    document.getElementById('import-status').textContent = 'Fehler beim Lesen: ' + e.message;
+    console.error(e);
+  }
+}
+
+async function confirmImport() {
+  if (!pendingImportRows.length) return;
+  const btn = document.getElementById('import-confirm-btn');
+  btn.textContent = 'Importiert...';
+  btn.disabled = true;
+  setSyncStatus('saving', 'Importiert ' + pendingImportRows.length + ' Artikel...');
+  try {
+    // Insert in chunks of 100
+    for (let i = 0; i < pendingImportRows.length; i += 100) {
+      const chunk = pendingImportRows.slice(i, i+100);
+      const res = await fetch(SUPA_URL + '/rest/v1/produktvorgaben', {
+        method: 'POST',
+        headers: {
+          'apikey': SUPA_KEY,
+          'Authorization': 'Bearer ' + SUPA_KEY,
+          'Content-Type': 'application/json',
+          'Prefer': 'return=representation'
+        },
+        body: JSON.stringify(chunk)
+      });
+      if (!res.ok) throw new Error(await res.text());
+      const inserted = await res.json();
+      // Add to local ART
+      inserted.forEach(function(r) {
+        ART[r.id] = Object.assign({}, r);
+      });
+    }
+    // Rebuild GROUPS and re-render
+    const allRows = Object.values(ART);
+    buildFromRows(allRows);
+    closeImportModal();
+    render();
+    setSyncStatus('ok', pendingImportRows.length + ' Artikel importiert \u2713');
+    setTimeout(function(){ setSyncStatus('ok', 'Verbunden'); }, 3000);
+  } catch(e) {
+    document.getElementById('import-status').textContent = 'Fehler: ' + e.message;
+    btn.textContent = 'Nochmal versuchen';
+    btn.disabled = false;
+    setSyncStatus('error', 'Import fehlgeschlagen');
+    console.error(e);
+  }
+}
 
 init();
 
