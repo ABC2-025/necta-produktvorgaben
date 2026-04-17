@@ -577,9 +577,9 @@ function render() {
   document.getElementById('no-res').style.display = vis === 0 ? 'block' : 'none';
 }
 
-// Single click handler - edit-btn checked FIRST
+// Single click handler
 document.addEventListener('click', function(e) {
-  // Check edit button first
+  // Edit button
   const btn = e.target.closest('.edit-btn');
   if (btn) {
     e.stopPropagation();
@@ -587,7 +587,36 @@ document.addEventListener('click', function(e) {
     if (id) openEdit(id);
     return;
   }
-  // Then check group header
+  // Row checkbox
+  const chk = e.target.closest('.art-chk');
+  if (chk) {
+    e.stopPropagation();
+    const id = chk.getAttribute('data-id');
+    if (!id) return;
+    if (chk.checked) selectedIds.add(id); else selectedIds.delete(id);
+    chk.closest('tr').classList.toggle('row-selected', chk.checked);
+    updateSelBar();
+    return;
+  }
+  // Select-all checkbox
+  const grpChk = e.target.closest('.grp-chk');
+  if (grpChk) {
+    e.stopPropagation();
+    // find all art-chk in same table
+    const table = grpChk.closest('table');
+    if (!table) return;
+    const allChks = table.querySelectorAll('.art-chk');
+    allChks.forEach(function(cb) {
+      const id = cb.getAttribute('data-id');
+      if (!id) return;
+      cb.checked = grpChk.checked;
+      if (grpChk.checked) selectedIds.add(id); else selectedIds.delete(id);
+      cb.closest('tr').classList.toggle('row-selected', grpChk.checked);
+    });
+    updateSelBar();
+    return;
+  }
+  // Group header toggle
   const gh = e.target.closest('.gh');
   if (gh) {
     const k = gh.getAttribute('data-kat');
@@ -629,7 +658,7 @@ function buildTable(gname, articles) {
     const pctH = pct != null ? '<span class="pct '+(pct>0?'pos':'neg')+'">'+(pct>0?'+':'')+pct+'%</span>' : '\u2013';
     const comment = a.bemerkungen ? ' <span title="'+String(a.bemerkungen).replace(/"/g,'&quot;')+'" style="cursor:help">&#x1F4AC;</span>' : '';
     const isSelected = selectedIds.has(a.id);
-    return '<tr class="'+rowCls+(isSelected?' row-selected':'')+'">' + '<td class="chk-cell"><input type="checkbox" class="row-chk art-chk" data-id="'+a.id+'" '+(isSelected?'checked':'')+' onchange="toggleRowSelect(this)"></td>'
+    return '<tr class="'+rowCls+(isSelected?' row-selected':'')+'">' + '<td class="chk-cell"><input type="checkbox" class="row-chk art-chk" data-id="'+a.id+'" '+(isSelected?'checked':'')+' ></td>'
       + '<td style="width:25%"><span class="art-name">'+a.name+'</span>'+comment+'</td>'
       + '<td style="width:7%" class="c"><span class="pill '+st+'">'+st+'</span></td>'
       + '<td style="width:4%" class="c">'+bpill(a.bio_pflicht)+'</td>'
@@ -649,7 +678,7 @@ function buildTable(gname, articles) {
 
   const gn = gname.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
   return '<table><thead><tr>'
-    + '<th class="chk-cell"><input type="checkbox" class="row-chk grp-chk" title="Alle" onchange="toggleSelectAll(this,sorted)"></th>'
+    + '<th class="chk-cell"><input type="checkbox" class="row-chk grp-chk" title="Alle" ></th>'
     + th('name','Artikel')
     + th('status','Status','c')
     + '<th class="c">Bio</th><th class="c">Vegan</th><th class="c">Veg.</th><th class="c">GF</th>'
