@@ -564,7 +564,7 @@ function buildTable(gname, articles) {
       '<td style="width:8%" class="r">'+(a.all_conv?fmtE(a.all_conv):'\u2013')+'</td>' +
       '<td style="width:8%" class="r">'+(a.all_bio?fmtE(a.all_bio):'\u2013')+'</td>' +
       '<td style="width:5%" class="c">'+pctH+'</td>' +
-      '<td style="width:5%" class="c"><button class="edit-btn" onclick="editFromTable(\''+keyEsc+'\')">\u270e Bearb.</button></td>' +
+      '<td style="width:5%" class="c"><button class="edit-btn" data-key="'+key+'">\u270e Bearb.</button></td>' +' +
       '</tr>';
   }).join('');
   return '<table><thead><tr>' +
@@ -584,6 +584,15 @@ function editFromTable(key) {
   fg.forEach(function(g){ g.articles.forEach(function(a){ currentArticleList.push(a._key); }); });
   openEdit(key);
 }
+
+// Event delegation for edit buttons
+document.addEventListener('click', function(e) {
+  var btn = e.target.closest('.edit-btn');
+  if (!btn) return;
+  e.stopPropagation();
+  var key = btn.getAttribute('data-key');
+  if (key) editFromTable(key);
+});
 
 function sortTbl(gname, col) {
   var s = sortState[gname] || {col:'spend_2025', dir:-1};
