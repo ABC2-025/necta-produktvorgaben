@@ -130,6 +130,17 @@ tbody tr.row-selected td{outline:2px solid #2E75B6;outline-offset:-1px}
 .fi input:focus,.fi select:focus,.fi textarea:focus{outline:none;border-color:#2E75B6;box-shadow:0 0 0 2px rgba(46,117,182,.15)}
 .fi textarea{resize:vertical;min-height:60px}
 .fi.full{grid-column:1/-1}
+.fi-check{display:flex;flex-direction:column;gap:6px}
+.fi-check label.main{font-size:10px;font-weight:700;color:#607080}
+.check-row{display:flex;align-items:center;gap:8px;padding:6px 8px;border:1px solid #c8d8e8;border-radius:5px;background:#fff}
+.check-row:hover{background:#f0f4f8}
+.check-row input[type=checkbox]{width:15px;height:15px;cursor:pointer;accent-color:#1F4E79;flex-shrink:0}
+.check-row .check-label{font-size:12px;color:#1a2332;font-weight:600;flex:1}
+.check-row.checked{border-color:#2E75B6;background:#EBF3FB}
+.festverg-extra{margin-top:4px;display:none}
+.festverg-extra.show{display:block}
+.festverg-extra input{width:100%;padding:5px 8px;border:1px solid #c8d8e8;border-radius:5px;font-size:12px;font-family:inherit;color:#1a2332}
+.festverg-extra input:focus{outline:none;border-color:#2E75B6}
 .mf{padding:12px 20px;border-top:1px solid #f0f4f8;display:flex;align-items:center;gap:8px}
 .mf-nav{font-size:11px;color:#607080;flex:1}
 .btn-save{padding:7px 18px;background:#1F4E79;color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer}
@@ -244,6 +255,22 @@ tbody tr.row-selected td{outline:2px solid #2E75B6;outline-offset:-1px}
             <input type="text" id="e-aus" placeholder="Ausgeschlossen"></div>
           <div class="fi full"><label>Anforderungen / Bemerkungen</label>
             <textarea id="e-bem" placeholder="Freitext..."></textarea></div>
+          <div class="fi-check full">
+            <label class="main">Besondere Vergabe</label>
+            <div class="check-row" id="row-ausschreibung" onclick="toggleCheck('e-ausschreibung')">
+              <input type="checkbox" id="e-ausschreibung" onclick="event.stopPropagation();toggleCheck('e-ausschreibung',true)">
+              <span class="check-label">Separate Ausschreibung</span>
+              <span style="font-size:10px;color:#607080">Artikel wird separat ausgeschrieben</span>
+            </div>
+            <div class="check-row" id="row-festvergeben" onclick="toggleCheck('e-festvergeben')">
+              <input type="checkbox" id="e-festvergeben" onclick="event.stopPropagation();toggleCheck('e-festvergeben',true)">
+              <span class="check-label">Festvergeben</span>
+              <span style="font-size:10px;color:#607080">Lieferant/Vertrag bereits festgelegt</span>
+            </div>
+            <div class="festverg-extra" id="festverg-extra">
+              <input type="text" id="e-festvergeben-kommentar" placeholder="Kommentar: z.B. Lieferant, Vertragsnummer, Laufzeit...">
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -660,7 +687,10 @@ function buildTable(gname, articles) {
     const isSelected = selectedIds.has(a.id);
     return '<tr class="'+rowCls+(isSelected?' row-selected':'')+'">' + '<td class="chk-cell"><input type="checkbox" class="row-chk art-chk" data-id="'+a.id+'" '+(isSelected?'checked':'')+' ></td>'
       + '<td style="width:25%"><span class="art-name">'+a.name+'</span>'+comment+'</td>'
-      + '<td style="width:7%" class="c"><span class="pill '+st+'">'+st+'</span></td>'
+      + '<td style="width:7%" class="c"><span class="pill '+st+'">'+st+'</span>'
+      + (a.separate_ausschreibung?' <span title="Separate Ausschreibung" style="font-size:10px">&#x1F4CB;</span>':'')
+      + (a.festvergeben?' <span title="Festvergeben'+(a.festvergeben_kommentar?': '+String(a.festvergeben_kommentar).replace(/"/g,'&quot;'):'')+'" style="font-size:10px">&#x1F512;</span>':'')
+      + '</td>'
       + '<td style="width:4%" class="c">'+bpill(a.bio_pflicht)+'</td>'
       + '<td style="width:4%" class="c">'+bpill(a.vegan_pflicht)+'</td>'
       + '<td style="width:4%" class="c">'+bpill(a.veg_pflicht)+'</td>'
@@ -804,6 +834,17 @@ function openEdit(id) {
   setf('e-herkunft', a.herkunft); setf('e-bev', a.bevorzugt);
   setf('e-aus', a.ausschluss); setf('e-bem', a.bemerkungen);
 
+  // Checkboxes
+  const ausschr = a.separate_ausschreibung === true || a.separate_ausschreibung === 'true';
+  const festv = a.festvergeben === true || a.festvergeben === 'true';
+  document.getElementById('e-ausschreibung').checked = ausschr;
+  document.getElementById('row-ausschreibung').classList.toggle('checked', ausschr);
+  document.getElementById('e-festvergeben').checked = festv;
+  document.getElementById('row-festvergeben').classList.toggle('checked', festv);
+  const extra = document.getElementById('festverg-extra');
+  extra.classList.toggle('show', festv);
+  const fk = document.getElementById('e-festvergeben-kommentar');
+  fk.value = a.festvergeben_kommentar || '';
   document.getElementById('mbg').classList.add('open');
 }
 
@@ -812,6 +853,17 @@ function statBox(lbl, val, highlight) {
     + '<div class="sb-lbl">'+lbl+'</div>'
     + '<div class="sb-val">'+val+'</div>'
     + '</div>';
+}
+
+function toggleCheck(id, fromCheckbox) {
+  const cb = document.getElementById(id);
+  if (!fromCheckbox) cb.checked = !cb.checked;
+  const row = document.getElementById('row-' + id.replace('e-',''));
+  if (row) row.classList.toggle('checked', cb.checked);
+  if (id === 'e-festvergeben') {
+    const extra = document.getElementById('festverg-extra');
+    if (extra) extra.classList.toggle('show', cb.checked);
+  }
 }
 
 async function saveModal() {
@@ -863,7 +915,7 @@ function closeModal() {
 function exportExcel() {
   if (typeof XLSX === 'undefined') { alert('Bitte kurz warten...'); return; }
   const headers = ['Kategorie','Grundprodukt','Necta ID','Warengruppe','Kiosk',
-    'Status','Bio Pflicht','Vegan Pflicht','Vegetarisch Pflicht','Glutenfrei Pflicht',
+    'Status','Bio Pflicht','Vegan Pflicht','Vegetarisch Pflicht','Glutenfrei Pflicht','Separate Ausschreibung','Festvergeben','Festvergeben Kommentar',
     'Mindest-MHD','Zertifizierung','Gew./Gr\u00f6\u00dfenvorgabe','Verpackung',
     'Ausschluss Hersteller','Bevorzugter Hersteller','Regionale Herkunft','Bemerkungen',
     'Menge 2025 (kg)','Ausgaben 2025 (\u20ac)','\u00d8 Konv./kg','\u00d8 Bio/kg',
@@ -873,7 +925,7 @@ function exportExcel() {
     g.articles.forEach(function(a) {
       rows.push([
         a.kategorie, a.name, a.necta_id||'', a.warengruppe||'', a.kiosk||'',
-        a.status||'offen', a.bio_pflicht||'', a.vegan_pflicht||'', a.veg_pflicht||'', a.glutenfrei_pflicht||'',
+        a.status||'offen', a.bio_pflicht||'', a.vegan_pflicht||'', a.veg_pflicht||'', a.glutenfrei_pflicht||'', a.separate_ausschreibung?'Ja':'', a.festvergeben?'Ja':'', a.festvergeben_kommentar||'',
         a.mhd||'', a.zertifizierung||'', a.groesse||'', a.verpackung||'',
         a.ausschluss||'', a.bevorzugt||'', a.herkunft||'', a.bemerkungen||'',
         a.kg_2025!=null?a.kg_2025:'', a.spend_2025!=null?a.spend_2025:'',
