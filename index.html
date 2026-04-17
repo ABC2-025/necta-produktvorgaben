@@ -347,7 +347,7 @@ function buildArtFromDB(rows) {
   var orderedKats = RAW_DATA.groups.map(function(g) { return g.kategorie; }).filter(function(k) { return groupMap[k]; });
   Object.keys(groupMap).forEach(function(k) { if (orderedKats.indexOf(k) < 0) orderedKats.push(k); });
   GROUPS = orderedKats.map(function(k) {
-    return { kategorie: k, articles: groupMap[k].map(function(key) { return ART[key]; }).filter(Boolean) };
+    return { kategorie: k, articles: groupMap[k].map(function(key) { return ART[key]; }).filter(Boolean).sort(function(a,b){ return a.name.localeCompare(b.name,'de'); }) };
   });
 }
 
