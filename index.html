@@ -87,7 +87,7 @@ td.r{text-align:right;font-variant-numeric:tabular-nums}td.c{text-align:center}
 .pct{font-size:10px;padding:1px 4px;border-radius:3px;font-weight:700}
 .pct.pos{background:#fde8e8;color:#a00}.pct.neg{background:#e8f5e9;color:#1a6b1a}
 .no-res{text-align:center;padding:40px;color:#607080}
-.sel-bar{background:#0D3352;color:#fff;padding:7px 16px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;min-height:38px;border-bottom:2px solid #2E75B6;position:sticky;top:49px;z-index:199}
+.sel-bar{background:#0D3352;color:#fff;padding:7px 16px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;min-height:38px;border-bottom:2px solid #2E75B6;position:sticky;top:0;z-index:199}
 .sel-bar-info{font-size:12px;font-weight:700;flex:1}
 .sel-bar-info span{opacity:.7;font-weight:400;margin-left:6px;font-size:11px}
 .sel-actions{display:flex;gap:6px;align-items:center}
@@ -715,6 +715,7 @@ function updateSelBar() {
   bar.style.display = n > 0 ? 'flex' : 'none';
   document.getElementById('sel-info').innerHTML =
     '<strong>' + n + '</strong> Artikel ausgew&auml;hlt';
+  if (n > 0) updateSelBarTop();
 }
 
 function clearSelection() {
@@ -889,6 +890,15 @@ function exportExcel() {
   XLSX.utils.book_append_sheet(wb, ws, 'Produktvorgaben');
   XLSX.writeFile(wb, 'Produktvorgaben_Export.xlsx');
 }
+
+// Set sel-bar top dynamically based on topbar height
+function updateSelBarTop() {
+  const tb = document.querySelector('.topbar');
+  const sb = document.getElementById('sel-bar');
+  if (tb && sb) sb.style.top = tb.offsetHeight + 'px';
+}
+window.addEventListener('resize', updateSelBarTop);
+updateSelBarTop();
 
 init();
 
