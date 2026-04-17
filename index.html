@@ -87,7 +87,7 @@ td.r{text-align:right;font-variant-numeric:tabular-nums}td.c{text-align:center}
 .pct{font-size:10px;padding:1px 4px;border-radius:3px;font-weight:700}
 .pct.pos{background:#fde8e8;color:#a00}.pct.neg{background:#e8f5e9;color:#1a6b1a}
 .no-res{text-align:center;padding:40px;color:#607080}
-.sel-bar{background:#0D3352;color:#fff;padding:7px 16px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;min-height:38px;border-bottom:2px solid #2E75B6}
+.sel-bar{background:#0D3352;color:#fff;padding:7px 16px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;min-height:38px;border-bottom:2px solid #2E75B6;position:sticky;top:49px;z-index:199}
 .sel-bar-info{font-size:12px;font-weight:700;flex:1}
 .sel-bar-info span{opacity:.7;font-weight:400;margin-left:6px;font-size:11px}
 .sel-actions{display:flex;gap:6px;align-items:center}
@@ -182,7 +182,7 @@ tbody tr.row-selected td{outline:2px solid #2E75B6;outline-offset:-1px}
     <button class="sel-status-btn s-offen" onclick="bulkSetStatus('offen')">Offen</button>
     <button class="sel-status-btn s-definiert" onclick="bulkSetStatus('definiert')">Definiert</button>
     <button class="sel-status-btn s-gesperrt" onclick="bulkSetStatus('gesperrt')">Gesperrt</button>
-    <button class="sel-clear" onclick="clearSelection()">&#10005; Auswahl l&ouml;schen</button>
+    <button class="sel-clear" onclick="clearSelection()">&#10005; Alle abw&auml;hlen</button>
   </div>
 </div>
 <div class="container">
