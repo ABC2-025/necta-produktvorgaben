@@ -518,7 +518,7 @@ function buildTable(gname, articles) {
     var key = a._key || a.name;
     var keyEsc = key.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
     return '<tr>' +
-      '<td style="width:25%" title="'+a.name+'">'+a.name+'</td>' +
+      '<td style="width:25%" title="'+a.name+'">' + a.name + (a.bemerkungen ? ' <span title="'+String(a.bemerkungen).replace(/"/g,"&quot;")+'" style="cursor:help;font-size:12px;opacity:.8">&#x1F4AC;</span>' : '') + '</td>' +
       '<td style="width:7%" class="c"><span class="pill '+st+'">'+st+'</span></td>' +
       '<td style="width:4%" class="c">'+bpill(a.bio_pflicht)+'</td>' +
       '<td style="width:4%" class="c">'+bpill(a.vegan_pflicht)+'</td>' +
