@@ -745,7 +745,9 @@ function buildTable(gname, articles) {
       + '<td style="width:7%" class="r csep">'
       + (a.conv_pp ? fmtE(a.conv_pp,3)+'/kg' : '\u2013')
       + (function(){
-          const p = PREISE[String(a.necta_id||'').trim()];
+          let _nid = String(a.necta_id||'').trim();
+          if (_nid.indexOf('.') >= 0) _nid = _nid.split('.')[0];
+          const p = PREISE[_nid];
           if (!p || !p.s || !p.s.length) return '';
           const best = p.s[0];
           if (!best.pk) return '';
@@ -912,7 +914,10 @@ function statBox(lbl, val, highlight) {
 
 function buildPreisSection(necta_id) {
   if (!necta_id) return '';
-  const p = PREISE[String(necta_id).trim()];
+  // Clean ID: handle floats like "12929274.0" -> "12929274"
+  let nid = String(necta_id).trim();
+  if (nid.indexOf('.') >= 0) nid = nid.split('.')[0];
+  const p = PREISE[nid];
   if (!p || !p.s || !p.s.length) return '';
   const header = '<div class="preis-section">'
     + '<div class="stat-sect">Ausschreibungspreise</div>'
