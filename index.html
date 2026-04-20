@@ -104,24 +104,24 @@ td.r{text-align:right;font-variant-numeric:tabular-nums}td.c{text-align:center}
 tbody tr.row-selected td{outline:2px solid #2E75B6;outline-offset:-1px}
 .edit-btn{background:#EBF3FB;border:1px solid #B8CCE4;border-radius:4px;cursor:pointer;color:#1F4E79;font-size:10px;padding:2px 8px;white-space:nowrap;font-weight:700}
 .edit-btn:hover{background:#d0e4f7}
-.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:500;overflow-y:auto;padding:40px 16px}
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:500;overflow-y:auto;padding:30px 16px}
 .modal-bg.open{display:block}
 .modal{background:#fff;border-radius:12px;width:980px;max-width:98vw;margin:0 auto;box-shadow:0 8px 40px rgba(0,0,0,.3)}
 .mh{background:#1F4E79;color:#fff;padding:14px 20px;border-radius:12px 12px 0 0;display:flex;align-items:center;gap:12px}
 .mh h2{font-size:14px;font-weight:700;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin:0}
 .mh-close{background:rgba(255,255,255,.2);border:none;color:#fff;border-radius:5px;padding:4px 12px;cursor:pointer;font-size:12px;font-weight:700;flex-shrink:0}
 .mh-close:hover{background:rgba(255,255,255,.35)}
-.modal-layout{display:flex}
-.modal-left{width:280px;flex-shrink:0;background:#f7fafd;border-right:1px solid #dbe4ee;padding:16px;border-radius:0 0 0 12px;overflow-y:auto;max-height:70vh}
-.modal-right{flex:1;padding:18px 20px;overflow-y:auto;max-height:70vh}
-.stat-sect{font-size:11px;font-weight:700;color:#1F4E79;margin-bottom:8px;padding-bottom:4px;border-bottom:1.5px solid #dbe4ee}
-.stat-box{background:#fff;border:1px solid #dbe4ee;border-radius:6px;padding:8px 10px;margin-bottom:6px}
+.modal-layout{display:flex;flex-direction:column}
+.modal-left{width:100%;background:#f7fafd;border-bottom:2px solid #dbe4ee;padding:14px 20px;display:flex;flex-wrap:wrap;gap:12px;align-items:flex-start}
+.modal-right{flex:1;padding:18px 20px}
+.stat-sect{font-size:10px;font-weight:700;color:#1F4E79;width:100%;margin-bottom:0;padding-bottom:4px;border-bottom:1.5px solid #dbe4ee;text-transform:uppercase;letter-spacing:.4px}
+.stat-box{background:#fff;border:1px solid #dbe4ee;border-radius:6px;padding:8px 12px;min-width:110px;flex:1}
 .stat-box.highlight{border-color:#2E75B6;background:#EBF3FB}
 .sb-lbl{font-size:10px;color:#607080;margin-bottom:1px}
 .sb-val{font-size:15px;font-weight:700;color:#1F4E79}
-.pct-big{font-size:24px;font-weight:700;text-align:center;padding:10px;margin-top:6px}
+.pct-big{font-size:22px;font-weight:700;text-align:center;padding:8px 12px;border:1px solid #dbe4ee;border-radius:7px;background:#fff;min-width:100px}
 .pct-lbl{font-size:10px;color:#607080;margin-top:2px;font-weight:400}
-.stat-id{font-size:10px;color:#aaa;margin-top:8px}
+.stat-id{font-size:10px;color:#aaa;width:100%;margin-top:0}
 .preis-section{margin-top:12px}
 .preis-table{width:100%;border-collapse:collapse;font-size:11px;margin-top:4px}
 .preis-table th{background:#dbe4ee;font-size:10px;font-weight:700;color:#1F4E79;padding:3px 6px;text-align:left;border-bottom:1px solid #B8CCE4}
@@ -914,27 +914,23 @@ function statBox(lbl, val, highlight) {
 
 function buildPreisSection(necta_id) {
   if (!necta_id) return '';
-  // Clean ID: handle floats like "12929274.0" -> "12929274"
   let nid = String(necta_id).trim();
   if (nid.indexOf('.') >= 0) nid = nid.split('.')[0];
   const p = PREISE[nid];
   if (!p || !p.s || !p.s.length) return '';
-  const header = '<div class="preis-section">'
-    + '<div class="stat-sect">Ausschreibungspreise</div>'
-    + '<div class="wa-label">WA ' + p.wa + ' \u00b7 ' + p.d + '</div>'
-    + '<table class="preis-table"><thead><tr>'
-    + '<th>Lieferant</th><th class="r">\u00d8/kg</th><th class="r">\u00d8/AE</th><th class="r">Einheit</th>'
-    + '</tr></thead><tbody>';
-  const rows = p.s.map(function(s, i) {
-    const badge = i === 0 ? '<span class="preis-badge">G\u00fcnstigster</span>' : '';
-    return '<tr>'
-      + '<td>' + s.f + badge + '</td>'
-      + '<td class="r">' + (s.pk != null ? s.pk.toLocaleString('de-DE', {minimumFractionDigits:3, maximumFractionDigits:3}) + '\u00a0\u20ac' : '\u2013') + '</td>'
-      + '<td class="r">' + (s.pe != null ? s.pe.toLocaleString('de-DE', {minimumFractionDigits:3, maximumFractionDigits:3}) + '\u00a0\u20ac' : '\u2013') + '</td>'
-      + '<td class="r">' + (s.e || '\u2013') + '</td>'
-      + '</tr>';
+  // Horizontal card layout
+  const cards = p.s.map(function(s, i) {
+    const isFirst = i === 0;
+    return '<div style="background:'+(isFirst?'#edfbf1':'#fff')+';border:1px solid '+(isFirst?'#28a745':'#dbe4ee')+';border-radius:7px;padding:8px 12px;min-width:120px;flex:1">'
+      + '<div style="font-size:10px;font-weight:700;color:'+(isFirst?'#155724':'#607080')+'">'+s.f+(isFirst?' \u2714':'')+' </div>'
+      + '<div style="font-size:15px;font-weight:700;color:#1F4E79;margin-top:2px">' + (s.pk != null ? s.pk.toLocaleString('de-DE', {minimumFractionDigits:3, maximumFractionDigits:3}) + '\u00a0\u20ac/kg' : (s.pe != null ? s.pe.toLocaleString('de-DE',{minimumFractionDigits:3,maximumFractionDigits:3})+'\u00a0\u20ac' : '\u2013')) + '</div>'
+      + (s.pe != null && s.pk != null ? '<div style="font-size:10px;color:#8a9ab0">'+s.pe.toLocaleString('de-DE',{minimumFractionDigits:3,maximumFractionDigits:3})+'\u00a0\u20ac/'+s.e+'</div>' : '')
+      + '</div>';
   }).join('');
-  return header + rows + '</tbody></table></div>';
+  return '<div style="width:100%">'
+    + '<div style="font-size:10px;font-weight:700;color:#1F4E79;margin-bottom:4px">AUSSCHREIBUNGSPREISE \u00b7 WA ' + p.wa + ' \u00b7 ' + p.d + '</div>'
+    + '<div style="display:flex;gap:8px;flex-wrap:wrap">' + cards + '</div>'
+    + '</div>';
 }
 
 function toggleCheck(id, fromCheckbox) {
