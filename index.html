@@ -866,16 +866,16 @@ function openEdit(id) {
   const pct = a.pct_bio_vs_conv;
   const pctColor = pct == null ? '#607080' : pct > 0 ? '#a00' : '#1a6b1a';
   document.getElementById('m-stats').innerHTML =
-    '<div class="stat-sect">Bestelldaten 2025</div>'
-    + statBox('Jahresmenge', a.kg_2025!=null?fmt(a.kg_2025,0)+' kg':'\u2013')
-    + statBox('Ausgaben 2025', fmtE(a.spend_2025))
-    + '<div class="stat-sect" style="margin-top:12px">Bio vs. Konventionell</div>'
-    + statBox('\u00d8 Konv./kg', a.conv_pp?fmtE(a.conv_pp,3):'\u2013')
-    + statBox('\u00d8 Bio/kg', a.bio_pp?fmtE(a.bio_pp,3):'\u2013')
-    + statBox('100% Konventionell', a.all_conv?fmtE(a.all_conv):'\u2013', a.all_conv!=null)
-    + statBox('100% Bio', a.all_bio?fmtE(a.all_bio):'\u2013', a.all_bio!=null)
-    + (pct!=null ? '<div class="pct-big" style="color:'+pctColor+'">'+(pct>0?'+':'')+pct+'%<div class="pct-lbl">Bio vs. Konv.</div></div>' : '')
-    + '<div class="stat-id">Necta ID: '+(a.necta_id||'\u2013')+'</div>'
+    '<div style="display:flex;flex-wrap:wrap;gap:8px;width:100%">'
+    + '<div style="background:#fff;border:1px solid #dbe4ee;border-radius:7px;padding:8px 12px;min-width:100px;flex:1"><div style="font-size:10px;color:#607080">Jahresmenge</div><div style="font-size:15px;font-weight:700;color:#1F4E79">' + (a.kg_2025!=null?fmt(a.kg_2025,0)+' kg':'\u2013') + '</div></div>'
+    + '<div style="background:#fff;border:1px solid #dbe4ee;border-radius:7px;padding:8px 12px;min-width:100px;flex:1"><div style="font-size:10px;color:#607080">Ausgaben 2025</div><div style="font-size:15px;font-weight:700;color:#1F4E79">' + fmtE(a.spend_2025) + '</div></div>'
+    + '<div style="background:#fff;border:1px solid #dbe4ee;border-radius:7px;padding:8px 12px;min-width:100px;flex:1"><div style="font-size:10px;color:#607080">\u00d8 Konv./kg</div><div style="font-size:15px;font-weight:700;color:#1F4E79">' + (a.conv_pp?fmtE(a.conv_pp,3):'\u2013') + '</div></div>'
+    + '<div style="background:#fff;border:1px solid #dbe4ee;border-radius:7px;padding:8px 12px;min-width:100px;flex:1"><div style="font-size:10px;color:#607080">\u00d8 Bio/kg</div><div style="font-size:15px;font-weight:700;color:#1F4E79">' + (a.bio_pp?fmtE(a.bio_pp,3):'\u2013') + '</div></div>'
+    + '<div style="background:'+(a.all_conv?'#EBF3FB':'#fff')+';border:1px solid '+(a.all_conv?'#2E75B6':'#dbe4ee')+';border-radius:7px;padding:8px 12px;min-width:100px;flex:1"><div style="font-size:10px;color:#607080">100% Konv.</div><div style="font-size:15px;font-weight:700;color:#1F4E79">' + (a.all_conv?fmtE(a.all_conv):'\u2013') + '</div></div>'
+    + '<div style="background:'+(a.all_bio?'#EBF3FB':'#fff')+';border:1px solid '+(a.all_bio?'#2E75B6':'#dbe4ee')+';border-radius:7px;padding:8px 12px;min-width:100px;flex:1"><div style="font-size:10px;color:#607080">100% Bio</div><div style="font-size:15px;font-weight:700;color:#1F4E79">' + (a.all_bio?fmtE(a.all_bio):'\u2013') + '</div></div>'
+    + (pct!=null ? '<div style="background:#fff;border:1px solid #dbe4ee;border-radius:7px;padding:8px 12px;min-width:80px;text-align:center;flex:1"><div style="font-size:10px;color:#607080">Bio vs. Konv.</div><div style="font-size:18px;font-weight:700;color:'+pctColor+'">'+(pct>0?'+':'')+pct+'%</div></div>' : '')
+    + '<div style="font-size:10px;color:#aaa;display:flex;align-items:center;padding:4px 0">Necta ID: '+(a.necta_id||'\u2013')+'</div>'
+    + '</div>'
     + buildPreisSection(a.necta_id);
 
   // Form fields
