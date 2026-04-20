@@ -127,8 +127,9 @@ td.r{text-align:right}td.c{text-align:center}
           <option value="12M">12-Monatsausschreibung (Jahres-WA)</option>
         </select>
       </div>
-      <div class="field"><label>Kategorie / Warengruppe</label>
-        <select id="wa-kategorie" multiple size="4" style="height:80px"></select>
+      <div style="grid-column:1/-1">
+        <div style="font-size:11px;font-weight:700;color:#607080;margin-bottom:8px">Kategorien ausw&auml;hlen (klicken zum De-/Aktivieren)</div>
+        <div id="kat-grid" style="display:flex;gap:8px;flex-wrap:wrap"></div>
       </div>
     </div>
     <h2 style="margin-top:8px">Lieferanten ausw&auml;hlen</h2>
@@ -331,8 +332,17 @@ function populateStep2() {
   var kats = {};
   Object.values(PV).forEach(function(a){ if(a.k) kats[a.k]=1; });
   var katList = Object.keys(kats).sort();
-  var sel = document.getElementById('wa-kategorie');
-  sel.innerHTML = katList.map(function(k){ return '<option value="'+k+'" selected>'+k+'</option>'; }).join('');
+  // Count articles per category
+  var katCounts = {};
+  Object.values(PV).forEach(function(a){ if(a.k) katCounts[a.k]=(katCounts[a.k]||0)+1; });
+  var grid = document.getElementById('kat-grid');
+  grid.innerHTML = katList.map(function(k){
+    return '<div class="sup-card selected" data-kat="'+encodeURIComponent(k)+'" onclick="toggleKat(this)" style="min-width:140px;flex:0">'
+      +'<div class="sup-name">'+k+'</div>'
+      +'<div class="sup-count">'+(katCounts[k]||0)+'</div>'
+      +'<div class="sup-info">Artikel</div>'
+      +'</div>';
+  }).join('');
 
   var grid = document.getElementById('supplier-grid');
   grid.innerHTML = suppliers.map(function(s){
@@ -351,11 +361,23 @@ function toggleSupplier(el) {
   else { selectedSuppliers.add(name); el.classList.add('selected'); }
 }
 
+function toggleKat(el) {
+  el.classList.toggle('selected');
+}
+
+function getSelectedKats() {
+  var selected = [];
+  document.querySelectorAll('#kat-grid .sup-card.selected').forEach(function(el){
+    selected.push(decodeURIComponent(el.getAttribute('data-kat')));
+  });
+  return selected;
+}
+
 // STEP 3
 function prepareArtikel() {
   if (selectedSuppliers.size===0) { alert('Bitte mindestens einen Lieferanten auswählen.'); return; }
 
-  var selKats = Array.from(document.getElementById('wa-kategorie').selectedOptions).map(function(o){ return o.value; });
+  var selKats = getSelectedKats();
   var artFilter = document.getElementById('art-filter').value;
   var mengeRef = document.getElementById('menge-ref').value;
 
