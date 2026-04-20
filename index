@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ABC Kochwerk · Einkauf Tools</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Arial,sans-serif;background:#f0f4f8;color:#1a2332;min-height:100vh}
+.header{background:#1F4E79;color:#fff;padding:28px 32px 24px}
+.header h1{font-size:22px;font-weight:700;margin-bottom:4px}
+.header p{font-size:13px;opacity:.75}
+.container{padding:28px 32px;max-width:1000px;margin:0 auto}
+.section-title{font-size:11px;font-weight:700;color:#607080;text-transform:uppercase;letter-spacing:.8px;margin-bottom:14px}
+.tools{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;margin-bottom:32px}
+.tool-card{background:#fff;border-radius:12px;border:1px solid #dbe4ee;padding:22px 24px;text-decoration:none;color:inherit;display:flex;flex-direction:column;gap:10px;transition:box-shadow .15s,transform .15s;cursor:pointer}
+.tool-card:hover{box-shadow:0 4px 20px rgba(0,0,0,.12);transform:translateY(-2px)}
+.tool-icon{font-size:32px;width:52px;height:52px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.tool-header{display:flex;align-items:center;gap:14px}
+.tool-name{font-size:15px;font-weight:700;color:#1F4E79}
+.tool-desc{font-size:12px;color:#607080;line-height:1.5}
+.tool-tags{display:flex;gap:5px;flex-wrap:wrap}
+.tag{font-size:10px;padding:2px 8px;border-radius:10px;font-weight:600}
+.tag-blue{background:#cce5ff;color:#004085}
+.tag-green{background:#d4edda;color:#155724}
+.tag-purple{background:#e2d9f3;color:#4a0080}
+.tag-orange{background:#fde8d8;color:#804000}
+.tool-card .arrow{font-size:18px;color:#B8CCE4;margin-top:auto;align-self:flex-end;transition:color .15s}
+.tool-card:hover .arrow{color:#1F4E79}
+.divider{height:1px;background:#dbe4ee;margin:8px 0 24px}
+.info-bar{background:#EBF3FB;border-radius:8px;padding:12px 16px;font-size:12px;color:#1F4E79;display:flex;align-items:center;gap:10px}
+.info-bar strong{font-weight:700}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>&#127859; ABC Kochwerk Gruppe · Einkauf</h1>
+  <p>Digitale Tools für Produktvorgaben, Ausschreibungen und Beschaffungsanalysen</p>
+</div>
+
+<div class="container">
+
+  <div class="info-bar">
+    <span style="font-size:18px">&#9432;</span>
+    <span>Alle Tools laufen direkt im Browser &ndash; keine Installation nötig. Änderungen in den <strong>Produktvorgaben</strong> werden in Echtzeit für alle Kollegen gespeichert.</span>
+  </div>
+
+  <div style="margin-top:24px"></div>
+  <div class="section-title">Haupttools</div>
+  <div class="tools">
+
+    <a class="tool-card" href="./produktvorgaben/index.html">
+      <div class="tool-header">
+        <div class="tool-icon" style="background:#EBF3FB">&#128203;</div>
+        <div class="tool-name">Produktvorgaben</div>
+      </div>
+      <div class="tool-desc">Zentrale Verwaltung aller Artikelvorgaben: Status, Bio-Pflicht, Vegan, Glutenfrei, Festvergabe, Gebindegröße und mehr. Mit Bestelldaten 2025 und Ausschreibungspreisen angereichert.</div>
+      <div class="tool-tags">
+        <span class="tag tag-blue">Supabase Live-Sync</span>
+        <span class="tag tag-green">1.380 Artikel</span>
+        <span class="tag tag-purple">Kollaborativ</span>
+      </div>
+      <div class="arrow">&#8594;</div>
+    </a>
+
+    <a class="tool-card" href="./Ausschreibungs_Generator.html">
+      <div class="tool-header">
+        <div class="tool-icon" style="background:#f0fff4">&#128196;</div>
+        <div class="tool-name">Ausschreibungs-Generator</div>
+      </div>
+      <div class="tool-desc">WaWi-Export hochladen, Lieferanten & Kategorien auswählen und automatisch Ausschreibungsformulare im bekannten Format generieren – mit Produktvorgaben vorausgefüllt.</div>
+      <div class="tool-tags">
+        <span class="tag tag-green">Excel-Export</span>
+        <span class="tag tag-orange">Pro Lieferant</span>
+        <span class="tag tag-blue">Vorgaben-Abgleich</span>
+      </div>
+      <div class="arrow">&#8594;</div>
+    </a>
+
+  </div>
+
+  <div class="divider"></div>
+  <div class="section-title">In Entwicklung</div>
+  <div class="tools">
+
+    <div class="tool-card" style="opacity:.6;cursor:default">
+      <div class="tool-header">
+        <div class="tool-icon" style="background:#f9f9f9">&#128202;</div>
+        <div class="tool-name">Ausschreibungs-Auswertung</div>
+      </div>
+      <div class="tool-desc">Lieferanten-Rückläufe importieren, Vorgaben prüfen, Preisranking mit Zahlungs- und Lieferbedingungen. Ergebnisbrief pro Lieferant.</div>
+      <div class="tool-tags">
+        <span class="tag tag-blue">Demnächst</span>
+      </div>
+    </div>
+
+    <div class="tool-card" style="opacity:.6;cursor:default">
+      <div class="tool-header">
+        <div class="tool-icon" style="background:#f9f9f9">&#128260;</div>
+        <div class="tool-name">WaWi-Import Generator</div>
+      </div>
+      <div class="tool-desc">Aus dem Ausschreibungsranking direkt eine WaWi-Import-Datei im Bartsch-Format generieren – ein Klick vom Ranking zur Preispflege.</div>
+      <div class="tool-tags">
+        <span class="tag tag-blue">Demnächst</span>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+</body>
+</html>
