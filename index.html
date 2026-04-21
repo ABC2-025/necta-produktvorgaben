@@ -33,37 +33,39 @@ body{font-family:Arial,sans-serif;background:#f0f4f8;color:#1a2332;min-height:10
 .tag-green{background:#d4edda;color:#155724}
 .tag-purple{background:#e2d9f3;color:#4a0080}
 .tag-orange{background:#fde8d8;color:#804000}
+.tag-red{background:#f8d7da;color:#721c24}
 .tool-card .arrow{font-size:18px;color:#B8CCE4;margin-top:auto;align-self:flex-end;transition:color .15s}
 .tool-card:hover .arrow{color:#1F4E79}
 .divider{height:1px;background:#dbe4ee;margin:8px 0 24px}
 .info-bar{background:#EBF3FB;border-radius:8px;padding:12px 16px;font-size:12px;color:#1F4E79;display:flex;align-items:center;gap:10px}
+.warn-bar{background:#fff3e0;border-radius:8px;padding:10px 14px;font-size:12px;color:#804000;display:flex;align-items:center;gap:8px;margin-bottom:12px}
 
 /* ─── DASHBOARD TAB ─── */
 .dash{padding:24px 32px;max-width:1200px;margin:0 auto;display:none}
 .dash.visible{display:block}
 
-/* KPI Cards */
 .kpi-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;margin-bottom:24px}
 .kpi{background:#fff;border-radius:10px;border:1px solid #dbe4ee;padding:14px 16px}
 .kpi-label{font-size:10px;font-weight:700;color:#607080;text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px}
 .kpi-val{font-size:22px;font-weight:700;color:#1F4E79}
 .kpi-sub{font-size:10px;color:#90a0b0;margin-top:3px}
 
-/* Dash sections */
+.dash-section-title{font-size:11px;font-weight:700;color:#607080;text-transform:uppercase;letter-spacing:.8px;margin:20px 0 12px;display:flex;align-items:center;gap:8px}
+.dash-section-title::after{content:'';flex:1;height:1px;background:#dbe4ee}
+
 .dash-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px}
 .dash-row.single{grid-template-columns:1fr}
+.dash-row.three{grid-template-columns:1fr 1fr 1fr}
 .dash-card{background:#fff;border-radius:10px;border:1px solid #dbe4ee;padding:18px 20px}
 .dash-card-title{font-size:12px;font-weight:700;color:#1F4E79;margin-bottom:14px;display:flex;align-items:center;gap:8px}
 .dash-card-title span{font-size:16px}
 
-/* Periode selector */
 .periode-bar{display:flex;align-items:center;gap:10px;margin-bottom:20px;flex-wrap:wrap}
 .periode-bar label{font-size:12px;font-weight:700;color:#607080}
-.periode-sel{padding:5px 12px;border:1px solid #dbe4ee;border-radius:6px;font-size:12px;background:#fff;cursor:pointer}
 .periode-badge{padding:3px 10px;border-radius:12px;font-size:11px;font-weight:700;background:#EBF3FB;color:#1F4E79;cursor:pointer;border:2px solid transparent;transition:all .15s}
 .periode-badge.active{background:#1F4E79;color:#fff;border-color:#1F4E79}
+.periode-badge.disabled{background:#f0f4f8;color:#b0bec5;cursor:default;text-decoration:line-through;border-color:transparent}
 
-/* Preishistorie table */
 .ph-search{width:100%;padding:7px 12px;border:1px solid #dbe4ee;border-radius:6px;font-size:12px;margin-bottom:10px}
 .tbl{width:100%;border-collapse:collapse;font-size:12px}
 .tbl th{background:#f5f8fc;color:#607080;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;padding:7px 10px;text-align:left;border-bottom:2px solid #dbe4ee;white-space:nowrap}
@@ -72,14 +74,11 @@ body{font-family:Arial,sans-serif;background:#f0f4f8;color:#1a2332;min-height:10
 .tbl .r{text-align:right}
 .tbl .num{font-variant-numeric:tabular-nums;font-family:monospace;font-size:11px}
 
-/* Trend badge */
 .trend-up{color:#d32f2f;font-weight:700}
 .trend-dn{color:#2e7d32;font-weight:700}
 .trend-eq{color:#607080}
 .rank-1{background:#fff8e1;color:#f57f17;font-weight:700;padding:1px 6px;border-radius:8px;font-size:10px}
-.rank-2{background:#f3f3f3;color:#607080;padding:1px 6px;border-radius:8px;font-size:10px}
 
-/* Lieferant scorecard */
 .sup-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px}
 .sup-card{border:1px solid #dbe4ee;border-radius:8px;padding:13px 15px}
 .sup-name{font-size:13px;font-weight:700;color:#1F4E79;margin-bottom:8px}
@@ -88,14 +87,10 @@ body{font-family:Arial,sans-serif;background:#f0f4f8;color:#1a2332;min-height:10
 .sup-bar-wrap{height:6px;background:#f0f4f8;border-radius:3px;margin-top:8px;overflow:hidden}
 .sup-bar-fill{height:100%;background:#1F4E79;border-radius:3px;transition:width .4s}
 
-/* Comparison table */
-.cmp-row-up td.cmp-preis{color:#d32f2f;font-weight:700}
-.cmp-row-dn td.cmp-preis{color:#2e7d32;font-weight:700}
 .delta-badge{padding:1px 6px;border-radius:8px;font-size:10px;font-weight:700}
 .delta-pos{background:#d4edda;color:#155724}
 .delta-neg{background:#f8d7da;color:#721c24}
 
-/* Loading / empty state */
 .dash-empty{text-align:center;padding:48px 24px;color:#90a0b0}
 .dash-empty .big-icon{font-size:48px;margin-bottom:12px}
 .dash-empty p{font-size:13px;line-height:1.6}
@@ -104,9 +99,66 @@ body{font-family:Arial,sans-serif;background:#f0f4f8;color:#1a2332;min-height:10
 .spinner{width:16px;height:16px;border:2px solid #dbe4ee;border-top-color:#1F4E79;border-radius:50%;animation:spin .8s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 
+/* Produktkatalog-Dashboard Elemente */
+.pk-chart-wrap{position:relative;width:100%;height:220px}
+.pk-bar-row{display:flex;align-items:center;gap:8px;margin-bottom:6px;font-size:12px}
+.pk-bar-label{width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#607080;flex-shrink:0}
+.pk-bar-track{flex:1;height:14px;background:#f0f4f8;border-radius:3px;overflow:hidden}
+.pk-bar-fill{height:100%;border-radius:3px;transition:width .5s}
+.pk-bar-val{width:70px;text-align:right;font-variant-numeric:tabular-nums;font-size:11px;color:#1a2332;font-weight:600;flex-shrink:0}
+
+/* ─── EINSTELLUNGEN TAB ─── */
+.settings-view{padding:24px 32px;max-width:900px;margin:0 auto;display:none}
+.settings-section{background:#fff;border-radius:12px;border:1px solid #dbe4ee;margin-bottom:20px;overflow:hidden}
+.settings-section-head{padding:16px 20px;border-bottom:1px solid #f0f4f8;display:flex;align-items:center;justify-content:space-between}
+.settings-section-head h3{font-size:14px;font-weight:700;color:#1F4E79}
+.settings-section-head p{font-size:11px;color:#90a0b0;margin-top:2px}
+.settings-table{width:100%;border-collapse:collapse}
+.settings-table th{background:#f5f8fc;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#607080;padding:8px 16px;text-align:left}
+.settings-table td{padding:10px 16px;border-bottom:1px solid #f0f4f8;font-size:13px;vertical-align:middle}
+.settings-table tr:last-child td{border-bottom:none}
+.settings-table tr:hover td{background:#fafcff}
+
+/* Toggle */
+.toggle-wrap{display:flex;align-items:center;gap:10px}
+.toggle{position:relative;width:38px;height:22px;flex-shrink:0}
+.toggle input{opacity:0;width:0;height:0;position:absolute}
+.toggle-slider{position:absolute;inset:0;background:#ccd;border-radius:11px;cursor:pointer;transition:background .2s}
+.toggle input:checked + .toggle-slider{background:#1F4E79}
+.toggle-slider::before{content:'';position:absolute;width:16px;height:16px;left:3px;top:3px;background:#fff;border-radius:50%;transition:transform .2s}
+.toggle input:checked + .toggle-slider::before{transform:translateX(16px)}
+.toggle-label{font-size:12px;font-weight:600}
+.toggle-label.on{color:#1F4E79}
+.toggle-label.off{color:#b0bec5}
+
+/* Modal */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.35);display:flex;align-items:center;justify-content:center;z-index:100}
+.modal{background:#fff;border-radius:14px;padding:26px;min-width:380px;max-width:480px;width:92vw;box-shadow:0 8px 40px rgba(0,0,0,.18)}
+.modal h2{font-size:16px;font-weight:700;color:#1F4E79;margin-bottom:18px}
+.field{margin-bottom:14px}
+.field label{display:block;font-size:11px;font-weight:700;color:#607080;text-transform:uppercase;letter-spacing:.3px;margin-bottom:5px}
+.field input,.field select{width:100%;padding:8px 10px;border:1px solid #dbe4ee;border-radius:6px;font-size:13px;outline:none;color:#1a2332}
+.field input:focus,.field select:focus{border-color:#1F4E79}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.modal-footer{display:flex;justify-content:flex-end;gap:8px;margin-top:20px;padding-top:16px;border-top:1px solid #f0f4f8}
+.btn{padding:7px 16px;border-radius:7px;border:1px solid #dbe4ee;background:#fff;color:#1a2332;font-size:13px;font-weight:600;cursor:pointer}
+.btn:hover{background:#f0f4f8}
+.btn-primary{background:#1F4E79;color:#fff;border-color:#1F4E79}
+.btn-primary:hover{background:#164069}
+.btn-danger{background:#fff;color:#d32f2f;border-color:#f8d7da}
+.btn-danger:hover{background:#f8d7da}
+.btn-sm{padding:4px 10px;font-size:11px}
+.badge-inaktiv{background:#f0f4f8;color:#90a0b0;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600}
+.badge-aktiv{background:#d4edda;color:#155724;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600}
+.badge-disabled{background:#f8d7da;color:#721c24;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600}
+
+/* Inaktiv-Overlay auf Tool-Karten */
+.tool-card.lief-inaktiv{opacity:.45;pointer-events:none}
+.tool-card.lief-inaktiv::after{content:'Lieferant inaktiv';font-size:10px;font-weight:700;color:#d32f2f;background:#f8d7da;padding:2px 8px;border-radius:8px;align-self:flex-start}
+
 @media(max-width:700px){
-  .dash-row{grid-template-columns:1fr}
-  .container,.dash{padding:16px}
+  .dash-row,.dash-row.three{grid-template-columns:1fr}
+  .container,.dash,.settings-view{padding:16px}
   .kpi-row{grid-template-columns:1fr 1fr}
 }
 </style>
@@ -122,20 +174,25 @@ body{font-family:Arial,sans-serif;background:#f0f4f8;color:#1a2332;min-height:10
   </div>
   <div class="tab-bar">
     <button class="tab active" id="tab-tools" onclick="switchTab('tools')">&#128736; Tools</button>
-    <button class="tab" id="tab-dash" onclick="switchTab('dash')">&#128202; Ausschreibungs-Dashboard</button>
+    <button class="tab" id="tab-dash" onclick="switchTab('dash')">&#128202; Dashboard</button>
+    <button class="tab" id="tab-settings" onclick="switchTab('settings')">&#9881; Einstellungen</button>
   </div>
 </div>
 
 <!-- ═══ TOOLS TAB ═══ -->
 <div id="view-tools" class="container">
+  <div id="inaktiv-warn" class="warn-bar" style="display:none;margin-top:0;margin-bottom:16px">
+    &#9888; <span id="inaktiv-warn-text"></span>
+    <span style="margin-left:auto;cursor:pointer;text-decoration:underline" onclick="switchTab('settings')">Einstellungen öffnen →</span>
+  </div>
   <div class="info-bar" style="margin-top:0;margin-bottom:20px">
     <span style="font-size:18px">&#9432;</span>
-    <span>Alle Tools laufen direkt im Browser &ndash; keine Installation nötig. Änderungen in den <strong>Produktvorgaben</strong> werden in Echtzeit für alle Kollegen gespeichert.</span>
+    <span>Alle Tools laufen direkt im Browser – keine Installation nötig. Änderungen in den <strong>Produktvorgaben</strong> werden in Echtzeit für alle Kollegen gespeichert.</span>
   </div>
 
   <div class="section-title">Haupttools</div>
-  <div class="tools">
-    <a class="tool-card" href="./produktvorgaben/index.html">
+  <div class="tools" id="tools-grid">
+    <a class="tool-card" id="card-produktvorgaben" href="./produktvorgaben/index.html">
       <div class="tool-header">
         <div class="tool-icon" style="background:#EBF3FB">&#128203;</div>
         <div class="tool-name">Produktvorgaben</div>
@@ -148,16 +205,16 @@ body{font-family:Arial,sans-serif;background:#f0f4f8;color:#1a2332;min-height:10
       </div>
       <div class="arrow">&#8594;</div>
     </a>
-    <a class="tool-card" href="./Ausschreibungs_Generator.html">
+    <a class="tool-card" id="card-generator" href="./Ausschreibungs_Auswertung.html">
       <div class="tool-header">
         <div class="tool-icon" style="background:#f0fff4">&#128196;</div>
         <div class="tool-name">Ausschreibungs-Generator</div>
       </div>
-      <div class="tool-desc">WaWi-Export hochladen, Lieferanten & Kategorien auswählen und Ausschreibungsformulare automatisch generieren – mit Produktvorgaben vorausgefüllt.</div>
+      <div class="tool-desc">WaWi-Export hochladen, Lieferanten &amp; Kategorien auswählen und Ausschreibungsformulare automatisch generieren – mit Produktvorgaben vorausgefüllt.</div>
       <div class="tool-tags">
         <span class="tag tag-green">Excel-Export</span>
         <span class="tag tag-orange">Pro Lieferant</span>
-        <span class="tag tag-blue">Vorgaben-Abgleich</span>
+        <span class="tag tag-blue">→ Auswertung</span>
       </div>
       <div class="arrow">&#8594;</div>
     </a>
@@ -166,7 +223,7 @@ body{font-family:Arial,sans-serif;background:#f0f4f8;color:#1a2332;min-height:10
   <div class="divider"></div>
   <div class="section-title">Auswertung &amp; Analyse</div>
   <div class="tools">
-    <a class="tool-card" href="./Ausschreibungs_Auswertung.html">
+    <a class="tool-card" id="card-auswertung" href="./Ausschreibungs_Auswertung.html">
       <div class="tool-header">
         <div class="tool-icon" style="background:#fff3e0">&#128202;</div>
         <div class="tool-name">Ausschreibungs-Auswertung</div>
@@ -201,17 +258,16 @@ body{font-family:Arial,sans-serif;background:#f0f4f8;color:#1a2332;min-height:10
   </div>
   <div id="dash-content" style="display:none">
 
-    <!-- Periode-Auswahl -->
+    <div class="dash-section-title">&#128202; Ausschreibungs-Auswertung</div>
+
     <div class="periode-bar">
       <label>Periode:</label>
       <div id="periode-btns" style="display:flex;gap:6px;flex-wrap:wrap"></div>
       <span id="dash-refresh-btn" onclick="loadDashboard()" style="margin-left:auto;cursor:pointer;color:#607080;font-size:11px;text-decoration:underline">&#8635; Aktualisieren</span>
     </div>
 
-    <!-- KPI Row -->
     <div class="kpi-row" id="kpi-row"></div>
 
-    <!-- Row 1: Lieferanten-Übersicht + Vergleich letzte/aktuelle WA -->
     <div class="dash-row">
       <div class="dash-card">
         <div class="dash-card-title"><span>&#127942;</span> Lieferanten-Übersicht</div>
@@ -223,16 +279,14 @@ body{font-family:Arial,sans-serif;background:#f0f4f8;color:#1a2332;min-height:10
       </div>
     </div>
 
-    <!-- Row 2: Preishistorie Suche -->
     <div class="dash-row single">
       <div class="dash-card">
-        <div class="dash-card-title"><span>&#128200;</span> Preishistorie pro Artikel & Lieferant</div>
+        <div class="dash-card-title"><span>&#128200;</span> Preishistorie pro Artikel &amp; Lieferant</div>
         <input class="ph-search" id="ph-search" placeholder="Artikel suchen..." oninput="renderHistory()">
         <div id="ph-table-wrap" style="overflow-x:auto;max-height:420px;overflow-y:auto"></div>
       </div>
     </div>
 
-    <!-- Row 3: Preistendenz (top Veränderungen) -->
     <div class="dash-row">
       <div class="dash-card">
         <div class="dash-card-title"><span>&#128200;</span> Größte Preissteigerungen</div>
@@ -245,99 +299,617 @@ body{font-family:Arial,sans-serif;background:#f0f4f8;color:#1a2332;min-height:10
     </div>
 
   </div>
+
+  <!-- Produktkatalog-Abschnitt (immer sichtbar wenn Daten vorhanden) -->
+  <div id="pk-dash-section" style="display:none">
+    <div class="dash-section-title">&#128230; Produktkatalog 2025 – Einkaufspreise &amp; Mengen</div>
+
+    <div class="kpi-row" id="pk-kpi-row"></div>
+
+    <div class="dash-row">
+      <div class="dash-card">
+        <div class="dash-card-title"><span>&#128178;</span> Monatliches Einkaufsvolumen (€)</div>
+        <div id="pk-monthly-chart"></div>
+      </div>
+      <div class="dash-card">
+        <div class="dash-card-title"><span>&#127937;</span> Volumen nach Kategorie (Top 8)</div>
+        <div id="pk-cat-chart"></div>
+      </div>
+    </div>
+
+    <div class="dash-row">
+      <div class="dash-card">
+        <div class="dash-card-title"><span>&#128230;</span> Artikel nach Lieferant</div>
+        <div id="pk-lief-chart"></div>
+      </div>
+      <div class="dash-card">
+        <div class="dash-card-title"><span>&#128260;</span> EP Konv. vs. Bio – Top 15 (€/Einheit)</div>
+        <div id="pk-preis-chart"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="pk-dash-empty" style="display:none;margin-top:24px" class="dash-empty">
+    <div class="big-icon">&#128230;</div>
+    <p>Keine Produktkatalog-Daten gefunden.<br>
+    Öffne den <strong><a href="./produktkatalog.html">Produktkatalog</a></strong> und lege Artikel mit Einkaufspreisen und Monatsmengen an.</p>
+  </div>
+</div>
+
+<!-- ═══ EINSTELLUNGEN TAB ═══ -->
+<div id="view-settings" class="settings-view">
+
+  <!-- Lieferanten -->
+  <div class="settings-section">
+    <div class="settings-section-head">
+      <div>
+        <h3>&#127968; Lieferanten</h3>
+        <p>Inaktive Lieferanten werden im Dashboard, in Filtern und in der Auswertung ausgeblendet.</p>
+      </div>
+      <button class="btn btn-primary" onclick="openLiefModal(null)">+ Lieferant</button>
+    </div>
+    <table class="settings-table">
+      <thead><tr><th>Name</th><th>Quelle</th><th>Perioden mit Daten</th><th>Status</th><th></th></tr></thead>
+      <tbody id="lief-settings-tbody"></tbody>
+    </table>
+  </div>
+
+  <!-- WA-Perioden -->
+  <div class="settings-section">
+    <div class="settings-section-head">
+      <div>
+        <h3>&#128197; Ausschreibungs-Perioden (WA)</h3>
+        <p>Ausgeblendete Perioden erscheinen nicht im Dashboard und in der Auswertung – Daten bleiben erhalten.</p>
+      </div>
+      <button class="btn btn-primary" onclick="openWAModal(null)">+ Periode</button>
+    </div>
+    <table class="settings-table">
+      <thead><tr><th>Bezeichnung</th><th>Zeitraum</th><th>Sichtbar im Dashboard</th><th>Notiz</th><th></th></tr></thead>
+      <tbody id="wa-settings-tbody"></tbody>
+    </table>
+  </div>
+
+  <!-- Produktkatalog-Verbindung -->
+  <div class="settings-section">
+    <div class="settings-section-head">
+      <div>
+        <h3>&#128203; Produktkatalog</h3>
+        <p>Zeigt den Verbindungsstatus zum Produktkatalog-Tool (localStorage).</p>
+      </div>
+      <a class="btn" href="./produktkatalog.html">Produktkatalog öffnen →</a>
+    </div>
+    <div id="pk-status" style="padding:16px 20px;font-size:13px;color:#607080"></div>
+  </div>
+
+</div>
+
+<!-- MODAL: Lieferant -->
+<div class="modal-overlay" id="modal-lief" style="display:none" onclick="if(event.target===this)closeModal('modal-lief')">
+  <div class="modal">
+    <h2 id="modal-lief-title">Lieferant anlegen</h2>
+    <input type="hidden" id="lief-edit-id">
+    <div class="field">
+      <label>Name *</label>
+      <input type="text" id="f-lief-name" placeholder="Lieferantenname">
+    </div>
+    <div class="field-row">
+      <div class="field">
+        <label>Quelle</label>
+        <select id="f-lief-quelle">
+          <option value="WaWi">WaWi</option>
+          <option value="Manuell">Manuell</option>
+          <option value="WaWi+Manuell">WaWi + Manuell</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Status</label>
+        <select id="f-lief-status">
+          <option value="aktiv">Aktiv</option>
+          <option value="inaktiv">Inaktiv</option>
+        </select>
+      </div>
+    </div>
+    <div class="field">
+      <label>Notiz</label>
+      <input type="text" id="f-lief-notiz" placeholder="Optional">
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('modal-lief')">Abbrechen</button>
+      <button class="btn btn-primary" onclick="saveLieferant()">Speichern</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: WA-Periode -->
+<div class="modal-overlay" id="modal-wa" style="display:none" onclick="if(event.target===this)closeModal('modal-wa')">
+  <div class="modal">
+    <h2 id="modal-wa-title">WA-Periode anlegen</h2>
+    <input type="hidden" id="wa-edit-id">
+    <div class="field">
+      <label>Bezeichnung *</label>
+      <input type="text" id="f-wa-name" placeholder="z.B. WA 2025, WA Test Q1">
+    </div>
+    <div class="field-row">
+      <div class="field">
+        <label>Von</label>
+        <input type="date" id="f-wa-von">
+      </div>
+      <div class="field">
+        <label>Bis</label>
+        <input type="date" id="f-wa-bis">
+      </div>
+    </div>
+    <div class="field">
+      <label>Im Dashboard anzeigen</label>
+      <select id="f-wa-sichtbar">
+        <option value="ja">Ja – sichtbar</option>
+        <option value="nein">Nein – ausgeblendet (Testlauf)</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>Notiz</label>
+      <input type="text" id="f-wa-notiz" placeholder="Optional">
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('modal-wa')">Abbrechen</button>
+      <button class="btn btn-primary" onclick="saveWA()">Speichern</button>
+    </div>
+  </div>
 </div>
 
 <script>
 const SUPA_URL = 'https://ywmimuctohdmxkmexops.supabase.co';
 const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl3bWltdWN0b2hkbXhrbWV4b3BzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYzNzY5MjUsImV4cCI6MjA5MTk1MjkyNX0.eqyCjArkAla2oCxbTUMCAvYzlsJJY6AdI-QXnyKcpy0';
 
-// ─── Tab switching ───
-function switchTab(tab) {
-  document.getElementById('view-tools').style.display = tab === 'tools' ? '' : 'none';
-  document.getElementById('view-dash').style.display = tab === 'dash' ? 'block' : 'none';
-  document.getElementById('tab-tools').classList.toggle('active', tab === 'tools');
-  document.getElementById('tab-dash').classList.toggle('active', tab === 'dash');
-  if (tab === 'dash' && !dashLoaded) loadDashboard();
+const MONTHS = ['Jan','Feb','Mär','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Dez'];
+const MONTH_KEYS = ['jan','feb','mar','apr','mai','jun','jul','aug','sep','okt','nov','dez'];
+
+// ─── Settings State ──────────────────────────────────────────────────────────
+let settings = { lieferanten: [], waperioden: [] };
+
+function loadSettings() {
+  try { settings = JSON.parse(localStorage.getItem('einkauf_settings_v1') || '{"lieferanten":[],"waperioden":[]}'); } catch(e){}
+  if (!settings.lieferanten) settings.lieferanten = [];
+  if (!settings.waperioden) settings.waperioden = [];
+}
+function saveSettings() { localStorage.setItem('einkauf_settings_v1', JSON.stringify(settings)); }
+function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
+
+function isLieferantAktiv(name) {
+  const l = settings.lieferanten.find(x => x.name === name);
+  return !l || l.status !== 'inaktiv';
+}
+function isWAsichtbar(name) {
+  const w = settings.waperioden.find(x => x.name === name);
+  return !w || w.sichtbar !== 'nein';
 }
 
-// ─── Dashboard state ───
-let allData = [];       // all rows from supabase
-let periodes = [];      // sorted unique periods
-let activePeriode = ''; // currently selected
+// ─── Tab switching ────────────────────────────────────────────────────────────
+function switchTab(tab) {
+  ['tools','dash','settings'].forEach(t => {
+    document.getElementById('view-' + t).style.display = 'none';
+    document.getElementById('tab-' + t).classList.remove('active');
+  });
+  document.getElementById('view-' + tab).style.display = tab === 'dash' ? 'block' : (tab === 'settings' ? 'block' : '');
+  document.getElementById('tab-' + tab).classList.add('active');
+  if (tab === 'dash' && !dashLoaded) loadDashboard();
+  if (tab === 'dash') renderPKDashboard();
+  if (tab === 'settings') renderSettings();
+  if (tab === 'tools') renderToolsWarning();
+}
+
+// ─── Tools Warning (inaktive Lieferanten) ─────────────────────────────────────
+function renderToolsWarning() {
+  const inaktiv = settings.lieferanten.filter(l => l.status === 'inaktiv');
+  const warn = document.getElementById('inaktiv-warn');
+  if (inaktiv.length > 0) {
+    warn.style.display = 'flex';
+    document.getElementById('inaktiv-warn-text').textContent =
+      inaktiv.length + ' Lieferant' + (inaktiv.length > 1 ? 'en' : '') + ' inaktiv: ' + inaktiv.map(l=>l.name).join(', ') + ' – werden im Dashboard ausgeblendet.';
+  } else {
+    warn.style.display = 'none';
+  }
+}
+
+// ─── EINSTELLUNGEN RENDER ─────────────────────────────────────────────────────
+function renderSettings() {
+  // Lieferanten aus Supabase-Daten + manuell
+  const knownFromSupa = [...new Set(allData.map(r => r.lieferant))].sort();
+  // Merge: known + manually added
+  knownFromSupa.forEach(name => {
+    if (!settings.lieferanten.find(l => l.name === name)) {
+      settings.lieferanten.push({ id: uid(), name, quelle: 'WaWi', status: 'aktiv', notiz: '' });
+    }
+  });
+  // Also add lieferanten from Produktkatalog
+  const pkData = getPKData();
+  const pkLiefs = [...new Set(pkData.artikel.map(a => a.lieferant).filter(Boolean))];
+  pkLiefs.forEach(name => {
+    if (!settings.lieferanten.find(l => l.name === name)) {
+      settings.lieferanten.push({ id: uid(), name, quelle: 'Produktkatalog', status: 'aktiv', notiz: '' });
+    }
+  });
+  saveSettings();
+
+  // Perioden aus Supabase-Daten
+  const knownPerioden = [...new Set(allData.map(r => r.periode))].sort();
+  knownPerioden.forEach(name => {
+    if (!settings.waperioden.find(w => w.name === name)) {
+      settings.waperioden.push({ id: uid(), name, von: '', bis: '', sichtbar: 'ja', notiz: '' });
+    }
+  });
+  saveSettings();
+
+  // Render Lieferanten-Tabelle
+  const ltbody = document.getElementById('lief-settings-tbody');
+  ltbody.innerHTML = settings.lieferanten.length === 0
+    ? '<tr><td colspan="5" style="text-align:center;color:#90a0b0;padding:20px">Noch keine Lieferanten. Öffne das Dashboard oder lege manuell an.</td></tr>'
+    : settings.lieferanten.sort((a,b)=>a.name.localeCompare(b.name,'de')).map(l => {
+        const perioden = [...new Set(allData.filter(r=>r.lieferant===l.name).map(r=>r.periode))];
+        return `<tr>
+          <td><strong>${l.name}</strong>${l.notiz ? '<br><span style="font-size:11px;color:#90a0b0">'+l.notiz+'</span>' : ''}</td>
+          <td style="font-size:12px;color:#607080">${l.quelle||'–'}</td>
+          <td style="font-size:11px;color:#607080">${perioden.length > 0 ? perioden.join(', ') : '–'}</td>
+          <td>
+            <label class="toggle">
+              <input type="checkbox" ${l.status==='aktiv'?'checked':''} onchange="toggleLieferant('${l.id}',this.checked)">
+              <span class="toggle-slider"></span>
+            </label>
+            <span class="toggle-label ${l.status==='aktiv'?'on':'off'}" id="lief-label-${l.id}">${l.status==='aktiv'?'Aktiv':'Inaktiv'}</span>
+          </td>
+          <td>
+            <button class="btn btn-sm" onclick="openLiefModal('${l.id}')">✏</button>
+            <button class="btn btn-sm btn-danger" onclick="deleteLieferant('${l.id}')">🗑</button>
+          </td>
+        </tr>`;
+      }).join('');
+
+  // Render WA-Tabelle
+  const wtbody = document.getElementById('wa-settings-tbody');
+  wtbody.innerHTML = settings.waperioden.length === 0
+    ? '<tr><td colspan="5" style="text-align:center;color:#90a0b0;padding:20px">Noch keine Perioden. Lade Dashboard-Daten oder lege manuell an.</td></tr>'
+    : settings.waperioden.sort((a,b)=>a.name.localeCompare(b.name,'de')).map(w => {
+        const zeitraum = w.von && w.bis ? w.von + ' – ' + w.bis : w.von || w.bis || '–';
+        return `<tr>
+          <td><strong>${w.name}</strong></td>
+          <td style="font-size:12px;color:#607080">${zeitraum}</td>
+          <td>
+            <label class="toggle">
+              <input type="checkbox" ${w.sichtbar==='ja'?'checked':''} onchange="toggleWA('${w.id}',this.checked)">
+              <span class="toggle-slider"></span>
+            </label>
+            <span class="toggle-label ${w.sichtbar==='ja'?'on':'off'}" id="wa-label-${w.id}">${w.sichtbar==='ja'?'Sichtbar':'Ausgeblendet'}</span>
+          </td>
+          <td style="font-size:12px;color:#607080">${w.notiz||'–'}</td>
+          <td>
+            <button class="btn btn-sm" onclick="openWAModal('${w.id}')">✏</button>
+            <button class="btn btn-sm btn-danger" onclick="deleteWA('${w.id}')">🗑</button>
+          </td>
+        </tr>`;
+      }).join('');
+
+  // PK Status
+  const pkData2 = getPKData();
+  const pkStatusEl = document.getElementById('pk-status');
+  if (pkData2.artikel.length > 0) {
+    const mitPreis = pkData2.artikel.filter(a => a.preisKonv > 0 || a.preisBio > 0).length;
+    const mitMengen = pkData2.mengen.filter(m => MONTH_KEYS.some(k => m[k] > 0)).length;
+    pkStatusEl.innerHTML = `<span style="color:#155724;font-weight:700">&#9989; Verbunden</span> &nbsp;·&nbsp; ${pkData2.artikel.length} Artikel &nbsp;·&nbsp; ${mitPreis} mit Preisen &nbsp;·&nbsp; ${mitMengen} mit Monatsmengen`;
+  } else {
+    pkStatusEl.innerHTML = '<span style="color:#d32f2f;font-weight:700">&#9888; Keine Daten</span> – Produktkatalog noch nicht befüllt.';
+  }
+}
+
+function toggleLieferant(id, checked) {
+  const l = settings.lieferanten.find(x => x.id === id);
+  if (l) {
+    l.status = checked ? 'aktiv' : 'inaktiv';
+    document.getElementById('lief-label-' + id).textContent = checked ? 'Aktiv' : 'Inaktiv';
+    document.getElementById('lief-label-' + id).className = 'toggle-label ' + (checked ? 'on' : 'off');
+    saveSettings();
+    renderToolsWarning();
+  }
+}
+function toggleWA(id, checked) {
+  const w = settings.waperioden.find(x => x.id === id);
+  if (w) {
+    w.sichtbar = checked ? 'ja' : 'nein';
+    document.getElementById('wa-label-' + id).textContent = checked ? 'Sichtbar' : 'Ausgeblendet';
+    document.getElementById('wa-label-' + id).className = 'toggle-label ' + (checked ? 'on' : 'off');
+    saveSettings();
+  }
+}
+
+function openLiefModal(id) {
+  const l = id ? settings.lieferanten.find(x=>x.id===id) : null;
+  document.getElementById('modal-lief-title').textContent = l ? 'Lieferant bearbeiten' : 'Lieferant anlegen';
+  document.getElementById('lief-edit-id').value = id || '';
+  document.getElementById('f-lief-name').value = l?.name || '';
+  document.getElementById('f-lief-quelle').value = l?.quelle || 'WaWi';
+  document.getElementById('f-lief-status').value = l?.status || 'aktiv';
+  document.getElementById('f-lief-notiz').value = l?.notiz || '';
+  document.getElementById('modal-lief').style.display = 'flex';
+}
+function saveLieferant() {
+  const id = document.getElementById('lief-edit-id').value;
+  const name = document.getElementById('f-lief-name').value.trim();
+  if (!name) { alert('Name ist Pflichtfeld.'); return; }
+  const obj = { id: id||uid(), name, quelle: document.getElementById('f-lief-quelle').value, status: document.getElementById('f-lief-status').value, notiz: document.getElementById('f-lief-notiz').value.trim() };
+  if (id) { const i=settings.lieferanten.findIndex(x=>x.id===id); if(i>=0) settings.lieferanten[i]=obj; }
+  else settings.lieferanten.push(obj);
+  saveSettings(); closeModal('modal-lief'); renderSettings(); renderToolsWarning();
+}
+function deleteLieferant(id) {
+  if (!confirm('Lieferant entfernen?')) return;
+  settings.lieferanten = settings.lieferanten.filter(x=>x.id!==id);
+  saveSettings(); renderSettings();
+}
+
+function openWAModal(id) {
+  const w = id ? settings.waperioden.find(x=>x.id===id) : null;
+  document.getElementById('modal-wa-title').textContent = w ? 'WA-Periode bearbeiten' : 'WA-Periode anlegen';
+  document.getElementById('wa-edit-id').value = id || '';
+  document.getElementById('f-wa-name').value = w?.name || '';
+  document.getElementById('f-wa-von').value = w?.von || '';
+  document.getElementById('f-wa-bis').value = w?.bis || '';
+  document.getElementById('f-wa-sichtbar').value = w?.sichtbar || 'ja';
+  document.getElementById('f-wa-notiz').value = w?.notiz || '';
+  document.getElementById('modal-wa').style.display = 'flex';
+}
+function saveWA() {
+  const id = document.getElementById('wa-edit-id').value;
+  const name = document.getElementById('f-wa-name').value.trim();
+  if (!name) { alert('Bezeichnung ist Pflichtfeld.'); return; }
+  const obj = { id: id||uid(), name, von: document.getElementById('f-wa-von').value, bis: document.getElementById('f-wa-bis').value, sichtbar: document.getElementById('f-wa-sichtbar').value, notiz: document.getElementById('f-wa-notiz').value.trim() };
+  if (id) { const i=settings.waperioden.findIndex(x=>x.id===id); if(i>=0) settings.waperioden[i]=obj; }
+  else settings.waperioden.push(obj);
+  saveSettings(); closeModal('modal-wa'); renderSettings();
+}
+function deleteWA(id) {
+  if (!confirm('WA-Periode entfernen?')) return;
+  settings.waperioden = settings.waperioden.filter(x=>x.id!==id);
+  saveSettings(); renderSettings();
+}
+
+function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+document.addEventListener('keydown', e => { if (e.key==='Escape') document.querySelectorAll('.modal-overlay').forEach(m=>m.style.display='none'); });
+
+// ─── Produktkatalog-Daten lesen ────────────────────────────────────────────
+function getPKData() {
+  try {
+    const raw = localStorage.getItem('produktkatalog_v1');
+    if (raw) { const d = JSON.parse(raw); return { artikel: d.artikel||[], mengen: d.mengen||[] }; }
+  } catch(e) {}
+  return { artikel: [], mengen: [] };
+}
+
+// ─── Produktkatalog-Dashboard ──────────────────────────────────────────────
+function renderPKDashboard() {
+  const { artikel, mengen } = getPKData();
+  const pkSection = document.getElementById('pk-dash-section');
+  const pkEmpty = document.getElementById('pk-dash-empty');
+
+  if (artikel.length === 0) {
+    pkSection.style.display = 'none';
+    pkEmpty.style.display = 'block';
+    return;
+  }
+  pkEmpty.style.display = 'none';
+  pkSection.style.display = 'block';
+
+  // Filter out inaktive Lieferanten
+  const aktArtikel = artikel.filter(a => isLieferantAktiv(a.lieferant||''));
+
+  // KPI
+  const mitPreis = aktArtikel.filter(a => a.preisKonv > 0 || a.preisBio > 0).length;
+  const mitMengen = mengen.filter(m => aktArtikel.find(a=>a.id===m.artikelId) && MONTH_KEYS.some(k=>m[k]>0)).length;
+
+  // Total Volumen
+  let totalVol = 0;
+  aktArtikel.forEach(a => {
+    const m = mengen.find(x=>x.artikelId===a.id)||{};
+    const menge = MONTH_KEYS.reduce((s,k)=>s+(m[k]||0),0);
+    totalVol += menge * (a.preisKonv || a.preisBio || 0);
+  });
+
+  // Konv vs Bio count
+  const konvCount = aktArtikel.filter(a=>a.preisKonv>0&&!a.preisBio).length;
+  const bioCount = aktArtikel.filter(a=>a.preisBio>0).length;
+
+  document.getElementById('pk-kpi-row').innerHTML = [
+    {label:'Aktive Artikel', val: aktArtikel.length, sub: artikel.length + ' gesamt'},
+    {label:'Mit Einkaufspreis', val: mitPreis, sub: konvCount + ' nur Konv. · ' + bioCount + ' mit Bio'},
+    {label:'Mit Monatsmengen', val: mitMengen, sub: 'Artikel mit 2025-Daten'},
+    {label:'Gesamtvolumen 2025', val: '€ ' + Math.round(totalVol).toLocaleString('de-DE'), sub: 'EP × Bestellmenge'},
+  ].map(k=>'<div class="kpi"><div class="kpi-label">'+k.label+'</div><div class="kpi-val">'+k.val+'</div><div class="kpi-sub">'+k.sub+'</div></div>').join('');
+
+  // Monthly Volume bars
+  const monthlyVol = MONTH_KEYS.map((k,i) => {
+    let s = 0;
+    aktArtikel.forEach(a => {
+      const m = mengen.find(x=>x.artikelId===a.id)||{};
+      s += (m[k]||0) * (a.preisKonv || a.preisBio || 0);
+    });
+    return { label: MONTHS[i], value: Math.round(s) };
+  });
+  const maxMonthly = Math.max(...monthlyVol.map(x=>x.value), 1);
+  document.getElementById('pk-monthly-chart').innerHTML = monthlyVol.map(m =>
+    `<div class="pk-bar-row">
+      <span class="pk-bar-label">${m.label}</span>
+      <div class="pk-bar-track"><div class="pk-bar-fill" style="width:${Math.round(m.value/maxMonthly*100)}%;background:#1F4E79"></div></div>
+      <span class="pk-bar-val">${m.value > 0 ? '€ ' + m.value.toLocaleString('de-DE') : '–'}</span>
+    </div>`
+  ).join('');
+
+  // Category chart
+  const byCat = {};
+  aktArtikel.forEach(a => {
+    const cat = a.kategorie || '(keine)';
+    if (!byCat[cat]) byCat[cat] = 0;
+    const m = mengen.find(x=>x.artikelId===a.id)||{};
+    const menge = MONTH_KEYS.reduce((s,k)=>s+(m[k]||0),0);
+    byCat[cat] += menge * (a.preisKonv || a.preisBio || 0);
+  });
+  const catColors = ['#1F4E79','#2e7d32','#854F0B','#A32D2D','#4a0080','#0F6E56','#993556','#444441'];
+  const catSorted = Object.entries(byCat).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  const maxCat = Math.max(...catSorted.map(x=>x[1]), 1);
+  document.getElementById('pk-cat-chart').innerHTML = catSorted.map(([cat, val], i) =>
+    `<div class="pk-bar-row">
+      <span class="pk-bar-label" title="${cat}">${cat}</span>
+      <div class="pk-bar-track"><div class="pk-bar-fill" style="width:${Math.round(val/maxCat*100)}%;background:${catColors[i%catColors.length]}"></div></div>
+      <span class="pk-bar-val">${val > 0 ? '€ ' + Math.round(val).toLocaleString('de-DE') : '–'}</span>
+    </div>`
+  ).join('') || '<div style="color:#90a0b0;font-size:12px;padding:16px">Keine Kategorien vorhanden.</div>';
+
+  // Lieferant chart (Artikel-Anzahl)
+  const byLief = {};
+  aktArtikel.forEach(a => {
+    const l = a.lieferant || '(kein)';
+    if (!byLief[l]) byLief[l] = { konv: 0, bio: 0 };
+    if (a.preisKonv > 0) byLief[l].konv++;
+    if (a.preisBio > 0) byLief[l].bio++;
+  });
+  const liefSorted = Object.entries(byLief).sort((a,b)=>(b[1].konv+b[1].bio)-(a[1].konv+a[1].bio)).slice(0,10);
+  const maxLief = Math.max(...liefSorted.map(([,v])=>v.konv+v.bio), 1);
+  document.getElementById('pk-lief-chart').innerHTML =
+    '<div style="display:flex;gap:12px;margin-bottom:8px;font-size:11px;color:#607080"><span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:2px;background:#1F4E79;display:inline-block"></span>Konv.</span><span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:2px;background:#2e7d32;display:inline-block"></span>Bio</span></div>' +
+    liefSorted.map(([lief, v]) =>
+      `<div class="pk-bar-row">
+        <span class="pk-bar-label" title="${lief}">${lief}</span>
+        <div class="pk-bar-track" style="display:flex;gap:1px">
+          <div style="height:14px;background:#1F4E79;width:${Math.round(v.konv/maxLief*100)}%;border-radius:3px 0 0 3px;transition:width .5s"></div>
+          <div style="height:14px;background:#2e7d32;width:${Math.round(v.bio/maxLief*100)}%;border-radius:0 3px 3px 0;transition:width .5s"></div>
+        </div>
+        <span class="pk-bar-val">${v.konv+v.bio} Art.</span>
+      </div>`
+    ).join('') || '<div style="color:#90a0b0;font-size:12px;padding:16px">Keine Lieferanten vorhanden.</div>';
+
+  // Preisvergleich Konv vs Bio
+  const artikelMitBio = aktArtikel.filter(a=>a.preisBio>0&&a.preisKonv>0).sort((a,b)=>b.preisKonv-a.preisKonv).slice(0,15);
+  if (artikelMitBio.length === 0) {
+    document.getElementById('pk-preis-chart').innerHTML = '<div style="color:#90a0b0;font-size:12px;padding:16px">Keine Artikel mit Konv.- und Bio-Preis vorhanden.</div>';
+  } else {
+    const maxPreis = Math.max(...artikelMitBio.map(a=>Math.max(a.preisKonv,a.preisBio)), 1);
+    document.getElementById('pk-preis-chart').innerHTML =
+      '<div style="display:flex;gap:12px;margin-bottom:8px;font-size:11px;color:#607080"><span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:2px;background:#1F4E79;display:inline-block"></span>Konv.</span><span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:2px;background:#2e7d32;display:inline-block"></span>Bio</span></div>' +
+      artikelMitBio.map(a => {
+        const bez = a.bezeichnung.length > 22 ? a.bezeichnung.slice(0,20)+'…' : a.bezeichnung;
+        return `<div style="margin-bottom:8px">
+          <div style="font-size:11px;color:#607080;margin-bottom:3px" title="${a.bezeichnung}">${bez}</div>
+          <div style="display:flex;flex-direction:column;gap:2px">
+            <div class="pk-bar-row" style="margin-bottom:0">
+              <span style="width:30px;font-size:10px;color:#1F4E79">Konv</span>
+              <div class="pk-bar-track"><div class="pk-bar-fill" style="width:${Math.round(a.preisKonv/maxPreis*100)}%;background:#1F4E79"></div></div>
+              <span class="pk-bar-val" style="font-size:11px">€ ${a.preisKonv.toFixed(3).replace('.',',')}</span>
+            </div>
+            <div class="pk-bar-row" style="margin-bottom:0">
+              <span style="width:30px;font-size:10px;color:#2e7d32">Bio</span>
+              <div class="pk-bar-track"><div class="pk-bar-fill" style="width:${Math.round(a.preisBio/maxPreis*100)}%;background:#2e7d32"></div></div>
+              <span class="pk-bar-val" style="font-size:11px">€ ${a.preisBio.toFixed(3).replace('.',',')}</span>
+            </div>
+          </div>
+        </div>`;
+      }).join('');
+  }
+}
+
+// ─── SUPABASE DASHBOARD ─────────────────────────────────────────────────────
+let allData = [];
+let periodes = [];
+let activePeriode = '';
 let dashLoaded = false;
 
 function fmt(v, d=2) {
-  if (v == null || isNaN(v)) return '–';
+  if (v==null||isNaN(v)) return '–';
   return Number(v).toFixed(d).replace('.', ',') + ' €';
 }
 function fmtPct(v) {
-  if (v == null || isNaN(v)) return '';
-  const s = (v >= 0 ? '+' : '') + v.toFixed(1).replace('.', ',') + ' %';
-  return s;
+  if (v==null||isNaN(v)) return '';
+  return (v>=0?'+':'') + v.toFixed(1).replace('.',',') + ' %';
 }
 
-// ─── Load from Supabase ───
 async function loadDashboard() {
   dashLoaded = true;
   document.getElementById('dash-loading').style.display = 'flex';
   document.getElementById('dash-empty').style.display = 'none';
   document.getElementById('dash-content').style.display = 'none';
-
   try {
-    // Load all rows (paginate with limit 10000)
     let rows = [], offset = 0, limit = 1000;
     while (true) {
-      const resp = await fetch(
-        SUPA_URL + '/rest/v1/ausschreibung_preise?select=*&order=created_at.asc&limit=' + limit + '&offset=' + offset,
-        { headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY } }
-      );
+      const resp = await fetch(SUPA_URL + '/rest/v1/ausschreibung_preise?select=*&order=created_at.asc&limit='+limit+'&offset='+offset,
+        { headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer '+SUPA_KEY } });
       if (!resp.ok) throw new Error('HTTP ' + resp.status);
       const chunk = await resp.json();
       rows = rows.concat(chunk);
       if (chunk.length < limit) break;
       offset += limit;
     }
-
     if (!rows.length) {
       document.getElementById('dash-loading').style.display = 'none';
       document.getElementById('dash-empty').style.display = 'block';
+      renderPKDashboard();
       return;
     }
-
     allData = rows;
-    // Sort periodes
-    periodes = [...new Set(rows.map(r => r.periode))].sort();
-    activePeriode = periodes[periodes.length - 1];
+    // Auto-add perioden to settings if not yet there
+    const knownP = [...new Set(rows.map(r=>r.periode))];
+    knownP.forEach(name => {
+      if (!settings.waperioden.find(w=>w.name===name)) {
+        settings.waperioden.push({ id: uid(), name, von:'', bis:'', sichtbar:'ja', notiz:'' });
+      }
+    });
+    // Auto-add lieferanten
+    const knownL = [...new Set(rows.map(r=>r.lieferant))];
+    knownL.forEach(name => {
+      if (!settings.lieferanten.find(l=>l.name===name)) {
+        settings.lieferanten.push({ id: uid(), name, quelle:'WaWi', status:'aktiv', notiz:'' });
+      }
+    });
+    saveSettings();
+
+    // Filter by settings
+    const visiblePeriodes = [...new Set(rows.map(r=>r.periode))].filter(p => isWAsichtbar(p)).sort();
+    periodes = visiblePeriodes;
+    activePeriode = periodes[periodes.length - 1] || '';
 
     renderPeriodeBar();
-    renderAll();
+    if (activePeriode) renderAll();
 
     document.getElementById('dash-loading').style.display = 'none';
     document.getElementById('dash-content').style.display = 'block';
+    renderPKDashboard();
   } catch(e) {
-    document.getElementById('dash-loading').innerHTML = '<span style="color:#d32f2f">&#9888; Fehler beim Laden: ' + e.message + '</span>';
-    console.error(e);
+    document.getElementById('dash-loading').innerHTML = '<span style="color:#d32f2f">&#9888; Fehler: ' + e.message + '</span>';
   }
 }
 
 function renderPeriodeBar() {
-  document.getElementById('periode-btns').innerHTML = periodes.map(p =>
-    '<span class="periode-badge' + (p === activePeriode ? ' active' : '') + '" onclick="setPeriode(\'' + p + '\')">' + p + '</span>'
-  ).join('');
+  // Show all perioden, disabled if ausgeblendet
+  const allPeriodes = [...new Set(allData.map(r=>r.periode))].sort();
+  document.getElementById('periode-btns').innerHTML = allPeriodes.map(p => {
+    const vis = isWAsichtbar(p);
+    const act = p === activePeriode;
+    return `<span class="periode-badge ${act?'active':''} ${!vis?'disabled':''}" 
+      title="${!vis?'Ausgeblendet in Einstellungen':''}"
+      onclick="${vis?'setPeriode(\''+p+'\')':'showDisabledHint()'}">${p}</span>`;
+  }).join('');
+}
+
+function showDisabledHint() {
+  alert('Diese Periode ist in den Einstellungen ausgeblendet. Aktiviere sie dort wieder, um sie anzuzeigen.');
 }
 
 function setPeriode(p) {
+  if (!isWAsichtbar(p)) return;
   activePeriode = p;
   renderPeriodeBar();
   renderAll();
 }
 
 function renderAll() {
-  const cur = allData.filter(r => r.periode === activePeriode);
-  // Find previous period
+  const cur = allData.filter(r => r.periode === activePeriode && isLieferantAktiv(r.lieferant));
   const prevIdx = periodes.indexOf(activePeriode) - 1;
-  const prev = prevIdx >= 0 ? allData.filter(r => r.periode === periodes[prevIdx]) : [];
-
+  const prev = prevIdx >= 0 ? allData.filter(r => r.periode === periodes[prevIdx] && isLieferantAktiv(r.lieferant)) : [];
   renderKPI(cur, prev);
   renderSupScorecard(cur);
   renderComparison(cur, prev);
@@ -345,224 +917,125 @@ function renderAll() {
   renderTrends(prev);
 }
 
-// ─── KPI Cards ───
 function renderKPI(cur, prev) {
-  const artikel = new Set(cur.map(r => r.produkt)).size;
-  const lieferanten = new Set(cur.map(r => r.lieferant)).size;
-  const rank1 = cur.filter(r => r.rang_eff === 1);
+  const artikel = new Set(cur.map(r=>r.produkt)).size;
+  const lieferanten = new Set(cur.map(r=>r.lieferant)).size;
+  const rank1 = cur.filter(r=>r.rang_eff===1);
   const avgPreis = cur.length ? cur.reduce((s,r)=>s+(r.preis_kg||0),0)/cur.length : 0;
-
-  // Avg price change vs prev
   let pctChange = null;
   if (prev.length) {
     const prevAvg = prev.reduce((s,r)=>s+(r.preis_kg||0),0)/prev.length;
-    pctChange = prevAvg ? (avgPreis - prevAvg) / prevAvg * 100 : null;
+    pctChange = prevAvg ? (avgPreis-prevAvg)/prevAvg*100 : null;
   }
-
   document.getElementById('kpi-row').innerHTML = [
-    {label:'Artikel bewertet', val: artikel, sub: activePeriode},
-    {label:'Lieferanten', val: lieferanten, sub: 'Angebote eingegangen'},
-    {label:'Rang-1-Artikel', val: rank1.length, sub: new Set(rank1.map(r=>r.lieferant)).size + ' verschiedene Lieferanten'},
-    {label:'Ø Preis/kg', val: avgPreis.toFixed(2).replace('.',',') + ' €',
-     sub: pctChange !== null ? (pctChange >= 0 ? '▲ +' : '▼ ') + Math.abs(pctChange).toFixed(1) + '% vs. Vorperiode' : 'Erste Periode'},
-  ].map(k =>
-    '<div class="kpi"><div class="kpi-label">' + k.label + '</div><div class="kpi-val">' + k.val + '</div><div class="kpi-sub">' + k.sub + '</div></div>'
-  ).join('');
+    {label:'Artikel bewertet', val:artikel, sub:activePeriode},
+    {label:'Lieferanten', val:lieferanten, sub:'Angebote eingegangen'},
+    {label:'Rang-1-Artikel', val:rank1.length, sub:new Set(rank1.map(r=>r.lieferant)).size+' verschiedene Lieferanten'},
+    {label:'Ø Preis/kg', val:avgPreis.toFixed(2).replace('.',',')+' €', sub:pctChange!==null?(pctChange>=0?'▲ +':'▼ ')+Math.abs(pctChange).toFixed(1)+'% vs. Vorperiode':'Erste Periode'},
+  ].map(k=>'<div class="kpi"><div class="kpi-label">'+k.label+'</div><div class="kpi-val">'+k.val+'</div><div class="kpi-sub">'+k.sub+'</div></div>').join('');
 }
 
-// ─── Lieferanten Scorecard ───
 function renderSupScorecard(cur) {
   const sups = {};
   cur.forEach(r => {
-    if (!sups[r.lieferant]) sups[r.lieferant] = {name:r.lieferant, total:0, rang1:0, preise:[]};
+    if (!sups[r.lieferant]) sups[r.lieferant]={name:r.lieferant,total:0,rang1:0,preise:[]};
     sups[r.lieferant].total++;
-    if (r.rang_eff === 1) sups[r.lieferant].rang1++;
+    if (r.rang_eff===1) sups[r.lieferant].rang1++;
     if (r.preis_kg) sups[r.lieferant].preise.push(r.preis_kg);
   });
   const maxRank1 = Math.max(...Object.values(sups).map(s=>s.rang1), 1);
-
   document.getElementById('sup-scorecard').innerHTML =
     '<div class="sup-grid">' +
-    Object.values(sups)
-      .sort((a,b) => b.rang1 - a.rang1)
-      .map(s => {
-        const avg = s.preise.length ? s.preise.reduce((a,b)=>a+b,0)/s.preise.length : 0;
-        const pct = Math.round(s.rang1 / maxRank1 * 100);
-        return '<div class="sup-card">'
-          + '<div class="sup-name">' + s.name + '</div>'
-          + '<div class="sup-stat"><span>Artikel:</span><strong>' + s.total + '</strong></div>'
-          + '<div class="sup-stat"><span>&#9733; Rang 1:</span><strong>' + s.rang1 + '</strong></div>'
-          + '<div class="sup-stat"><span>&#216; Preis/kg:</span><strong>' + avg.toFixed(2).replace('.',',') + ' €</strong></div>'
-          + '<div class="sup-bar-wrap"><div class="sup-bar-fill" style="width:' + pct + '%"></div></div>'
-          + '</div>';
-      }).join('')
-    + '</div>';
+    Object.values(sups).sort((a,b)=>b.rang1-a.rang1).map(s => {
+      const avg = s.preise.length ? s.preise.reduce((a,b)=>a+b,0)/s.preise.length : 0;
+      const pct = Math.round(s.rang1/maxRank1*100);
+      return '<div class="sup-card"><div class="sup-name">'+s.name+'</div>'
+        +'<div class="sup-stat"><span>Artikel:</span><strong>'+s.total+'</strong></div>'
+        +'<div class="sup-stat"><span>&#9733; Rang 1:</span><strong>'+s.rang1+'</strong></div>'
+        +'<div class="sup-stat"><span>&#216; Preis/kg:</span><strong>'+avg.toFixed(2).replace('.',',')+'€</strong></div>'
+        +'<div class="sup-bar-wrap"><div class="sup-bar-fill" style="width:'+pct+'%"></div></div>'
+        +'</div>';
+    }).join('')+'</div>';
 }
 
-// ─── Vergleich aktuell vs. vorher ───
 function renderComparison(cur, prev) {
   const wrap = document.getElementById('cmp-table-wrap');
-  if (!prev.length) {
-    wrap.innerHTML = '<div style="color:#90a0b0;font-size:12px;padding:20px 0">Keine Vorperiode vorhanden.</div>';
-    return;
-  }
-
-  // Build lookup prev: produkt+lieferant -> preis_kg
+  if (!prev.length) { wrap.innerHTML='<div style="color:#90a0b0;font-size:12px;padding:20px 0">Keine Vorperiode vorhanden.</div>'; return; }
   const prevMap = {};
-  prev.forEach(r => { prevMap[r.produkt + '|' + r.lieferant] = r.preis_kg; });
-
-  const rows = cur
-    .map(r => {
-      const prev_kg = prevMap[r.produkt + '|' + r.lieferant];
-      const delta = (prev_kg && r.preis_kg) ? (r.preis_kg - prev_kg) / prev_kg * 100 : null;
-      return {...r, prev_kg, delta};
-    })
-    .filter(r => r.rang_eff === 1)
-    .sort((a,b) => Math.abs(b.delta||0) - Math.abs(a.delta||0))
-    .slice(0, 20);
-
-  wrap.innerHTML = '<div style="font-size:11px;color:#607080;margin-bottom:8px">Nur Rang-1-Artikel · ' + periodes[periodes.indexOf(activePeriode)-1] + ' → ' + activePeriode + '</div>'
-    + '<div style="overflow-x:auto;max-height:340px;overflow-y:auto">'
-    + '<table class="tbl"><thead><tr>'
-    + '<th>Artikel</th><th>Lieferant</th>'
-    + '<th class="r">Vorher</th><th class="r">Aktuell</th><th class="r">Δ</th>'
-    + '</tr></thead><tbody>'
-    + rows.map(r => {
-        const badge = r.delta == null ? '<span style="color:#ccc">–</span>'
-          : r.delta > 2 ? '<span class="delta-badge delta-neg">' + fmtPct(r.delta) + '</span>'
-          : r.delta < -2 ? '<span class="delta-badge delta-pos">' + fmtPct(r.delta) + '</span>'
-          : '<span style="color:#607080">' + fmtPct(r.delta) + '</span>';
-        return '<tr>'
-          + '<td>' + r.produkt + '</td>'
-          + '<td style="font-size:11px;color:#607080">' + r.lieferant + '</td>'
-          + '<td class="r num">' + (r.prev_kg ? r.prev_kg.toFixed(2).replace('.',',') + ' €' : '–') + '</td>'
-          + '<td class="r num cmp-preis">' + (r.preis_kg ? r.preis_kg.toFixed(2).replace('.',',') + ' €' : '–') + '</td>'
-          + '<td class="r">' + badge + '</td>'
-          + '</tr>';
-      }).join('')
-    + '</tbody></table></div>';
+  prev.forEach(r => { prevMap[r.produkt+'|'+r.lieferant] = r.preis_kg; });
+  const rows = cur.map(r => {
+    const prev_kg = prevMap[r.produkt+'|'+r.lieferant];
+    const delta = (prev_kg&&r.preis_kg) ? (r.preis_kg-prev_kg)/prev_kg*100 : null;
+    return {...r, prev_kg, delta};
+  }).filter(r=>r.rang_eff===1).sort((a,b)=>Math.abs(b.delta||0)-Math.abs(a.delta||0)).slice(0,20);
+  wrap.innerHTML = '<div style="font-size:11px;color:#607080;margin-bottom:8px">Nur Rang-1 · '+periodes[periodes.indexOf(activePeriode)-1]+' → '+activePeriode+'</div>'
+    +'<div style="overflow-x:auto;max-height:340px;overflow-y:auto"><table class="tbl"><thead><tr><th>Artikel</th><th>Lieferant</th><th class="r">Vorher</th><th class="r">Aktuell</th><th class="r">Δ</th></tr></thead><tbody>'
+    +rows.map(r => {
+      const badge = r.delta==null?'<span style="color:#ccc">–</span>':r.delta>2?'<span class="delta-badge delta-neg">'+fmtPct(r.delta)+'</span>':r.delta<-2?'<span class="delta-badge delta-pos">'+fmtPct(r.delta)+'</span>':'<span style="color:#607080">'+fmtPct(r.delta)+'</span>';
+      return '<tr><td>'+r.produkt+'</td><td style="font-size:11px;color:#607080">'+r.lieferant+'</td><td class="r num">'+(r.prev_kg?r.prev_kg.toFixed(2).replace('.',',')+'€':'–')+'</td><td class="r num">'+(r.preis_kg?r.preis_kg.toFixed(2).replace('.',',')+'€':'–')+'</td><td class="r">'+badge+'</td></tr>';
+    }).join('')+'</tbody></table></div>';
 }
 
-// ─── Preishistorie ───
 function renderHistory() {
-  const q = (document.getElementById('ph-search')?.value || '').toLowerCase();
+  const q = (document.getElementById('ph-search')?.value||'').toLowerCase();
   const wrap = document.getElementById('ph-table-wrap');
-
-  // Build: produkt -> periode -> lieferant -> {preis_kg, rang_eff}
   const map = {};
-  allData.forEach(r => {
-    if (!map[r.produkt]) map[r.produkt] = {};
-    if (!map[r.produkt][r.periode]) map[r.produkt][r.periode] = {};
-    // Keep lowest rang_eff per period
-    const existing = map[r.produkt][r.periode][r.lieferant];
-    if (!existing || r.rang_eff < existing.rang_eff) {
-      map[r.produkt][r.periode][r.lieferant] = r;
-    }
+  // Filter data by aktive Lieferanten
+  allData.filter(r => isLieferantAktiv(r.lieferant)).forEach(r => {
+    if (!map[r.produkt]) map[r.produkt]={};
+    if (!map[r.produkt][r.periode]) map[r.produkt][r.periode]={};
+    const ex = map[r.produkt][r.periode][r.lieferant];
+    if (!ex||r.rang_eff<ex.rang_eff) map[r.produkt][r.periode][r.lieferant]=r;
   });
-
-  const produkts = Object.keys(map)
-    .filter(p => !q || p.toLowerCase().includes(q))
-    .sort((a,b) => a.localeCompare(b, 'de'))
-    .slice(0, 80);
-
-  if (!produkts.length) {
-    wrap.innerHTML = '<div style="color:#90a0b0;font-size:12px;padding:16px">Kein Artikel gefunden.</div>';
-    return;
-  }
-
-  // All suppliers in active period
-  const curData = allData.filter(r => r.periode === activePeriode);
-  const sups = [...new Set(curData.map(r => r.lieferant))].sort();
-
-  let html = '<table class="tbl"><thead><tr>'
-    + '<th>Artikel</th><th>WG</th>'
-    + periodes.map(p => '<th class="r" style="' + (p === activePeriode ? 'background:#EBF3FB;color:#1F4E79' : '') + '">' + p + '</th>').join('')
-    + '<th>Beste Lieferant</th>'
-    + '</tr></thead><tbody>';
-
-  html += produkts.map(prod => {
-    const periodeVals = periodes.map(p => {
-      const entries = map[prod][p];
+  const produkts = Object.keys(map).filter(p=>!q||p.toLowerCase().includes(q)).sort((a,b)=>a.localeCompare(b,'de')).slice(0,80);
+  if (!produkts.length) { wrap.innerHTML='<div style="color:#90a0b0;font-size:12px;padding:16px">Kein Artikel gefunden.</div>'; return; }
+  let html='<table class="tbl"><thead><tr><th>Artikel</th><th>WG</th>'
+    +periodes.map(p=>'<th class="r" style="'+(p===activePeriode?'background:#EBF3FB;color:#1F4E79':'')+'">'+(isWAsichtbar(p)?p:'<s>'+p+'</s>')+'</th>').join('')
+    +'<th>Bester Lieferant</th></tr></thead><tbody>';
+  html+=produkts.map(prod => {
+    const periodeVals=periodes.map(p=>{
+      const entries=map[prod][p];
       if (!entries) return '<td class="r"><span style="color:#ddd">–</span></td>';
-      // Get rank 1 for this period
-      const r1 = Object.values(entries).find(e => e.rang_eff === 1);
-      const val = r1 ? r1.preis_kg : Object.values(entries).sort((a,b)=>(a.preis_kg||99)-(b.preis_kg||99))[0].preis_kg;
-      const prevP = periodes[periodes.indexOf(p) - 1];
-      let trendIcon = '';
-      if (prevP && map[prod][prevP]) {
-        const prevR1 = Object.values(map[prod][prevP]).find(e => e.rang_eff === 1);
-        const prevVal = prevR1 ? prevR1.preis_kg : null;
-        if (prevVal && val) {
-          const d = (val - prevVal) / prevVal * 100;
-          trendIcon = d > 2 ? ' <span class="trend-up" title="' + fmtPct(d) + '">▲</span>'
-                    : d < -2 ? ' <span class="trend-dn" title="' + fmtPct(d) + '">▼</span>' : '';
-        }
+      const r1=Object.values(entries).find(e=>e.rang_eff===1);
+      const val=r1?r1.preis_kg:Object.values(entries).sort((a,b)=>(a.preis_kg||99)-(b.preis_kg||99))[0].preis_kg;
+      const prevP=periodes[periodes.indexOf(p)-1];
+      let ti='';
+      if (prevP&&map[prod][prevP]) {
+        const pr1=Object.values(map[prod][prevP]).find(e=>e.rang_eff===1);
+        const pv=pr1?pr1.preis_kg:null;
+        if (pv&&val) { const d=(val-pv)/pv*100; ti=d>2?' <span class="trend-up">▲</span>':d<-2?' <span class="trend-dn">▼</span>':''; }
       }
-      const isCur = p === activePeriode;
-      return '<td class="r num" style="' + (isCur ? 'background:#EBF3FB;font-weight:700' : '') + '">'
-        + val.toFixed(2).replace('.',',') + ' €' + trendIcon + '</td>';
+      const ic=p===activePeriode;
+      return '<td class="r num" style="'+(ic?'background:#EBF3FB;font-weight:700':'')+'">'+(val?val.toFixed(2).replace('.',',')+' €':'–')+ti+'</td>';
     }).join('');
-
-    const wg = (map[prod][activePeriode] || map[prod][periodes[0]]) || {};
-    const firstRow = Object.values(Object.values(wg)[0] || {})[0] || {};
-    const wgStr = firstRow.warengruppe || '';
-
-    // Best supplier in active period
-    const curEntries = map[prod][activePeriode] ? Object.values(map[prod][activePeriode]) : [];
-    const best = curEntries.find(e => e.rang_eff === 1);
-    const bestStr = best ? '<span class="rank-1">' + best.lieferant + '</span>' : '<span style="color:#ccc">–</span>';
-
-    return '<tr><td><strong>' + prod + '</strong></td>'
-      + '<td style="font-size:10px;color:#90a0b0">' + wgStr + '</td>'
-      + periodeVals
-      + '<td>' + bestStr + '</td>'
-      + '</tr>';
+    const wg=(map[prod][activePeriode]||map[prod][periodes[0]])||{};
+    const fr=Object.values(Object.values(wg)[0]||{})[0]||{};
+    const wgStr=fr.warengruppe||'';
+    const curE=map[prod][activePeriode]?Object.values(map[prod][activePeriode]):[];
+    const best=curE.find(e=>e.rang_eff===1);
+    return '<tr><td><strong>'+prod+'</strong></td><td style="font-size:10px;color:#90a0b0">'+wgStr+'</td>'+periodeVals+'<td>'+(best?'<span class="rank-1">'+best.lieferant+'</span>':'<span style="color:#ccc">–</span>')+'</td></tr>';
   }).join('');
-
-  html += '</tbody></table>';
-  wrap.innerHTML = html;
+  html+='</tbody></table>';
+  wrap.innerHTML=html;
 }
 
-// ─── Preis-Trends ───
 function renderTrends(prev) {
-  const wrap_up = document.getElementById('top-increase');
-  const wrap_dn = document.getElementById('top-decrease');
-
-  if (!prev.length) {
-    wrap_up.innerHTML = wrap_dn.innerHTML = '<div style="color:#90a0b0;font-size:12px;padding:16px">Keine Vorperiode für Vergleich.</div>';
-    return;
-  }
-
-  const prevMap = {};
-  prev.forEach(r => { prevMap[r.produkt + '|' + r.lieferant] = r.preis_kg; });
-
-  const curPeriode = allData.filter(r => r.periode === activePeriode && r.rang_eff === 1);
-  const changes = curPeriode
-    .map(r => {
-      const pk = prevMap[r.produkt + '|' + r.lieferant];
-      if (!pk || !r.preis_kg) return null;
-      return {produkt: r.produkt, lieferant: r.lieferant, prev: pk, cur: r.preis_kg, delta: (r.preis_kg - pk) / pk * 100};
-    })
-    .filter(Boolean)
-    .sort((a,b) => b.delta - a.delta);
-
-  function tbl(rows, cls) {
-    if (!rows.length) return '<div style="color:#90a0b0;font-size:12px;padding:16px">Keine Daten.</div>';
-    return '<table class="tbl"><thead><tr><th>Artikel</th><th>Lieferant</th><th class="r">Vorher</th><th class="r">Aktuell</th><th class="r">Δ</th></tr></thead><tbody>'
-      + rows.map(r =>
-          '<tr><td><strong>' + r.produkt + '</strong></td>'
-          + '<td style="font-size:10px;color:#607080">' + r.lieferant + '</td>'
-          + '<td class="r num">' + r.prev.toFixed(2).replace('.',',') + ' €</td>'
-          + '<td class="r num">' + r.cur.toFixed(2).replace('.',',') + ' €</td>'
-          + '<td class="r"><span class="delta-badge ' + cls + '">' + fmtPct(r.delta) + '</span></td>'
-          + '</tr>'
-        ).join('')
-      + '</tbody></table>';
-  }
-
-  wrap_up.innerHTML = tbl(changes.filter(r => r.delta > 0).slice(0, 10), 'delta-neg');
-  wrap_dn.innerHTML = tbl(changes.filter(r => r.delta < 0).sort((a,b)=>a.delta-b.delta).slice(0, 10), 'delta-pos');
+  const wu=document.getElementById('top-increase'), wd=document.getElementById('top-decrease');
+  if (!prev.length) { wu.innerHTML=wd.innerHTML='<div style="color:#90a0b0;font-size:12px;padding:16px">Keine Vorperiode.</div>'; return; }
+  const prevMap={};
+  prev.forEach(r=>{prevMap[r.produkt+'|'+r.lieferant]=r.preis_kg;});
+  const changes=allData.filter(r=>r.periode===activePeriode&&r.rang_eff===1&&isLieferantAktiv(r.lieferant))
+    .map(r=>{const pk=prevMap[r.produkt+'|'+r.lieferant];if(!pk||!r.preis_kg)return null;return{produkt:r.produkt,lieferant:r.lieferant,prev:pk,cur:r.preis_kg,delta:(r.preis_kg-pk)/pk*100};})
+    .filter(Boolean).sort((a,b)=>b.delta-a.delta);
+  function tbl(rows,cls){if(!rows.length)return'<div style="color:#90a0b0;font-size:12px;padding:16px">Keine Daten.</div>';
+    return'<table class="tbl"><thead><tr><th>Artikel</th><th>Lieferant</th><th class="r">Vorher</th><th class="r">Aktuell</th><th class="r">Δ</th></tr></thead><tbody>'+rows.map(r=>'<tr><td><strong>'+r.produkt+'</strong></td><td style="font-size:10px;color:#607080">'+r.lieferant+'</td><td class="r num">'+r.prev.toFixed(2).replace('.',',')+'€</td><td class="r num">'+r.cur.toFixed(2).replace('.',',')+'€</td><td class="r"><span class="delta-badge '+cls+'">'+fmtPct(r.delta)+'</span></td></tr>').join('')+'</tbody></table>';}
+  wu.innerHTML=tbl(changes.filter(r=>r.delta>0).slice(0,10),'delta-neg');
+  wd.innerHTML=tbl(changes.filter(r=>r.delta<0).sort((a,b)=>a.delta-b.delta).slice(0,10),'delta-pos');
 }
+
+// ─── INIT ──────────────────────────────────────────────────────────────────
+loadSettings();
+renderToolsWarning();
 </script>
 </body>
 </html>
