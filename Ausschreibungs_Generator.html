@@ -309,6 +309,22 @@ async function processWaWiFile(file) {
     suppliers = Object.values(supMap).sort(function(a,b){ return a.name.localeCompare(b.name,'de'); });
     suppliers.forEach(function(s){ s.produktCount = Object.keys(s.produkte).length; });
 
+    // Lieferanten ins zentrale Einstellungen-localStorage synchronisieren
+    try {
+      var settingsRaw = localStorage.getItem('einkauf_settings_v1');
+      var settings = settingsRaw ? JSON.parse(settingsRaw) : {};
+      if (!settings.lieferanten) settings.lieferanten = [];
+      if (!settings.waperioden) settings.waperioden = [];
+      var uid = function(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,6); };
+      suppliers.forEach(function(s){
+        var exists = settings.lieferanten.find(function(l){ return l.name === s.name; });
+        if (!exists) {
+          settings.lieferanten.push({ id: uid(), name: s.name, quelle: 'WaWi', status: 'aktiv', notiz: '' });
+        }
+      });
+      localStorage.setItem('einkauf_settings_v1', JSON.stringify(settings));
+    } catch(e) { console.warn('Settings-Sync fehlgeschlagen:', e); }
+
     var uniqueProdukte = Object.keys(wawiData.reduce(function(m,r){ m[r.produkt]=1; return m; },{})).length;
 
     document.getElementById('upload-status').innerHTML =
