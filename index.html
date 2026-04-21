@@ -3,19 +3,27 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="icon" href="data:,">
 <title>ABC Kochwerk · Einkauf Tools</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:Arial,sans-serif;background:#f0f4f8;color:#1a2332;min-height:100vh}
-.header{background:#1F4E79;color:#fff;padding:28px 32px 24px}
-.header h1{font-size:22px;font-weight:700;margin-bottom:4px}
-.header p{font-size:13px;opacity:.75}
-.container{padding:28px 32px;max-width:1000px;margin:0 auto}
+.header{background:#1F4E79;color:#fff;padding:22px 32px 0}
+.header-top{display:flex;align-items:center;gap:16px;padding-bottom:16px}
+.header h1{font-size:20px;font-weight:700;margin-bottom:3px}
+.header p{font-size:12px;opacity:.75}
+.tab-bar{display:flex;gap:2px;margin-top:4px}
+.tab{padding:9px 20px;border-radius:8px 8px 0 0;font-size:13px;font-weight:600;cursor:pointer;color:rgba(255,255,255,.65);background:transparent;border:none;transition:background .15s,color .15s}
+.tab.active{background:#f0f4f8;color:#1F4E79}
+.tab:hover:not(.active){color:#fff;background:rgba(255,255,255,.1)}
+
+/* ─── TOOLS TAB ─── */
+.container{padding:24px 32px;max-width:1060px;margin:0 auto}
 .section-title{font-size:11px;font-weight:700;color:#607080;text-transform:uppercase;letter-spacing:.8px;margin-bottom:14px}
-.tools{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;margin-bottom:32px}
+.tools{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;margin-bottom:28px}
 .tool-card{background:#fff;border-radius:12px;border:1px solid #dbe4ee;padding:22px 24px;text-decoration:none;color:inherit;display:flex;flex-direction:column;gap:10px;transition:box-shadow .15s,transform .15s;cursor:pointer}
 .tool-card:hover{box-shadow:0 4px 20px rgba(0,0,0,.12);transform:translateY(-2px)}
-.tool-icon{font-size:32px;width:52px;height:52px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.tool-icon{font-size:28px;width:48px;height:48px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .tool-header{display:flex;align-items:center;gap:14px}
 .tool-name{font-size:15px;font-weight:700;color:#1F4E79}
 .tool-desc{font-size:12px;color:#607080;line-height:1.5}
@@ -29,33 +37,110 @@ body{font-family:Arial,sans-serif;background:#f0f4f8;color:#1a2332;min-height:10
 .tool-card:hover .arrow{color:#1F4E79}
 .divider{height:1px;background:#dbe4ee;margin:8px 0 24px}
 .info-bar{background:#EBF3FB;border-radius:8px;padding:12px 16px;font-size:12px;color:#1F4E79;display:flex;align-items:center;gap:10px}
-.info-bar strong{font-weight:700}
+
+/* ─── DASHBOARD TAB ─── */
+.dash{padding:24px 32px;max-width:1200px;margin:0 auto;display:none}
+.dash.visible{display:block}
+
+/* KPI Cards */
+.kpi-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;margin-bottom:24px}
+.kpi{background:#fff;border-radius:10px;border:1px solid #dbe4ee;padding:14px 16px}
+.kpi-label{font-size:10px;font-weight:700;color:#607080;text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px}
+.kpi-val{font-size:22px;font-weight:700;color:#1F4E79}
+.kpi-sub{font-size:10px;color:#90a0b0;margin-top:3px}
+
+/* Dash sections */
+.dash-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px}
+.dash-row.single{grid-template-columns:1fr}
+.dash-card{background:#fff;border-radius:10px;border:1px solid #dbe4ee;padding:18px 20px}
+.dash-card-title{font-size:12px;font-weight:700;color:#1F4E79;margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.dash-card-title span{font-size:16px}
+
+/* Periode selector */
+.periode-bar{display:flex;align-items:center;gap:10px;margin-bottom:20px;flex-wrap:wrap}
+.periode-bar label{font-size:12px;font-weight:700;color:#607080}
+.periode-sel{padding:5px 12px;border:1px solid #dbe4ee;border-radius:6px;font-size:12px;background:#fff;cursor:pointer}
+.periode-badge{padding:3px 10px;border-radius:12px;font-size:11px;font-weight:700;background:#EBF3FB;color:#1F4E79;cursor:pointer;border:2px solid transparent;transition:all .15s}
+.periode-badge.active{background:#1F4E79;color:#fff;border-color:#1F4E79}
+
+/* Preishistorie table */
+.ph-search{width:100%;padding:7px 12px;border:1px solid #dbe4ee;border-radius:6px;font-size:12px;margin-bottom:10px}
+.tbl{width:100%;border-collapse:collapse;font-size:12px}
+.tbl th{background:#f5f8fc;color:#607080;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;padding:7px 10px;text-align:left;border-bottom:2px solid #dbe4ee;white-space:nowrap}
+.tbl td{padding:7px 10px;border-bottom:1px solid #f0f4f8;vertical-align:middle}
+.tbl tr:hover td{background:#fafcff}
+.tbl .r{text-align:right}
+.tbl .num{font-variant-numeric:tabular-nums;font-family:monospace;font-size:11px}
+
+/* Trend badge */
+.trend-up{color:#d32f2f;font-weight:700}
+.trend-dn{color:#2e7d32;font-weight:700}
+.trend-eq{color:#607080}
+.rank-1{background:#fff8e1;color:#f57f17;font-weight:700;padding:1px 6px;border-radius:8px;font-size:10px}
+.rank-2{background:#f3f3f3;color:#607080;padding:1px 6px;border-radius:8px;font-size:10px}
+
+/* Lieferant scorecard */
+.sup-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px}
+.sup-card{border:1px solid #dbe4ee;border-radius:8px;padding:13px 15px}
+.sup-name{font-size:13px;font-weight:700;color:#1F4E79;margin-bottom:8px}
+.sup-stat{display:flex;justify-content:space-between;font-size:11px;color:#607080;margin-bottom:4px}
+.sup-stat strong{color:#1a2332}
+.sup-bar-wrap{height:6px;background:#f0f4f8;border-radius:3px;margin-top:8px;overflow:hidden}
+.sup-bar-fill{height:100%;background:#1F4E79;border-radius:3px;transition:width .4s}
+
+/* Comparison table */
+.cmp-row-up td.cmp-preis{color:#d32f2f;font-weight:700}
+.cmp-row-dn td.cmp-preis{color:#2e7d32;font-weight:700}
+.delta-badge{padding:1px 6px;border-radius:8px;font-size:10px;font-weight:700}
+.delta-pos{background:#d4edda;color:#155724}
+.delta-neg{background:#f8d7da;color:#721c24}
+
+/* Loading / empty state */
+.dash-empty{text-align:center;padding:48px 24px;color:#90a0b0}
+.dash-empty .big-icon{font-size:48px;margin-bottom:12px}
+.dash-empty p{font-size:13px;line-height:1.6}
+.dash-empty a{color:#1F4E79;font-weight:700}
+.loading{display:flex;align-items:center;gap:8px;color:#607080;font-size:12px;padding:20px}
+.spinner{width:16px;height:16px;border:2px solid #dbe4ee;border-top-color:#1F4E79;border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+@media(max-width:700px){
+  .dash-row{grid-template-columns:1fr}
+  .container,.dash{padding:16px}
+  .kpi-row{grid-template-columns:1fr 1fr}
+}
 </style>
 </head>
 <body>
 
 <div class="header">
-  <h1>&#127859; ABC Kochwerk Gruppe · Einkauf</h1>
-  <p>Digitale Tools für Produktvorgaben, Ausschreibungen und Beschaffungsanalysen</p>
+  <div class="header-top">
+    <div>
+      <h1>&#127859; ABC Kochwerk Gruppe · Einkauf</h1>
+      <p>Digitale Tools für Produktvorgaben, Ausschreibungen und Beschaffungsanalysen</p>
+    </div>
+  </div>
+  <div class="tab-bar">
+    <button class="tab active" id="tab-tools" onclick="switchTab('tools')">&#128736; Tools</button>
+    <button class="tab" id="tab-dash" onclick="switchTab('dash')">&#128202; Ausschreibungs-Dashboard</button>
+  </div>
 </div>
 
-<div class="container">
-
-  <div class="info-bar">
+<!-- ═══ TOOLS TAB ═══ -->
+<div id="view-tools" class="container">
+  <div class="info-bar" style="margin-top:0;margin-bottom:20px">
     <span style="font-size:18px">&#9432;</span>
     <span>Alle Tools laufen direkt im Browser &ndash; keine Installation nötig. Änderungen in den <strong>Produktvorgaben</strong> werden in Echtzeit für alle Kollegen gespeichert.</span>
   </div>
 
-  <div style="margin-top:24px"></div>
   <div class="section-title">Haupttools</div>
   <div class="tools">
-
     <a class="tool-card" href="./produktvorgaben/index.html">
       <div class="tool-header">
         <div class="tool-icon" style="background:#EBF3FB">&#128203;</div>
         <div class="tool-name">Produktvorgaben</div>
       </div>
-      <div class="tool-desc">Zentrale Verwaltung aller Artikelvorgaben: Status, Bio-Pflicht, Vegan, Glutenfrei, Festvergabe, Gebindegröße und mehr. Mit Bestelldaten 2025 und Ausschreibungspreisen angereichert.</div>
+      <div class="tool-desc">Zentrale Verwaltung aller Artikelvorgaben: Status, Bio-Pflicht, Vegan, Glutenfrei, Festvergabe, Gebindegröße und mehr. Mit Bestelldaten 2025 und Ausschreibungspreisen.</div>
       <div class="tool-tags">
         <span class="tag tag-blue">Supabase Live-Sync</span>
         <span class="tag tag-green">1.380 Artikel</span>
@@ -63,13 +148,12 @@ body{font-family:Arial,sans-serif;background:#f0f4f8;color:#1a2332;min-height:10
       </div>
       <div class="arrow">&#8594;</div>
     </a>
-
     <a class="tool-card" href="./Ausschreibungs_Generator.html">
       <div class="tool-header">
         <div class="tool-icon" style="background:#f0fff4">&#128196;</div>
         <div class="tool-name">Ausschreibungs-Generator</div>
       </div>
-      <div class="tool-desc">WaWi-Export hochladen, Lieferanten & Kategorien auswählen und automatisch Ausschreibungsformulare im bekannten Format generieren – mit Produktvorgaben vorausgefüllt.</div>
+      <div class="tool-desc">WaWi-Export hochladen, Lieferanten & Kategorien auswählen und Ausschreibungsformulare automatisch generieren – mit Produktvorgaben vorausgefüllt.</div>
       <div class="tool-tags">
         <span class="tag tag-green">Excel-Export</span>
         <span class="tag tag-orange">Pro Lieferant</span>
@@ -77,41 +161,408 @@ body{font-family:Arial,sans-serif;background:#f0f4f8;color:#1a2332;min-height:10
       </div>
       <div class="arrow">&#8594;</div>
     </a>
-
   </div>
 
   <div class="divider"></div>
-  <div class="section-title">In Entwicklung</div>
+  <div class="section-title">Auswertung &amp; Analyse</div>
   <div class="tools">
-
     <a class="tool-card" href="./Ausschreibungs_Auswertung.html">
       <div class="tool-header">
         <div class="tool-icon" style="background:#fff3e0">&#128202;</div>
         <div class="tool-name">Ausschreibungs-Auswertung</div>
       </div>
-      <div class="tool-desc">Lieferanten-Rückläufe hochladen, Vorgaben automatisch prüfen, Preisranking mit Zahlungs- und Lieferbedingungen erstellen und Ranking-Brief pro Lieferant exportieren.</div>
+      <div class="tool-desc">Lieferanten-Rückläufe hochladen, Vorgaben prüfen, Preisranking mit Zahlungs- und Lieferbedingungen erstellen. <strong>Speichert Ergebnisse ins Dashboard.</strong></div>
       <div class="tool-tags">
         <span class="tag tag-green">Excel-Export</span>
         <span class="tag tag-orange">Ranking</span>
-        <span class="tag tag-blue">Vorgaben-Check</span>
+        <span class="tag tag-blue">→ Dashboard</span>
       </div>
       <div class="arrow">&#8594;</div>
     </a>
-
     <div class="tool-card" style="opacity:.6;cursor:default">
       <div class="tool-header">
         <div class="tool-icon" style="background:#f9f9f9">&#128260;</div>
         <div class="tool-name">WaWi-Import Generator</div>
       </div>
-      <div class="tool-desc">Aus dem Ausschreibungsranking direkt eine WaWi-Import-Datei im Bartsch-Format generieren – ein Klick vom Ranking zur Preispflege.</div>
-      <div class="tool-tags">
-        <span class="tag tag-blue">Demnächst</span>
+      <div class="tool-desc">Aus dem Ausschreibungsranking direkt eine WaWi-Import-Datei im Bartsch-Format generieren.</div>
+      <div class="tool-tags"><span class="tag tag-blue">Demnächst</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ DASHBOARD TAB ═══ -->
+<div id="view-dash" class="dash">
+  <div id="dash-loading" class="loading"><div class="spinner"></div> Lade Ausschreibungsdaten aus Supabase...</div>
+  <div id="dash-empty" class="dash-empty" style="display:none">
+    <div class="big-icon">&#128202;</div>
+    <p>Noch keine Ausschreibungsdaten vorhanden.<br>
+    Führe eine Auswertung durch und klicke auf<br>
+    <strong>„In Supabase speichern"</strong> im <a href="./Ausschreibungs_Auswertung.html">Auswertungs-Tool</a>.</p>
+  </div>
+  <div id="dash-content" style="display:none">
+
+    <!-- Periode-Auswahl -->
+    <div class="periode-bar">
+      <label>Periode:</label>
+      <div id="periode-btns" style="display:flex;gap:6px;flex-wrap:wrap"></div>
+      <span id="dash-refresh-btn" onclick="loadDashboard()" style="margin-left:auto;cursor:pointer;color:#607080;font-size:11px;text-decoration:underline">&#8635; Aktualisieren</span>
+    </div>
+
+    <!-- KPI Row -->
+    <div class="kpi-row" id="kpi-row"></div>
+
+    <!-- Row 1: Lieferanten-Übersicht + Vergleich letzte/aktuelle WA -->
+    <div class="dash-row">
+      <div class="dash-card">
+        <div class="dash-card-title"><span>&#127942;</span> Lieferanten-Übersicht</div>
+        <div id="sup-scorecard"></div>
+      </div>
+      <div class="dash-card">
+        <div class="dash-card-title"><span>&#128260;</span> Vergleich: vorherige vs. aktuelle Periode</div>
+        <div id="cmp-table-wrap"></div>
+      </div>
+    </div>
+
+    <!-- Row 2: Preishistorie Suche -->
+    <div class="dash-row single">
+      <div class="dash-card">
+        <div class="dash-card-title"><span>&#128200;</span> Preishistorie pro Artikel & Lieferant</div>
+        <input class="ph-search" id="ph-search" placeholder="Artikel suchen..." oninput="renderHistory()">
+        <div id="ph-table-wrap" style="overflow-x:auto;max-height:420px;overflow-y:auto"></div>
+      </div>
+    </div>
+
+    <!-- Row 3: Preistendenz (top Veränderungen) -->
+    <div class="dash-row">
+      <div class="dash-card">
+        <div class="dash-card-title"><span>&#128200;</span> Größte Preissteigerungen</div>
+        <div id="top-increase"></div>
+      </div>
+      <div class="dash-card">
+        <div class="dash-card-title"><span>&#128201;</span> Größte Preisrückgänge</div>
+        <div id="top-decrease"></div>
       </div>
     </div>
 
   </div>
-
 </div>
 
+<script>
+const SUPA_URL = 'https://ywmimuctohdmxkmexops.supabase.co';
+const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl3bWltdWN0b2hkbXhrbWV4b3BzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYzNzY5MjUsImV4cCI6MjA5MTk1MjkyNX0.eqyCjArkAla2oCxbTUMCAvYzlsJJY6AdI-QXnyKcpy0';
+
+// ─── Tab switching ───
+function switchTab(tab) {
+  document.getElementById('view-tools').style.display = tab === 'tools' ? '' : 'none';
+  document.getElementById('view-dash').style.display = tab === 'dash' ? 'block' : 'none';
+  document.getElementById('tab-tools').classList.toggle('active', tab === 'tools');
+  document.getElementById('tab-dash').classList.toggle('active', tab === 'dash');
+  if (tab === 'dash' && !dashLoaded) loadDashboard();
+}
+
+// ─── Dashboard state ───
+let allData = [];       // all rows from supabase
+let periodes = [];      // sorted unique periods
+let activePeriode = ''; // currently selected
+let dashLoaded = false;
+
+function fmt(v, d=2) {
+  if (v == null || isNaN(v)) return '–';
+  return Number(v).toFixed(d).replace('.', ',') + ' €';
+}
+function fmtPct(v) {
+  if (v == null || isNaN(v)) return '';
+  const s = (v >= 0 ? '+' : '') + v.toFixed(1).replace('.', ',') + ' %';
+  return s;
+}
+
+// ─── Load from Supabase ───
+async function loadDashboard() {
+  dashLoaded = true;
+  document.getElementById('dash-loading').style.display = 'flex';
+  document.getElementById('dash-empty').style.display = 'none';
+  document.getElementById('dash-content').style.display = 'none';
+
+  try {
+    // Load all rows (paginate with limit 10000)
+    let rows = [], offset = 0, limit = 1000;
+    while (true) {
+      const resp = await fetch(
+        SUPA_URL + '/rest/v1/ausschreibung_preise?select=*&order=created_at.asc&limit=' + limit + '&offset=' + offset,
+        { headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY } }
+      );
+      if (!resp.ok) throw new Error('HTTP ' + resp.status);
+      const chunk = await resp.json();
+      rows = rows.concat(chunk);
+      if (chunk.length < limit) break;
+      offset += limit;
+    }
+
+    if (!rows.length) {
+      document.getElementById('dash-loading').style.display = 'none';
+      document.getElementById('dash-empty').style.display = 'block';
+      return;
+    }
+
+    allData = rows;
+    // Sort periodes
+    periodes = [...new Set(rows.map(r => r.periode))].sort();
+    activePeriode = periodes[periodes.length - 1];
+
+    renderPeriodeBar();
+    renderAll();
+
+    document.getElementById('dash-loading').style.display = 'none';
+    document.getElementById('dash-content').style.display = 'block';
+  } catch(e) {
+    document.getElementById('dash-loading').innerHTML = '<span style="color:#d32f2f">&#9888; Fehler beim Laden: ' + e.message + '</span>';
+    console.error(e);
+  }
+}
+
+function renderPeriodeBar() {
+  document.getElementById('periode-btns').innerHTML = periodes.map(p =>
+    '<span class="periode-badge' + (p === activePeriode ? ' active' : '') + '" onclick="setPeriode(\'' + p + '\')">' + p + '</span>'
+  ).join('');
+}
+
+function setPeriode(p) {
+  activePeriode = p;
+  renderPeriodeBar();
+  renderAll();
+}
+
+function renderAll() {
+  const cur = allData.filter(r => r.periode === activePeriode);
+  // Find previous period
+  const prevIdx = periodes.indexOf(activePeriode) - 1;
+  const prev = prevIdx >= 0 ? allData.filter(r => r.periode === periodes[prevIdx]) : [];
+
+  renderKPI(cur, prev);
+  renderSupScorecard(cur);
+  renderComparison(cur, prev);
+  renderHistory();
+  renderTrends(prev);
+}
+
+// ─── KPI Cards ───
+function renderKPI(cur, prev) {
+  const artikel = new Set(cur.map(r => r.produkt)).size;
+  const lieferanten = new Set(cur.map(r => r.lieferant)).size;
+  const rank1 = cur.filter(r => r.rang_eff === 1);
+  const avgPreis = cur.length ? cur.reduce((s,r)=>s+(r.preis_kg||0),0)/cur.length : 0;
+
+  // Avg price change vs prev
+  let pctChange = null;
+  if (prev.length) {
+    const prevAvg = prev.reduce((s,r)=>s+(r.preis_kg||0),0)/prev.length;
+    pctChange = prevAvg ? (avgPreis - prevAvg) / prevAvg * 100 : null;
+  }
+
+  document.getElementById('kpi-row').innerHTML = [
+    {label:'Artikel bewertet', val: artikel, sub: activePeriode},
+    {label:'Lieferanten', val: lieferanten, sub: 'Angebote eingegangen'},
+    {label:'Rang-1-Artikel', val: rank1.length, sub: new Set(rank1.map(r=>r.lieferant)).size + ' verschiedene Lieferanten'},
+    {label:'Ø Preis/kg', val: avgPreis.toFixed(2).replace('.',',') + ' €',
+     sub: pctChange !== null ? (pctChange >= 0 ? '▲ +' : '▼ ') + Math.abs(pctChange).toFixed(1) + '% vs. Vorperiode' : 'Erste Periode'},
+  ].map(k =>
+    '<div class="kpi"><div class="kpi-label">' + k.label + '</div><div class="kpi-val">' + k.val + '</div><div class="kpi-sub">' + k.sub + '</div></div>'
+  ).join('');
+}
+
+// ─── Lieferanten Scorecard ───
+function renderSupScorecard(cur) {
+  const sups = {};
+  cur.forEach(r => {
+    if (!sups[r.lieferant]) sups[r.lieferant] = {name:r.lieferant, total:0, rang1:0, preise:[]};
+    sups[r.lieferant].total++;
+    if (r.rang_eff === 1) sups[r.lieferant].rang1++;
+    if (r.preis_kg) sups[r.lieferant].preise.push(r.preis_kg);
+  });
+  const maxRank1 = Math.max(...Object.values(sups).map(s=>s.rang1), 1);
+
+  document.getElementById('sup-scorecard').innerHTML =
+    '<div class="sup-grid">' +
+    Object.values(sups)
+      .sort((a,b) => b.rang1 - a.rang1)
+      .map(s => {
+        const avg = s.preise.length ? s.preise.reduce((a,b)=>a+b,0)/s.preise.length : 0;
+        const pct = Math.round(s.rang1 / maxRank1 * 100);
+        return '<div class="sup-card">'
+          + '<div class="sup-name">' + s.name + '</div>'
+          + '<div class="sup-stat"><span>Artikel:</span><strong>' + s.total + '</strong></div>'
+          + '<div class="sup-stat"><span>&#9733; Rang 1:</span><strong>' + s.rang1 + '</strong></div>'
+          + '<div class="sup-stat"><span>&#216; Preis/kg:</span><strong>' + avg.toFixed(2).replace('.',',') + ' €</strong></div>'
+          + '<div class="sup-bar-wrap"><div class="sup-bar-fill" style="width:' + pct + '%"></div></div>'
+          + '</div>';
+      }).join('')
+    + '</div>';
+}
+
+// ─── Vergleich aktuell vs. vorher ───
+function renderComparison(cur, prev) {
+  const wrap = document.getElementById('cmp-table-wrap');
+  if (!prev.length) {
+    wrap.innerHTML = '<div style="color:#90a0b0;font-size:12px;padding:20px 0">Keine Vorperiode vorhanden.</div>';
+    return;
+  }
+
+  // Build lookup prev: produkt+lieferant -> preis_kg
+  const prevMap = {};
+  prev.forEach(r => { prevMap[r.produkt + '|' + r.lieferant] = r.preis_kg; });
+
+  const rows = cur
+    .map(r => {
+      const prev_kg = prevMap[r.produkt + '|' + r.lieferant];
+      const delta = (prev_kg && r.preis_kg) ? (r.preis_kg - prev_kg) / prev_kg * 100 : null;
+      return {...r, prev_kg, delta};
+    })
+    .filter(r => r.rang_eff === 1)
+    .sort((a,b) => Math.abs(b.delta||0) - Math.abs(a.delta||0))
+    .slice(0, 20);
+
+  wrap.innerHTML = '<div style="font-size:11px;color:#607080;margin-bottom:8px">Nur Rang-1-Artikel · ' + periodes[periodes.indexOf(activePeriode)-1] + ' → ' + activePeriode + '</div>'
+    + '<div style="overflow-x:auto;max-height:340px;overflow-y:auto">'
+    + '<table class="tbl"><thead><tr>'
+    + '<th>Artikel</th><th>Lieferant</th>'
+    + '<th class="r">Vorher</th><th class="r">Aktuell</th><th class="r">Δ</th>'
+    + '</tr></thead><tbody>'
+    + rows.map(r => {
+        const badge = r.delta == null ? '<span style="color:#ccc">–</span>'
+          : r.delta > 2 ? '<span class="delta-badge delta-neg">' + fmtPct(r.delta) + '</span>'
+          : r.delta < -2 ? '<span class="delta-badge delta-pos">' + fmtPct(r.delta) + '</span>'
+          : '<span style="color:#607080">' + fmtPct(r.delta) + '</span>';
+        return '<tr>'
+          + '<td>' + r.produkt + '</td>'
+          + '<td style="font-size:11px;color:#607080">' + r.lieferant + '</td>'
+          + '<td class="r num">' + (r.prev_kg ? r.prev_kg.toFixed(2).replace('.',',') + ' €' : '–') + '</td>'
+          + '<td class="r num cmp-preis">' + (r.preis_kg ? r.preis_kg.toFixed(2).replace('.',',') + ' €' : '–') + '</td>'
+          + '<td class="r">' + badge + '</td>'
+          + '</tr>';
+      }).join('')
+    + '</tbody></table></div>';
+}
+
+// ─── Preishistorie ───
+function renderHistory() {
+  const q = (document.getElementById('ph-search')?.value || '').toLowerCase();
+  const wrap = document.getElementById('ph-table-wrap');
+
+  // Build: produkt -> periode -> lieferant -> {preis_kg, rang_eff}
+  const map = {};
+  allData.forEach(r => {
+    if (!map[r.produkt]) map[r.produkt] = {};
+    if (!map[r.produkt][r.periode]) map[r.produkt][r.periode] = {};
+    // Keep lowest rang_eff per period
+    const existing = map[r.produkt][r.periode][r.lieferant];
+    if (!existing || r.rang_eff < existing.rang_eff) {
+      map[r.produkt][r.periode][r.lieferant] = r;
+    }
+  });
+
+  const produkts = Object.keys(map)
+    .filter(p => !q || p.toLowerCase().includes(q))
+    .sort((a,b) => a.localeCompare(b, 'de'))
+    .slice(0, 80);
+
+  if (!produkts.length) {
+    wrap.innerHTML = '<div style="color:#90a0b0;font-size:12px;padding:16px">Kein Artikel gefunden.</div>';
+    return;
+  }
+
+  // All suppliers in active period
+  const curData = allData.filter(r => r.periode === activePeriode);
+  const sups = [...new Set(curData.map(r => r.lieferant))].sort();
+
+  let html = '<table class="tbl"><thead><tr>'
+    + '<th>Artikel</th><th>WG</th>'
+    + periodes.map(p => '<th class="r" style="' + (p === activePeriode ? 'background:#EBF3FB;color:#1F4E79' : '') + '">' + p + '</th>').join('')
+    + '<th>Beste Lieferant</th>'
+    + '</tr></thead><tbody>';
+
+  html += produkts.map(prod => {
+    const periodeVals = periodes.map(p => {
+      const entries = map[prod][p];
+      if (!entries) return '<td class="r"><span style="color:#ddd">–</span></td>';
+      // Get rank 1 for this period
+      const r1 = Object.values(entries).find(e => e.rang_eff === 1);
+      const val = r1 ? r1.preis_kg : Object.values(entries).sort((a,b)=>(a.preis_kg||99)-(b.preis_kg||99))[0].preis_kg;
+      const prevP = periodes[periodes.indexOf(p) - 1];
+      let trendIcon = '';
+      if (prevP && map[prod][prevP]) {
+        const prevR1 = Object.values(map[prod][prevP]).find(e => e.rang_eff === 1);
+        const prevVal = prevR1 ? prevR1.preis_kg : null;
+        if (prevVal && val) {
+          const d = (val - prevVal) / prevVal * 100;
+          trendIcon = d > 2 ? ' <span class="trend-up" title="' + fmtPct(d) + '">▲</span>'
+                    : d < -2 ? ' <span class="trend-dn" title="' + fmtPct(d) + '">▼</span>' : '';
+        }
+      }
+      const isCur = p === activePeriode;
+      return '<td class="r num" style="' + (isCur ? 'background:#EBF3FB;font-weight:700' : '') + '">'
+        + val.toFixed(2).replace('.',',') + ' €' + trendIcon + '</td>';
+    }).join('');
+
+    const wg = (map[prod][activePeriode] || map[prod][periodes[0]]) || {};
+    const firstRow = Object.values(Object.values(wg)[0] || {})[0] || {};
+    const wgStr = firstRow.warengruppe || '';
+
+    // Best supplier in active period
+    const curEntries = map[prod][activePeriode] ? Object.values(map[prod][activePeriode]) : [];
+    const best = curEntries.find(e => e.rang_eff === 1);
+    const bestStr = best ? '<span class="rank-1">' + best.lieferant + '</span>' : '<span style="color:#ccc">–</span>';
+
+    return '<tr><td><strong>' + prod + '</strong></td>'
+      + '<td style="font-size:10px;color:#90a0b0">' + wgStr + '</td>'
+      + periodeVals
+      + '<td>' + bestStr + '</td>'
+      + '</tr>';
+  }).join('');
+
+  html += '</tbody></table>';
+  wrap.innerHTML = html;
+}
+
+// ─── Preis-Trends ───
+function renderTrends(prev) {
+  const wrap_up = document.getElementById('top-increase');
+  const wrap_dn = document.getElementById('top-decrease');
+
+  if (!prev.length) {
+    wrap_up.innerHTML = wrap_dn.innerHTML = '<div style="color:#90a0b0;font-size:12px;padding:16px">Keine Vorperiode für Vergleich.</div>';
+    return;
+  }
+
+  const prevMap = {};
+  prev.forEach(r => { prevMap[r.produkt + '|' + r.lieferant] = r.preis_kg; });
+
+  const curPeriode = allData.filter(r => r.periode === activePeriode && r.rang_eff === 1);
+  const changes = curPeriode
+    .map(r => {
+      const pk = prevMap[r.produkt + '|' + r.lieferant];
+      if (!pk || !r.preis_kg) return null;
+      return {produkt: r.produkt, lieferant: r.lieferant, prev: pk, cur: r.preis_kg, delta: (r.preis_kg - pk) / pk * 100};
+    })
+    .filter(Boolean)
+    .sort((a,b) => b.delta - a.delta);
+
+  function tbl(rows, cls) {
+    if (!rows.length) return '<div style="color:#90a0b0;font-size:12px;padding:16px">Keine Daten.</div>';
+    return '<table class="tbl"><thead><tr><th>Artikel</th><th>Lieferant</th><th class="r">Vorher</th><th class="r">Aktuell</th><th class="r">Δ</th></tr></thead><tbody>'
+      + rows.map(r =>
+          '<tr><td><strong>' + r.produkt + '</strong></td>'
+          + '<td style="font-size:10px;color:#607080">' + r.lieferant + '</td>'
+          + '<td class="r num">' + r.prev.toFixed(2).replace('.',',') + ' €</td>'
+          + '<td class="r num">' + r.cur.toFixed(2).replace('.',',') + ' €</td>'
+          + '<td class="r"><span class="delta-badge ' + cls + '">' + fmtPct(r.delta) + '</span></td>'
+          + '</tr>'
+        ).join('')
+      + '</tbody></table>';
+  }
+
+  wrap_up.innerHTML = tbl(changes.filter(r => r.delta > 0).slice(0, 10), 'delta-neg');
+  wrap_dn.innerHTML = tbl(changes.filter(r => r.delta < 0).sort((a,b)=>a.delta-b.delta).slice(0, 10), 'delta-pos');
+}
+</script>
 </body>
 </html>
