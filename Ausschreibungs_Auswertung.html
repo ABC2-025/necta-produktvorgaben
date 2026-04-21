@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="icon" href="data:,">
 <title>Ausschreibungs-Auswertung · ABC Kochwerk</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
@@ -93,7 +94,7 @@ td.r{text-align:right;font-variant-numeric:tabular-nums}td.c{text-align:center}
 <body>
 <div class="topbar">
   <h1>&#128202; Ausschreibungs-Auswertung · ABC Kochwerk Gruppe</h1>
-  <a href="./index.html" style="margin-left:auto;color:rgba(255,255,255,.7);font-size:11px;text-decoration:none">&#8592; Startseite</a>
+  <a href="./index.html" style="margin-left:auto;background:#ffffff22;border:1px solid #ffffff55;color:#fff;padding:5px 11px;border-radius:5px;font-size:12px;font-weight:600;text-decoration:none;white-space:nowrap">&#8962; Start</a>
 </div>
 <div class="container">
 
@@ -203,10 +204,14 @@ td.r{text-align:right;font-variant-numeric:tabular-nums}td.c{text-align:center}
     <h2>Schritt 5: Ranking-Export pro Lieferant</h2>
     <div class="alert alert-info">Für jeden Lieferanten wird eine Excel mit seinem persönlichen Ranking exportiert.</div>
     <div id="export-sup-list"></div>
-    <div class="btn-row">
+    <div class="btn-row" style="flex-wrap:wrap;gap:10px">
       <button class="btn btn-outline" onclick="gotoStep(4)">&#8592; Zurück</button>
       <button class="btn btn-success" onclick="exportAll()">&#8595; Alle Ranking-Excels exportieren</button>
+      <button class="btn" id="supa-save-btn" onclick="saveToSupabase()" style="background:#1F4E79;color:#fff;display:flex;align-items:center;gap:7px">
+        <span id="supa-save-icon">&#9729;</span> In Supabase speichern (Preishistorie)
+      </button>
     </div>
+    <div id="supa-save-status" style="margin-top:10px;font-size:12px;display:none"></div>
   </div>
 
 </div>
@@ -671,6 +676,101 @@ function populateExportList() {
 
 function exportAll() {
   uploadedFiles.forEach(f=>exportSupplier(f.supplierName));
+}
+
+// ── SUPABASE SAVE ──
+const SUPA_URL = 'https://ywmimuctohdmxkmexops.supabase.co';
+const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl3bWltdWN0b2hkbXhrbWV4b3BzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYzNzY5MjUsImV4cCI6MjA5MTk1MjkyNX0.eqyCjArkAla2oCxbTUMCAvYzlsJJY6AdI-QXnyKcpy0';
+
+async function saveToSupabase() {
+  const btn = document.getElementById('supa-save-btn');
+  const status = document.getElementById('supa-save-status');
+  const icon = document.getElementById('supa-save-icon');
+
+  const periode = uploadedFiles[0]?.periode || '';
+  if (!periode) { alert('Keine Periode erkannt – bitte zuerst Rückläufe laden.'); return; }
+
+  // Collect all rows
+  const rows = [];
+  Object.values(rankingData).forEach(art => {
+    art.angebote.forEach(a => {
+      const k = konditionen[a.supplier] || {};
+      // Find necta_id from PV data if available
+      rows.push({
+        periode,
+        produkt: art.produkt,
+        warengruppe: (art.pv && art.pv.k) || art.wg || '',
+        necta_id: null,
+        lieferant: a.supplier,
+        preis_kg: a.preis_kg || null,
+        preis_ae: a.preis_ae || null,
+        einheit: a.einheit || '',
+        artbeschr: a.artbeschr || '',
+        artnr: a.artnr || '',
+        hersteller: a.hersteller || '',
+        rang_eff: a.rang_eff || null,
+        rang_preis: a.rang_preis || null,
+        effpreis: a.effpreis || null,
+        skonto: k.skonto || 0,
+        zahlungsziel: k.zahlungsziel || 14,
+        lieferkosten: k.lieferkosten || 0,
+        mbw: k.mbw || 500,
+      });
+    });
+  });
+
+  if (!rows.length) { alert('Keine Rankingdaten vorhanden.'); return; }
+
+  btn.disabled = true;
+  icon.textContent = '⏳';
+  status.style.display = 'block';
+  status.style.color = '#607080';
+  status.textContent = 'Lösche alte Einträge für Periode ' + periode + '...';
+
+  try {
+    // Delete existing entries for this period first
+    const delResp = await fetch(SUPA_URL + '/rest/v1/ausschreibung_preise?periode=eq.' + encodeURIComponent(periode), {
+      method: 'DELETE',
+      headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY }
+    });
+    if (!delResp.ok && delResp.status !== 404) throw new Error('Delete fehlgeschlagen: ' + delResp.status);
+
+    status.textContent = 'Speichere ' + rows.length + ' Einträge...';
+
+    // Insert in batches of 200
+    const BATCH = 200;
+    for (let i = 0; i < rows.length; i += BATCH) {
+      const batch = rows.slice(i, i + BATCH);
+      const resp = await fetch(SUPA_URL + '/rest/v1/ausschreibung_preise', {
+        method: 'POST',
+        headers: {
+          'apikey': SUPA_KEY,
+          'Authorization': 'Bearer ' + SUPA_KEY,
+          'Content-Type': 'application/json',
+          'Prefer': 'return=minimal'
+        },
+        body: JSON.stringify(batch)
+      });
+      if (!resp.ok) {
+        const err = await resp.text();
+        throw new Error('Insert fehlgeschlagen: ' + err);
+      }
+      status.textContent = 'Gespeichert: ' + Math.min(i + BATCH, rows.length) + ' / ' + rows.length;
+    }
+
+    icon.textContent = '✓';
+    btn.style.background = '#198754';
+    status.style.color = '#198754';
+    status.textContent = '✓ ' + rows.length + ' Einträge für Periode „' + periode + '" in Supabase gespeichert. Dashboard auf der Startseite wird aktualisiert.';
+  } catch(e) {
+    icon.textContent = '⚠';
+    btn.style.background = '#dc3545';
+    status.style.color = '#dc3545';
+    status.textContent = 'Fehler: ' + e.message;
+    console.error(e);
+  } finally {
+    btn.disabled = false;
+  }
 }
 
 function exportSupplier(sup) {
