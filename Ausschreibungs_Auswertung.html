@@ -372,12 +372,12 @@ async function processSupplierFile(file) {
       });
     }
 // Extract WA period
-        let periode = '';
-        for (let i = 0; i < Math.min(15, raw.length); i++) {
-          const r = raw[i].join(' ');
-          const m = r.match(/\b(20\d{2}[-_]?\d{2}[M]?)\b/);
-          if (m) {
-            periode = m[1];
+        var periode = '';
+        for (var pi = 0; pi < Math.min(15, raw.length); pi++) {
+          var pr = raw[pi].join(' ');
+          var pm = pr.match(/\b(20\d{2}[-_]?\d{2}[M]?)\b/);
+          if (pm) {
+            periode = pm[1];
             break;
           }
         }
