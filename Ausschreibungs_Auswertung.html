@@ -498,10 +498,10 @@ function runVorgabenCheck() {
     + '<div class="sc"><div class="lbl">Lieferanten</div><div class="val">'+uploadedFiles.length+'</div></div>';
 
   const sups = ['all', ...uploadedFiles.map(f=>f.supplierName)];
-  document.getElementById('vorg-tabs').innerHTML = sups.map(s=>
-    '<div class="sup-tab'+(s===activeVorgTab?' active':'')+'" onclick="setVorgTab(''+s.replace(/'/g,"\'")+'')">'+
-    (s==='all'?'Alle':s)+'</div>'
-  ).join('');
+ document.getElementById('vorg-tabs').innerHTML = sups.map(s=>
+      '<div class="sup-tab'+(s===activeVorgTab?' active':'')+'" onclick="setVorgTab(\''+s.replace(/'/g,"\\'")+'\')">'
+      +(s==='all'?'Alle':s)+'</div>'
+    ).join('');
 
   renderVorgTable();
   gotoStep(3);
