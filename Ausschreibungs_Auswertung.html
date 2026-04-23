@@ -287,27 +287,38 @@ async function processSupplierFile(file) {
     // Payment fields (from our new generator)
     const iSkonto=col('Skonto'), iZZ=col('Zahlungsziel'), iLK=col('Lieferkosten'), iMBW=col('Mindestbestellwert');
 
-    // Extract supplier name from cell B0/title area or filename
-    let supplierName = '';
-    for (let i=0; i<Math.min(15,raw.length); i++) {
-      const r = raw[i];
-      if (r[0] && String(r[0]).trim() && !String(r[0]).includes('ABC') && !String(r[0]).includes('Grundprodukte') && !String(r[0]).includes('Warengruppe')) {
-        const candidate = String(r[0]).trim();
-        if (candidate.length > 2 && candidate.length < 60 && !candidate.includes('Ausschreibung') && !candidate.includes('Bitte')) {
-          supplierName = candidate; break;
+   // Extract supplier name from sheet name, filename, or cell content
+        let supplierName = '';
+        
+        // 1. Try sheet name first (most reliable in new format)
+        const sheetName = wb.SheetNames[0];
+        if (sheetName && sheetName.length > 2 && sheetName.length < 60 
+            && !sheetName.toLowerCase().includes('sheet') 
+            && !sheetName.toLowerCase().includes('tabelle')) {
+          supplierName = sheetName;
         }
-      }
-    }
-    if (!supplierName) supplierName = file.name.replace(/\.xlsx?$/i,'').replace(/^[0-9_-]+/,'').replace(/_/g,' ').trim();
-
-    // Extract WA period
-    let periode = '';
-    for (let i=0; i<Math.min(15,raw.length); i++) {
-      const r = raw[i].join(' ');
-      const m = r.match(/\b(20\d{2}-\d{2}[MQ]?)\b/);
-      if (m) { periode=m[1]; break; }
-    }
-
+        
+        // 2. Fallback: extract from filename
+        if (!supplierName) {
+          supplierName = file.name.replace(/\.xlsx?$/i, '').replace(/^[^_]*_[^_]*_[^_]*_Ausschreibung_/, '').replace(/_/g, ' ').trim();
+        }
+        
+        // 3. Fallback: scan first rows for a name
+        if (!supplierName) {
+          for (let i = 0; i < Math.min(15, raw.length); i++) {
+            const r = raw[i];
+            if (r[0] && String(r[0]).trim() && !String(r[0]).includes('ABC') && !String(r[0]).includes('Grundprodukt') && !String(r[0]).includes('Warengruppe')) {
+              let candidate = String(r[0]).trim();
+              if (candidate.length > 2 && candidate.length < 60 && !candidate.includes('Ausschreibung') && !candidate.includes('Bitte')) {
+                supplierName = candidate;
+                break;
+              }
+            }
+          }
+        }
+        
+        if (!supplierName)
+          supplierName = file.name.replace(/\.xlsx?$/i, '').replace(/^[0-9_-]+/, '').replace(/_/g, ' ').trim();
     // Extract konditionen if present
     let skonto=null, zahlungsziel=null, lieferkosten=null, mbw=null;
     for (let i=0; i<headerRow; i++) {
