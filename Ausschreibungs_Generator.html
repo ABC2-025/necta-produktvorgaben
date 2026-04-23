@@ -309,22 +309,6 @@ async function processWaWiFile(file) {
     suppliers = Object.values(supMap).sort(function(a,b){ return a.name.localeCompare(b.name,'de'); });
     suppliers.forEach(function(s){ s.produktCount = Object.keys(s.produkte).length; });
 
-    // Lieferanten ins zentrale Einstellungen-localStorage synchronisieren
-    try {
-      var settingsRaw = localStorage.getItem('einkauf_settings_v1');
-      var settings = settingsRaw ? JSON.parse(settingsRaw) : {};
-      if (!settings.lieferanten) settings.lieferanten = [];
-      if (!settings.waperioden) settings.waperioden = [];
-      var uid = function(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,6); };
-      suppliers.forEach(function(s){
-        var exists = settings.lieferanten.find(function(l){ return l.name === s.name; });
-        if (!exists) {
-          settings.lieferanten.push({ id: uid(), name: s.name, quelle: 'WaWi', status: 'aktiv', notiz: '' });
-        }
-      });
-      localStorage.setItem('einkauf_settings_v1', JSON.stringify(settings));
-    } catch(e) { console.warn('Settings-Sync fehlgeschlagen:', e); }
-
     var uniqueProdukte = Object.keys(wawiData.reduce(function(m,r){ m[r.produkt]=1; return m; },{})).length;
 
     document.getElementById('upload-status').innerHTML =
@@ -528,13 +512,37 @@ async function generateAll() {
 }
 
 function generateSupplierExcel(supplierName, artList, cfg) {
-  // Colors
-  var DARK   = '1F4E79';
-  var MID    = '2E75B6';
-  var YELLOW = 'FFFF00';
-  var ORANGE = 'FCE4D6';
-  var WHITE  = 'FFFFFF';
-  var ORANGE_FONT = '833C00';
+  /* ═══════════════════════════════════════════════════════════════
+     NEUES DESIGN – basierend auf ausgabe.xlsx Design-Template
+     Spalten: A..U (0..20)
+     A  = lfd Nr.
+     B  = Produkt           (vorausgefüllt)
+     C  = Warengruppe       (vorausgefüllt)
+     D  = Necta ID          (vorausgefüllt)
+     E  = Bio               (vorausgefüllt)
+     F  = ca. Menge kg – Gesamt   (auto aus 2025)
+     G  = p.M.              (auto = Gesamt/12)
+     H  = (Abtropf-)Gewicht je Stück in g
+     I  = ── Trennlinie ──  (leer, schmale Spalte)
+     J  = Artikelnummer      (gelb – LF füllt)
+     K  = Artikelbeschreibung(gelb – LF füllt)
+     L  = Hersteller         (vorausgefüllt wenn vorgegeben)
+     M  = Menge je VE        (vorausgefüllt wenn vorgegeben)
+     N  = VE                 (gelb – LF füllt)
+     O  = Einheit            (gelb – Dropdown KG/L/Stück)
+     P  = Preis je AE        (gelb – LF füllt – BOLD Header)
+     Q  = Preis je kg        (auto-Formel)
+     R  = Preis je l         (auto-Formel)
+     S  = Preis je Stück     (auto-Formel)
+     T  = (leer – Preisbindung entfernt)
+     U  = Anmerkung          (gelb – LF füllt)
+     ═══════════════════════════════════════════════════════════════ */
+
+  var GREY_HDR = 'D9D9D9';
+  var YELLOW   = 'FFFF00';
+  var WHITE    = 'FFFFFF';
+  var BLACK    = '000000';
+  var SEPARATOR_BG = 'BFBFBF';
 
   var waTypLabel = {
     '1M':'1-Monatsausschreibung','3M':'3-Monatsausschreibung',
@@ -547,11 +555,10 @@ function generateSupplierExcel(supplierName, artList, cfg) {
 
   function dateStr(s){ return s?new Date(s).toLocaleDateString('de-DE'):'–'; }
 
-  // ── Helper: cell style objects ──
   function cs(bg, fontColor, bold, sz, wrap, halign) {
     var s = {};
     if (bg) s.fill = {patternType:'solid', fgColor:{rgb:bg}};
-    s.font = {name:'Arial', sz:sz||10, color:{rgb:fontColor||'000000'}, bold:!!bold};
+    s.font = {name:'Arial', sz:sz||10, color:{rgb:fontColor||BLACK}, bold:!!bold};
     if (wrap || halign) s.alignment = {wrapText:!!wrap, horizontal:halign||'left', vertical:'center'};
     else s.alignment = {vertical:'center'};
     return s;
@@ -559,128 +566,137 @@ function generateSupplierExcel(supplierName, artList, cfg) {
 
   var wb = XLSX.utils.book_new();
   var ws = {};
-  var range = {s:{r:0,c:0}, e:{r:0,c:25}};
+  var range = {s:{r:0,c:0}, e:{r:0,c:20}};
 
-  function setCell(r, c, v, style) {
+  function setCell(r, c, v, style, numFmt) {
     var addr = XLSX.utils.encode_cell({r:r, c:c});
-    var t = typeof v === 'number' ? 'n' : (v===''||v==null) ? 'z' : 's';
-    if (v===''||v==null) ws[addr] = {t:'z', s:style||{}};
-    else ws[addr] = {t:t, v:v, s:style||{}};
+    var cell;
+    if (v===''||v==null) cell = {t:'z', s:style||{}};
+    else if (typeof v === 'number') cell = {t:'n', v:v, s:style||{}};
+    else cell = {t:'s', v:v, s:style||{}};
+    if (numFmt) cell.z = numFmt;
+    ws[addr] = cell;
     if (r > range.e.r) range.e.r = r;
     if (c > range.e.c) range.e.c = c;
   }
 
-  // Style shortcuts
-  var sDark  = cs(DARK,  WHITE, true,  10, false, 'left');
-  var sDarkC = cs(DARK,  WHITE, true,  9,  true,  'center');
-  var sMid   = cs(MID,   WHITE, true,  9,  true,  'center');
-  var sYellow= cs(YELLOW,'000000',false,11,false,'center');
-  var sOrange= cs(ORANGE, ORANGE_FONT, false, 9, false, 'left');
-  var sBlank = cs(null, '000000', false, 10);
-  var sDarkLabel = cs(DARK, WHITE, true, 10, false, 'left');
+  function setFormula(r, c, f, style, numFmt) {
+    var addr = XLSX.utils.encode_cell({r:r, c:c});
+    ws[addr] = {t:'n', f:f, s:style||{}, v:0};
+    if (numFmt) ws[addr].z = numFmt;
+    if (r > range.e.r) range.e.r = r;
+    if (c > range.e.c) range.e.c = c;
+  }
 
-  // ── ROW 0: Header ──
-  var titleStyle = cs(DARK, WHITE, true, 14, false, 'left');
-  for (var c=0;c<26;c++) setCell(0, c, '', cs(DARK, WHITE, false, 10));
-  setCell(0, 0, 'ABC Kochwerk Gruppe', titleStyle);
-  setCell(0, 10, 'Anleitung (Bitte an die vorgegebene Logik halten):', cs(DARK, WHITE, true, 9, false, 'left'));
+  /* ── ROW 0 (A1): ABC Kochwerk Gruppe ── */
+  setCell(0, 0, 'ABC Kochwerk Gruppe', cs(null, BLACK, true, 14, false, 'left'));
 
-  // ── ROW 1: WA Title ──
-  var lblue = 'DEEAF1';
-  for (var c=0;c<26;c++) setCell(1, c, '', cs(lblue, '000000', false, 10));
-  setCell(1, 0, 'Warengruppen: '+katStr+' ('+waTypLabel+')', cs(lblue, '000000', true, 11, false, 'left'));
-  setCell(1, 10, '1.', cs(lblue, '000000', true, 9, false, 'right'));
-  setCell(1, 11, 'Bitte alle gelb markierten Felder ausfüllen. "Menge je AE" und "Preis je AE" sind entscheidend!', cs(lblue, '000000', false, 9, true, 'left'));
+  /* ── ROW 1 (A2): Warengruppen ── */
+  setCell(1, 0, 'Warengruppen: '+katStr+' ('+waTypLabel+')', cs(null, BLACK, false, 10, false, 'left'));
 
-  // ── ROWS 2-5: Vertragsbedingungen ──
-  var anleitungen = [
-    [3, '2.', 'Bitte Beschreibung und Grammaturen (Abtropfgewicht in Gramm) beachten.'],
-    [4, '3.', 'Eine VE kann mehrere AE umfassen. Die VE kann bei manchen Produkten auch die AE sein.'],
-    [5, '4.', 'Bitte angeben ob Preisbindung auch bei Nicht-Zuschlag gewünscht ist (Alt.-Lieferant).'],
-    [6, '5.', 'Bitte preislich kompetitive Gebindegrößen anbieten, je nach Produkt 5–20 kg.'],
+  /* ── ROW 2: leer ── */
+
+  /* ── ROW 3 (B4): Allgemeine Vertragsbedingungen / Zahlungsbed. / Lieferbed. ── */
+  setCell(3, 1, 'Allgemeine Vertragsbedingungen:', cs(null, BLACK, true, 10, false, 'left'));
+  setCell(3, 10, 'Zahlungsbedingungen (bitte ausfüllen):', cs(null, BLACK, true, 10, false, 'left'));
+  setCell(3, 13, 'Lieferbedingungen (bitte ausfüllen):', cs(null, BLACK, true, 10, false, 'left'));
+
+  /* ── ROW 4 (B5): Preise / Skonto / Lieferkosten ── */
+  setCell(4, 1, '1. Die abgegebenen Preise gelten ab dem '+dateStr(cfg.gueltigAb)+' bis '+dateStr(cfg.gueltigBis)+' (Bestelldatum)', cs(null, BLACK, false, 10));
+  setCell(4, 10, 'Skonto %:', cs(null, BLACK, false, 10));
+  setCell(4, 11, '', cs(YELLOW, BLACK, false, 10));
+  setCell(4, 13, 'Lieferkosten pro Lieferung (€):', cs(null, BLACK, false, 10));
+  setCell(4, 14, '', cs(YELLOW, BLACK, false, 10));
+
+  /* ── ROW 5 (B6): Abgabefrist / Zahlungsziel / Bestellwert ── */
+  setCell(5, 1, '2. Abgabefrist: '+dateStr(cfg.abgabeFrist)+' - 24 Uhr', cs(null, BLACK, false, 10));
+  setCell(5, 10, 'Zahlungsziel Tage Netto:', cs(null, BLACK, false, 10));
+  setCell(5, 11, '', cs(YELLOW, BLACK, false, 10));
+  setCell(5, 13, 'Ø Bestellwert pro Lieferung (€):', cs(null, BLACK, false, 10));
+  setCell(5, 14, '', cs(YELLOW, BLACK, false, 10));
+
+  /* ── ROW 6 (B7): Alternativprodukt ── */
+  setCell(6, 1, '3. Verpflichtung zu Alternativprodukt (gleicher Qualität/Preis), wenn Produkt nicht lieferbar', cs(null, BLACK, false, 10));
+
+  /* ── ROW 7 (B8): Saison ── */
+  setCell(7, 1, '4. Bitte aus Umwelt- und Kostengründen: "Saison" beachten und ggf. von Preisabgabe absehen', cs(null, BLACK, false, 10));
+
+  /* ── ROW 8-9: leer ── */
+
+  /* ═══ ROW 10 (Zeile 11): Spaltenüberschriften Zeile 1 ═══ */
+  var hdrStyle    = cs(GREY_HDR, BLACK, false, 9, true, 'center');
+  var hdrStyleB   = cs(GREY_HDR, BLACK, true,  9, true, 'center');
+  var sepStyle    = cs(SEPARATOR_BG, BLACK, false, 9);
+
+  var headers1 = [
+    /* A */ 'lfd',
+    /* B */ 'Produkt',
+    /* C */ 'Warengruppe',
+    /* D */ 'Necta ID',
+    /* E */ 'Bio',
+    /* F */ 'ca. Menge in kg',
+    /* G */ '',
+    /* H */ '(Abtropf-)Gewicht',
+    /* I */ '',
+    /* J */ 'Artikelnummer',
+    /* K */ 'Artikelbeschreibung',
+    /* L */ 'Hersteller',
+    /* M */ 'Menge je VE',
+    /* N */ 'VE',
+    /* O */ 'Einheit',
+    /* P */ 'Preis je AE',
+    /* Q */ 'Preis je kg',
+    /* R */ 'Preis je l',
+    /* S */ 'Preis je Stück',
+    /* T */ '',
+    /* U */ 'Anmerkung'
   ];
-  var vbItems = [
-    [2, 'Allgemeine Vertragsbedingungen:', true],
-    [3, '1. Preise gelten ab '+dateStr(cfg.gueltigAb)+' bis '+dateStr(cfg.gueltigBis), false],
-    [4, '2. Abgabefrist: '+dateStr(cfg.abgabeFrist)+' – 24 Uhr', false],
-    [5, '3. Verpflichtung zu Alternativprodukt gleicher Qualität/Preis wenn nicht lieferbar', false],
+  headers1.forEach(function(h, ci) {
+    if (ci === 8) { setCell(10, ci, '', sepStyle); return; }
+    setCell(10, ci, h, ci===15 ? hdrStyleB : hdrStyle);
+  });
+
+  /* ═══ ROW 11 (Zeile 12): Spaltenüberschriften Zeile 2 ═══ */
+  var headers2 = [
+    /* A */ 'Nr.',
+    /* B */ '',
+    /* C */ '',
+    /* D */ '',
+    /* E */ '',
+    /* F */ 'Gesamt 2025',
+    /* G */ 'p.M.',
+    /* H */ 'je Stück in g',
+    /* I */ '',
+    /* J */ '',
+    /* K */ '',
+    /* L */ '',
+    /* M */ '',
+    /* N */ '',
+    /* O */ '',
+    /* P */ '',
+    /* Q */ '',
+    /* R */ '',
+    /* S */ '',
+    /* T */ '',
+    /* U */ ''
   ];
-  vbItems.forEach(function(item) {
-    setCell(item[0], 0, item[1], cs(null, '000000', item[2], 10, false, 'left'));
-  });
-  anleitungen.forEach(function(item) {
-    setCell(item[0], 10, item[1], cs(null, '000000', true, 9, false, 'right'));
-    setCell(item[0], 11, item[2], cs(null, '000000', false, 9, true, 'left'));
+  headers2.forEach(function(h, ci) {
+    if (ci === 8) { setCell(11, ci, '', sepStyle); return; }
+    setCell(11, ci, h, hdrStyle);
   });
 
-  // ── ROW 6: Zahlungsbedingungen ──
-  setCell(6, 0, 'Zahlungsbedingungen (bitte ausfüllen):', cs(null, '000000', true, 10));
-  setCell(6, 2, 'Skonto %:', cs(null, '000000', false, 10, false, 'right'));
-  setCell(6, 3, '', sYellow);
-  setCell(6, 4, 'Zahlungsziel Tage Netto:', cs(null, '000000', false, 10, false, 'right'));
-  setCell(6, 5, '', sYellow);
-  setCell(6, 6, '', sYellow);
-
-  // ── ROW 7: Lieferbedingungen ──
-  setCell(7, 0, 'Lieferbedingungen (bitte ausfüllen):', cs(null, '000000', true, 10));
-  setCell(7, 2, 'Lieferkosten pro Lieferung (€):', cs(null, '000000', false, 10, false, 'right'));
-  setCell(7, 3, '', sYellow);
-  setCell(7, 4, 'Ø Bestellwert pro Lieferung (€):', cs(null, '000000', false, 10, false, 'right'));
-  setCell(7, 5, '', sYellow);
-  setCell(7, 6, '', sYellow);
-
-  // ── ROW 8: spacer ──
-
-  // ── ROWS 9-10: Column headers ──
-  var headerDefs = [
-    // [col, row9text, row10text, bg, isInput]
-    [0,  '',                          '',                         DARK, false],
-    [1,  'lfd',                       'Nr.',                      DARK, false],
-    [2,  'Produkt',                   '',                         DARK, false],
-    [3,  'Warengruppe',               '',                         DARK, false],
-    [4,  'Necta ID',                  '',                         DARK, false],
-    [5,  'Bio',                       '',                         DARK, false],
-    [6,  'ca. Menge in kg',           'Gesamt '+cfg.periode,      DARK, false],
-    [7,  '',                          'p.M.',                     DARK, false],
-    [8,  '(Abtropf-)\nGewicht',       'je Stück in g',            DARK, false],
-    [9,  '',                          '',                         DARK, false],
-    [10, '',                          'Artikelnummer',            MID,  true],
-    [11, '',                          'Artikelbeschreibung',      MID,  true],
-    [12, '',                          'Hersteller',               MID,  true],
-    [13, '',                          'VE',                       MID,  true],
-    [14, '',                          'AE je VE',                 MID,  true],
-    [15, '',                          'AE',                       MID,  true],
-    [16, 'Kompetitive Gebindegröße',  'Bestellgröße AE oder VE',  MID,  true],
-    [17, '',                          'Menge je AE',              MID,  true],
-    [18, '',                          'Einheit',                  MID,  true],
-    [19, '',                          'Preis je AE',              MID,  true],
-    [20, '',                          'Preis je kg',              MID,  true],
-    [21, '',                          'Preis je l',               MID,  true],
-    [22, '',                          'Preis je Stück',           MID,  true],
-    [23, '',                          '',                         DARK, false],
-    [24, 'Preisbindung',              'auch bei Nichtzuschlag',   DARK, false],
-    [25, 'Anmerkungen / Vorgaben',    '',                         DARK, false],
-  ];
-  headerDefs.forEach(function(hd) {
-    var bgH = cs(hd[3], WHITE, true, 9, true, 'center');
-    setCell(9,  hd[0], hd[2]||'', bgH);
-    setCell(10, hd[0], hd[4]||'', bgH);
+  /* ── ROW 12: Beispielzeile (Bsp) ── */
+  var bspStyle = cs('FCE4D6', '833C00', false, 9, false, 'left');
+  var bspVals = ['Bsp', 'Apfel BIO', 'Obst', '', 'Bio', 600, 50, '', '',
+                 '123456789', 'Kartoffel Drillinge 5 KG', '', '', '', '', '', '', '', '', '', ''];
+  bspVals.forEach(function(v, ci) {
+    if (ci === 8) { setCell(12, ci, '', sepStyle); return; }
+    setCell(12, ci, v===''?'':v, bspStyle);
   });
 
-  // ── ROWS 11-12: Example rows ──
-  var bsp1 = ['',  'Bsp', 'Apfel BIO', 'Obst', '', 'Bio', 600, 50, 75, '',
-              '654654', 'Jonagold 1 KG', 'Neues Land', 'KT', 5, 'BT', 'VE', 50, 'Stk', 80, '', '', 1.6, '', 'ja',
-              '1 Karton = 5 Beutel à 50 Äpfel'];
-  var bsp2 = ['',  '', 'Kartoffel Drillinge geschält', 'Gemüse', '', '', 4000, 333, '', '',
-              '123456789', 'Kartoffel Drillinge 5 KG', 'Bauer XYZ', 'KT', 5, 'BT', 'AE', 1, 'kg', 25, 25, '', '', '', 'ja',
-              '1 Karton = 5 Beutel à 1 kg'];
-  [bsp1, bsp2].forEach(function(row, ri) {
-    row.forEach(function(v, ci) {
-      setCell(11+ri, ci, v===''?'':v, sOrange);
-    });
-  });
+  /* ── ROW 13: leer (Trenner) ── */
 
-  // ── DATA ROWS (start row 14, skip row 13 spacer) ──
+  /* ═══ DATA ROWS (ab Zeile 14 = Row index 14) ═══ */
   var lfd = 1;
   var dataRowStart = 14;
   artList.forEach(function(entry, idx){
@@ -688,7 +704,19 @@ function generateSupplierExcel(supplierName, artList, cfg) {
     var bioLabel = pv.bio==='Ja'?'Bio':'';
     var menge='', mengeM='';
     if (cfg.mengeRef==='2025'&&pv.kg!=null){ menge=Math.round(pv.kg); mengeM=Math.round(pv.kg/12); }
-    var einheit = wawiRow?wawiRow.einh_ae||wawiRow.einheit||'kg':'kg';
+
+    // Lookup Necta ID
+    var nectaId = '';
+    var pvKeys = Object.keys(PV);
+    for (var ki=0; ki<pvKeys.length; ki++) {
+      if (PV[pvKeys[ki]]===pv && !pvKeys[ki].startsWith('_')) { nectaId=pvKeys[ki]; break; }
+    }
+
+    // Hersteller / Menge je VE vorausfüllen wenn vorgegeben
+    var herstellerVorg = pv.hersteller || '';
+    var mengeVeVorg = pv.menge_ve || '';
+
+    // Vorgaben-Text für Anmerkungsspalte
     var vorgaben = [
       pv.bio==='Ja'?'Bio-Pflicht':'',
       pv.vegan==='Ja'?'Vegan-Pflicht':'',
@@ -700,82 +728,116 @@ function generateSupplierExcel(supplierName, artList, cfg) {
       pv.bem?pv.bem:'',
     ].filter(Boolean).join(' | ');
 
-    var nectaId = '';
-    var pvKeys = Object.keys(PV);
-    for (var ki=0; ki<pvKeys.length; ki++) {
-      if (PV[pvKeys[ki]]===pv && !pvKeys[ki].startsWith('_')) { nectaId=pvKeys[ki]; break; }
-    }
-
     var isAlt = idx % 2 === 1;
-    var rowBg = isAlt ? 'F5F8FC' : null;
-    function dc(v, align) {
-      return cs(rowBg, '000000', false, 10, false, align||'left');
-    }
-    function dcNum(v) {
-      return cs(rowBg, '000000', false, 10, false, 'right');
-    }
-    // Input cells (lieferant fills) - yellow
-    function dinput() {
-      return cs(YELLOW, '000000', false, 10, false, 'center');
-    }
-
+    var rowBg = isAlt ? 'F2F6FA' : null;
     var row = dataRowStart + idx;
-    var vals = [
-      ['',          dc()],
-      [lfd,         cs(rowBg,'000000',true,10,false,'center')],
-      [item.produkt, cs(rowBg,'000000',false,10,false,'left')],
-      [pv.wg||pv.k||'', dc()],
-      [nectaId,     cs(rowBg,'1F4E79',false,9,false,'left')],
-      [bioLabel,    cs(rowBg,'2E7D32',true,9,false,'center')],
-      [menge,       cs(rowBg,'000000',false,10,false,'right')],
-      [mengeM,      cs(rowBg,'000000',false,10,false,'right')],
-      ['',          dc()],
-      ['',          dc()],
-      [wawiRow?wawiRow.artnr:'',    dinput()],
-      [wawiRow?wawiRow.artbeschr:'', dinput()],
-      ['',          dinput()],
-      [wawiRow?wawiRow.ve:'',       dinput()],
-      [wawiRow?wawiRow.stk_ve:'',   dinput()],
-      [wawiRow?wawiRow.ae:'',       dinput()],
-      ['',          dinput()],
-      ['',          dinput()],
-      [einheit,     dinput()],
-      ['',          dinput()],
-      ['',          dinput()],
-      ['',          dinput()],
-      ['',          dinput()],
-      ['',          dc()],
-      ['',          cs(rowBg,'000000',false,9,false,'center')],
-      [vorgaben,    cs(rowBg,'444444',false,9,true,'left')],
-    ];
-    vals.forEach(function(pair, ci) {
-      setCell(row, ci, pair[0]===''||pair[0]==null?'':pair[0], pair[1]);
-    });
+    var excelRow = row + 1; // 1-indexed for formulas
+
+    // Style helpers
+    function sData(align){ return cs(rowBg, BLACK, false, 10, false, align||'left'); }
+    function sInput(align){ return cs(YELLOW, BLACK, false, 10, false, align||'center'); }
+    function sFormula(){ return cs(rowBg, '666666', false, 10, false, 'right'); }
+
+    /* A = lfd Nr. */
+    setCell(row, 0, lfd, cs(rowBg, BLACK, false, 10, false, 'center'));
+    /* B = Produkt */
+    setCell(row, 1, item.produkt, cs(rowBg, BLACK, false, 10, false, 'left'));
+    /* C = Warengruppe */
+    setCell(row, 2, pv.wg||pv.k||'', sData());
+    /* D = Necta ID */
+    setCell(row, 3, nectaId, cs(rowBg, '1F4E79', false, 9, false, 'left'));
+    /* E = Bio */
+    setCell(row, 4, bioLabel, cs(rowBg, '2E7D32', true, 9, false, 'center'));
+    /* F = Menge Gesamt 2025 */
+    setCell(row, 5, menge, cs(rowBg, BLACK, false, 10, false, 'right'));
+    /* G = p.M. (= F/12) */
+    if (menge) {
+      setFormula(row, 6, 'ROUND(F'+excelRow+'/12,0)', cs(rowBg, BLACK, false, 10, false, 'right'));
+    } else {
+      setCell(row, 6, '', sData('right'));
+    }
+    /* H = (Abtropf-)Gewicht */
+    setCell(row, 7, '', sData('right'));
+    /* I = Trennlinie (leer) */
+    setCell(row, 8, '', cs(SEPARATOR_BG, BLACK, false, 10));
+    /* J = Artikelnummer (gelb – LF füllt) */
+    setCell(row, 9, wawiRow?wawiRow.artnr||'':'', sInput());
+    /* K = Artikelbeschreibung (gelb – LF füllt) */
+    setCell(row, 10, wawiRow?wawiRow.artbeschr||'':'', sInput('left'));
+    /* L = Hersteller (vorausgefüllt wenn vorgegeben) */
+    setCell(row, 11, herstellerVorg, sData());
+    /* M = Menge je VE (vorausgefüllt wenn vorgegeben) */
+    setCell(row, 12, mengeVeVorg, sData('right'));
+    /* N = VE (gelb – LF füllt) */
+    setCell(row, 13, '', sInput());
+    /* O = Einheit (gelb – Dropdown KG/L/Stück) */
+    setCell(row, 14, '', sInput());
+    /* P = Preis je AE (gelb – LF füllt, HAUPTPREISFELD) */
+    setCell(row, 15, '', cs(YELLOW, BLACK, true, 11, false, 'right'), '#,##0.00 €');
+    /* Q = Preis je kg (auto-Formel: wenn O="KG" dann =P, sonst leer) */
+    setFormula(row, 16,
+      'IF(O'+excelRow+'="KG",P'+excelRow+',"")',
+      sFormula(), '#,##0.00 €');
+    /* R = Preis je l (auto-Formel: wenn O="L" dann =P, sonst leer) */
+    setFormula(row, 17,
+      'IF(O'+excelRow+'="L",P'+excelRow+',"")',
+      sFormula(), '#,##0.00 €');
+    /* S = Preis je Stück (auto-Formel: wenn O="Stück" dann =P, sonst leer) */
+    setFormula(row, 18,
+      'IF(O'+excelRow+'="Stück",P'+excelRow+',"")',
+      sFormula(), '#,##0.00 €');
+    /* T = leer (Preisbindung entfernt) */
+    setCell(row, 19, '', sData());
+    /* U = Anmerkung (gelb – LF füllt) + Vorgaben */
+    setCell(row, 20, vorgaben, sInput('left'));
+
     lfd++;
   });
 
   ws['!ref'] = XLSX.utils.encode_range(range);
 
-  // Column widths
-  ws['!cols'] = [3,5,32,16,12,5,11,9,8,1,14,30,18,6,7,6,12,9,7,11,11,9,11,1,12,50].map(function(w){return{wch:w};});
+  /* ── Spaltenbreiten ── */
+  ws['!cols'] = [
+    /* A */ {wch: 5},
+    /* B */ {wch: 30},
+    /* C */ {wch: 16},
+    /* D */ {wch: 12},
+    /* E */ {wch: 5},
+    /* F */ {wch: 12},
+    /* G */ {wch: 8},
+    /* H */ {wch: 12},
+    /* I */ {wch: 2},
+    /* J */ {wch: 14},
+    /* K */ {wch: 30},
+    /* L */ {wch: 16},
+    /* M */ {wch: 11},
+    /* N */ {wch: 8},
+    /* O */ {wch: 9},
+    /* P */ {wch: 12},
+    /* Q */ {wch: 11},
+    /* R */ {wch: 9},
+    /* S */ {wch: 11},
+    /* T */ {wch: 2},
+    /* U */ {wch: 45}
+  ];
 
-  // Row heights
+  /* ── Zeilenhöhen ── */
   var rowH = ws['!rows'] = [];
-  rowH[0]  = {hpt:26};
+  rowH[0]  = {hpt:28};
   rowH[1]  = {hpt:17};
-  rowH[6]  = {hpt:15};
-  rowH[7]  = {hpt:15};
-  rowH[9]  = {hpt:20};
-  rowH[10] = {hpt:30};
-  rowH[11] = {hpt:20};
+  rowH[10] = {hpt:22};
+  rowH[11] = {hpt:22};
   rowH[12] = {hpt:20};
-  // Data rows
   for (var dr=0; dr<artList.length; dr++) {
-    rowH[14+dr] = {hpt:17};
+    rowH[dataRowStart+dr] = {hpt:17};
   }
 
-  // Freeze panes at C15
-  ws['!freeze'] = {xSplit:2, ySplit:14};
+  /* ── Data Validation: Dropdown für Spalte O (Einheit) ── */
+  // SheetJS xlsx-style unterstützt '!dataValidation' nicht nativ,
+  // aber wir setzen es als Hinweis-Text in die Header-Subzeile
+
+  /* ── Freeze Panes: Spalte B + Zeile 14 fixieren ── */
+  ws['!freeze'] = {xSplit:1, ySplit:14};
 
   var sheetName = supplierName.substring(0,25).replace(/[\/*?[\]:]/g,'_');
   XLSX.utils.book_append_sheet(wb, ws, sheetName);
