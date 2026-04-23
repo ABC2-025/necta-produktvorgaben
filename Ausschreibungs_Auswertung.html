@@ -673,8 +673,11 @@ function populateExportList() {
         return '<div style="background:#fff;border:1px solid #dbe4ee;border-radius:8px;padding:14px">'
           +'<div style="font-size:12px;font-weight:700;margin-bottom:6px">'+f.supplierName+'</div>'
           +'<div style="font-size:11px;color:#607080">'+myArts.length+' Artikel · '+rank1+' mal Rang 1</div>'
-          +'<button class="btn btn-outline" style="margin-top:8px;font-size:11px;padding:4px 12px" onclick="exportSupplier(''+f.supplierName.replace(/'/g,"\'")+'')">&#8595; Export</button>'
+       +'<button class="btn btn-outline" style="margin-top:8px;font-size:11px;padding:4px 12px" data-supplier="'+f.supplierName.replace(/"/g,'&quot;')+'">&#8595; Export</button>'
           +'</div>';
+      document.querySelectorAll('#export-sup-list button[data-supplier]').forEach(b=>{
+      b.onclick=function(){ exportSupplier(this.getAttribute('data-supplier')); };
+    });
       }).join('')
     + '</div>';
 }
