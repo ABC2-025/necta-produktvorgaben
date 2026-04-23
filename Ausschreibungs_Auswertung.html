@@ -371,7 +371,16 @@ async function processSupplierFile(file) {
         anmerkung: String(r[iAnmerkung]||'').trim(),
       });
     }
-
+// Extract WA period
+        let periode = '';
+        for (let i = 0; i < Math.min(15, raw.length); i++) {
+          const r = raw[i].join(' ');
+          const m = r.match(/\b(20\d{2}[-_]?\d{2}[M]?)\b/);
+          if (m) {
+            periode = m[1];
+            break;
+          }
+        }
     // Store
     const existing = uploadedFiles.findIndex(f=>f.supplierName===supplierName);
     const entry = {name:file.name, supplierName, periode, rows, skonto, zahlungsziel, lieferkosten, mbw};
