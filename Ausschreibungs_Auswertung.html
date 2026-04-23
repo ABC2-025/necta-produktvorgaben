@@ -273,7 +273,7 @@ async function processSupplierFile(file) {
       if (r.some(c => c.trim()==='Produkt') && r.some(c => c.includes('Preis je'))) {
     }
     if (headerRow<0) { alert('Konnte Header nicht finden in: '+file.name); return; }
-
+if (headerRow >= 0) {
     const headers = raw[headerRow].map(c=>String(c).trim());
     const col = name => headers.findIndex(h=>h.toLowerCase().includes(name.toLowerCase()));
 
