@@ -498,10 +498,13 @@ function runVorgabenCheck() {
     + '<div class="sc"><div class="lbl">Lieferanten</div><div class="val">'+uploadedFiles.length+'</div></div>';
 
   const sups = ['all', ...uploadedFiles.map(f=>f.supplierName)];
- document.getElementById('vorg-tabs').innerHTML = sups.map(s=>
-      '<div class="sup-tab'+(s===activeVorgTab?' active':'')+'" onclick="setVorgTab(\''+s.replace(/'/g,"\\'")+'\')">'
+document.getElementById('vorg-tabs').innerHTML = sups.map(s=>
+      '<div class="sup-tab'+(s===activeVorgTab?' active':'')+'" data-sup="'+s.replace(/"/g,'&quot;')+'">'
       +(s==='all'?'Alle':s)+'</div>'
     ).join('');
+    document.querySelectorAll('#vorg-tabs .sup-tab').forEach(t=>{
+      t.onclick=function(){ setVorgTab(this.getAttribute('data-sup')); };
+    });
 
   renderVorgTable();
   gotoStep(3);
@@ -576,10 +579,13 @@ function buildRanking() {
 
   // Tabs: Alle + per supplier
   const sups = ['all',...uploadedFiles.map(f=>f.supplierName)];
-  document.getElementById('rank-tabs').innerHTML = sups.map(s=>
-    '<div class="sup-tab'+(s===activeRankTab?' active':'')+'" onclick="setRankTab(\''+s.replace(/'/g,"\\'")+'\')">'+
+ document.getElementById('rank-tabs').innerHTML = sups.map(s=>
+      '<div class="sup-tab'+(s===activeRankTab?' active':'')+'" data-sup="'+s.replace(/"/g,'&quot;')+'">'
       +(s==='all'?'Gesamt-Ranking':s)+'</div>'
     ).join('');
+    document.querySelectorAll('#rank-tabs .sup-tab').forEach(t=>{
+      t.onclick=function(){ setRankTab(this.getAttribute('data-sup')); };
+    });
   renderRankTable();
   populateExportList();
   gotoStep(4);
