@@ -577,7 +577,7 @@ function buildRanking() {
   // Tabs: Alle + per supplier
   const sups = ['all',...uploadedFiles.map(f=>f.supplierName)];
   document.getElementById('rank-tabs').innerHTML = sups.map(s=>
-      '<div class="sup-tab'+(s===activeRankTab?' active':'')+'" onclick="setRankTab(\''+s.replace(/'/g,"\\'")+'\')">'
+    '<div class="sup-tab'+(s===activeRankTab?' active':'')+'" onclick="setRankTab(\''+s.replace(/'/g,"\\'")+'\')">'+
       +(s==='all'?'Gesamt-Ranking':s)+'</div>'
     ).join('');
   renderRankTable();
