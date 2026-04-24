@@ -369,6 +369,7 @@ async function processSupplierFile(file) {
         preisbindung: String(r[iPreisbindung]||'').trim(),
         anmerkung: String(r[iAnmerkung]||'').trim(),
       });
+      }
 // Extract WA period
         var periode = '';
         for (var pi = 0; pi < Math.min(15, raw.length); pi++) {
