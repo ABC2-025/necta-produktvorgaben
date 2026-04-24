@@ -391,7 +391,7 @@ async function processSupplierFile(file) {
     }
   } catch(e) { console.error(e); alert('Fehler beim Lesen: '+file.name+' – '+e.message); }
 }
-
+}
 function renderUploadList() {
   const el = document.getElementById('upload-list');
   el.innerHTML = uploadedFiles.map((f,i) => 
