@@ -273,7 +273,6 @@ async function processSupplierFile(file) {
       if (r.some(c => c.trim()==='Produkt') && r.some(c => c.includes('Preis je'))) {
     }
     if (headerRow<0) { alert('Konnte Header nicht finden in: '+file.name); return; }
-if (headerRow >= 0) {
     const headers = raw[headerRow].map(c=>String(c).trim());
     const col = name => headers.findIndex(h=>h.toLowerCase().includes(name.toLowerCase()));
 
@@ -370,7 +369,6 @@ if (headerRow >= 0) {
         preisbindung: String(r[iPreisbindung]||'').trim(),
         anmerkung: String(r[iAnmerkung]||'').trim(),
       });
-      }
 // Extract WA period
         var periode = '';
         for (var pi = 0; pi < Math.min(15, raw.length); pi++) {
