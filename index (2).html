@@ -1,0 +1,1701 @@
+<div class="tool-card" onclick="location.href='wawi_import.html'" style="cursor:pointer">lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="icon" href="data:,">
+<title>ABC Kochwerk · Einkauf Tools</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Arial,sans-serif;background:#f0f4f8;color:#1a2332;min-height:100vh}
+.header{background:#1F4E79;color:#fff;padding:22px 32px 0}
+.header-top{display:flex;align-items:center;gap:16px;padding-bottom:16px}
+.header h1{font-size:20px;font-weight:700;margin-bottom:3px}
+.header p{font-size:12px;opacity:.75}
+.tab-bar{display:flex;gap:2px;margin-top:4px}
+.tab{padding:9px 20px;border-radius:8px 8px 0 0;font-size:13px;font-weight:600;cursor:pointer;color:rgba(255,255,255,.65);background:transparent;border:none;transition:background .15s,color .15s}
+.tab.active{background:#f0f4f8;color:#1F4E79}
+.tab:hover:not(.active){color:#fff;background:rgba(255,255,255,.1)}
+
+/* ─── TOOLS TAB ─── */
+.container{padding:24px 32px;max-width:1060px;margin:0 auto}
+.section-title{font-size:11px;font-weight:700;color:#607080;text-transform:uppercase;letter-spacing:.8px;margin-bottom:14px}
+.tools{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;margin-bottom:28px}
+.tool-card{background:#fff;border-radius:12px;border:1px solid #dbe4ee;padding:22px 24px;text-decoration:none;color:inherit;display:flex;flex-direction:column;gap:10px;transition:box-shadow .15s,transform .15s;cursor:pointer}
+.tool-card:hover{box-shadow:0 4px 20px rgba(0,0,0,.12);transform:translateY(-2px)}
+.tool-icon{font-size:28px;width:48px;height:48px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.tool-header{display:flex;align-items:center;gap:14px}
+.tool-name{font-size:15px;font-weight:700;color:#1F4E79}
+.tool-desc{font-size:12px;color:#607080;line-height:1.5}
+.tool-tags{display:flex;gap:5px;flex-wrap:wrap}
+.tag{font-size:10px;padding:2px 8px;border-radius:10px;font-weight:600}
+.tag-blue{background:#cce5ff;color:#004085}
+.tag-green{background:#d4edda;color:#155724}
+.tag-purple{background:#e2d9f3;color:#4a0080}
+.tag-orange{background:#fde8d8;color:#804000}
+.tag-red{background:#f8d7da;color:#721c24}
+.tool-card .arrow{font-size:18px;color:#B8CCE4;margin-top:auto;align-self:flex-end;transition:color .15s}
+.tool-card:hover .arrow{color:#1F4E79}
+.divider{height:1px;background:#dbe4ee;margin:8px 0 24px}
+.info-bar{background:#EBF3FB;border-radius:8px;padding:12px 16px;font-size:12px;color:#1F4E79;display:flex;align-items:center;gap:10px}
+.warn-bar{background:#fff3e0;border-radius:8px;padding:10px 14px;font-size:12px;color:#804000;display:flex;align-items:center;gap:8px;margin-bottom:12px}
+
+/* ─── DASHBOARD TAB ─── */
+.dash{padding:24px 32px;max-width:1200px;margin:0 auto;display:none}
+.dash.visible{display:block}
+
+.kpi-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;margin-bottom:24px}
+.kpi{background:#fff;border-radius:10px;border:1px solid #dbe4ee;padding:14px 16px}
+.kpi-label{font-size:10px;font-weight:700;color:#607080;text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px}
+.kpi-val{font-size:22px;font-weight:700;color:#1F4E79}
+.kpi-sub{font-size:10px;color:#90a0b0;margin-top:3px}
+
+.dash-section-title{font-size:11px;font-weight:700;color:#607080;text-transform:uppercase;letter-spacing:.8px;margin:20px 0 12px;display:flex;align-items:center;gap:8px}
+.dash-section-title::after{content:'';flex:1;height:1px;background:#dbe4ee}
+
+.dash-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px}
+.dash-row.single{grid-template-columns:1fr}
+.dash-row.three{grid-template-columns:1fr 1fr 1fr}
+.dash-card{background:#fff;border-radius:10px;border:1px solid #dbe4ee;padding:18px 20px}
+.dash-card-title{font-size:12px;font-weight:700;color:#1F4E79;margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.dash-card-title span{font-size:16px}
+
+.periode-bar{display:flex;align-items:center;gap:10px;margin-bottom:20px;flex-wrap:wrap}
+.periode-bar label{font-size:12px;font-weight:700;color:#607080}
+.periode-badge{padding:3px 10px;border-radius:12px;font-size:11px;font-weight:700;background:#EBF3FB;color:#1F4E79;cursor:pointer;border:2px solid transparent;transition:all .15s}
+.periode-badge.active{background:#1F4E79;color:#fff;border-color:#1F4E79}
+.periode-badge.disabled{background:#f0f4f8;color:#b0bec5;cursor:default;text-decoration:line-through;border-color:transparent}
+
+.ph-search{width:100%;padding:7px 12px;border:1px solid #dbe4ee;border-radius:6px;font-size:12px;margin-bottom:10px}
+.tbl{width:100%;border-collapse:collapse;font-size:12px}
+.tbl th{background:#f5f8fc;color:#607080;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;padding:7px 10px;text-align:left;border-bottom:2px solid #dbe4ee;white-space:nowrap}
+.tbl td{padding:7px 10px;border-bottom:1px solid #f0f4f8;vertical-align:middle}
+.tbl tr:hover td{background:#fafcff}
+.tbl .r{text-align:right}
+.tbl .num{font-variant-numeric:tabular-nums;font-family:monospace;font-size:11px}
+
+.trend-up{color:#d32f2f;font-weight:700}
+.trend-dn{color:#2e7d32;font-weight:700}
+.trend-eq{color:#607080}
+.rank-1{background:#fff8e1;color:#f57f17;font-weight:700;padding:1px 6px;border-radius:8px;font-size:10px}
+
+.sup-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px}
+.sup-card{border:1px solid #dbe4ee;border-radius:8px;padding:13px 15px}
+.sup-name{font-size:13px;font-weight:700;color:#1F4E79;margin-bottom:8px}
+.sup-stat{display:flex;justify-content:space-between;font-size:11px;color:#607080;margin-bottom:4px}
+.sup-stat strong{color:#1a2332}
+.sup-bar-wrap{height:6px;background:#f0f4f8;border-radius:3px;margin-top:8px;overflow:hidden}
+.sup-bar-fill{height:100%;background:#1F4E79;border-radius:3px;transition:width .4s}
+
+.delta-badge{padding:1px 6px;border-radius:8px;font-size:10px;font-weight:700}
+.delta-pos{background:#d4edda;color:#155724}
+.delta-neg{background:#f8d7da;color:#721c24}
+
+.dash-empty{text-align:center;padding:48px 24px;color:#90a0b0}
+.dash-empty .big-icon{font-size:48px;margin-bottom:12px}
+.dash-empty p{font-size:13px;line-height:1.6}
+.dash-empty a{color:#1F4E79;font-weight:700}
+.loading{display:flex;align-items:center;gap:8px;color:#607080;font-size:12px;padding:20px}
+.spinner{width:16px;height:16px;border:2px solid #dbe4ee;border-top-color:#1F4E79;border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* Produktkatalog-Dashboard Elemente */
+.pk-chart-wrap{position:relative;width:100%;height:220px}
+.pk-bar-row{display:flex;align-items:center;gap:8px;margin-bottom:6px;font-size:12px}
+.pk-bar-label{width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#607080;flex-shrink:0}
+.pk-bar-track{flex:1;height:14px;background:#f0f4f8;border-radius:3px;overflow:hidden}
+.pk-bar-fill{height:100%;border-radius:3px;transition:width .5s}
+.pk-bar-val{width:70px;text-align:right;font-variant-numeric:tabular-nums;font-size:11px;color:#1a2332;font-weight:600;flex-shrink:0}
+
+/* ─── EINSTELLUNGEN TAB ─── */
+.settings-view{padding:24px 32px;max-width:900px;margin:0 auto;display:none}
+.settings-section{background:#fff;border-radius:12px;border:1px solid #dbe4ee;margin-bottom:20px;overflow:hidden}
+.settings-section-head{padding:16px 20px;border-bottom:1px solid #f0f4f8;display:flex;align-items:center;justify-content:space-between}
+.settings-section-head h3{font-size:14px;font-weight:700;color:#1F4E79}
+.settings-section-head p{font-size:11px;color:#90a0b0;margin-top:2px}
+.settings-table{width:100%;border-collapse:collapse}
+.settings-table th{background:#f5f8fc;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#607080;padding:8px 16px;text-align:left}
+.settings-table td{padding:10px 16px;border-bottom:1px solid #f0f4f8;font-size:13px;vertical-align:middle}
+.settings-table tr:last-child td{border-bottom:none}
+.settings-table tr:hover td{background:#fafcff}
+
+/* Toggle */
+.toggle-wrap{display:flex;align-items:center;gap:10px}
+.toggle{position:relative;width:38px;height:22px;flex-shrink:0}
+.toggle input{opacity:0;width:0;height:0;position:absolute}
+.toggle-slider{position:absolute;inset:0;background:#ccd;border-radius:11px;cursor:pointer;transition:background .2s}
+.toggle input:checked + .toggle-slider{background:#1F4E79}
+.toggle-slider::before{content:'';position:absolute;width:16px;height:16px;left:3px;top:3px;background:#fff;border-radius:50%;transition:transform .2s}
+.toggle input:checked + .toggle-slider::before{transform:translateX(16px)}
+.toggle-label{font-size:12px;font-weight:600}
+.toggle-label.on{color:#1F4E79}
+.toggle-label.off{color:#b0bec5}
+
+/* Modal */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.35);display:flex;align-items:center;justify-content:center;z-index:100}
+.modal{background:#fff;border-radius:14px;padding:26px;min-width:380px;max-width:480px;width:92vw;box-shadow:0 8px 40px rgba(0,0,0,.18)}
+.modal h2{font-size:16px;font-weight:700;color:#1F4E79;margin-bottom:18px}
+.field{margin-bottom:14px}
+.field label{display:block;font-size:11px;font-weight:700;color:#607080;text-transform:uppercase;letter-spacing:.3px;margin-bottom:5px}
+.field input,.field select{width:100%;padding:8px 10px;border:1px solid #dbe4ee;border-radius:6px;font-size:13px;outline:none;color:#1a2332}
+.field input:focus,.field select:focus{border-color:#1F4E79}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.modal-footer{display:flex;justify-content:flex-end;gap:8px;margin-top:20px;padding-top:16px;border-top:1px solid #f0f4f8}
+.btn{padding:7px 16px;border-radius:7px;border:1px solid #dbe4ee;background:#fff;color:#1a2332;font-size:13px;font-weight:600;cursor:pointer}
+.btn:hover{background:#f0f4f8}
+.btn-primary{background:#1F4E79;color:#fff;border-color:#1F4E79}
+.btn-primary:hover{background:#164069}
+.btn-danger{background:#fff;color:#d32f2f;border-color:#f8d7da}
+.btn-danger:hover{background:#f8d7da}
+.btn-sm{padding:4px 10px;font-size:11px}
+.badge-inaktiv{background:#f0f4f8;color:#90a0b0;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600}
+.badge-aktiv{background:#d4edda;color:#155724;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600}
+.badge-disabled{background:#f8d7da;color:#721c24;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600}
+
+/* Inaktiv-Overlay auf Tool-Karten */
+.tool-card.lief-inaktiv{opacity:.45;pointer-events:none}
+.tool-card.lief-inaktiv::after{content:'Lieferant inaktiv';font-size:10px;font-weight:700;color:#d32f2f;background:#f8d7da;padding:2px 8px;border-radius:8px;align-self:flex-start}
+
+@media(max-width:700px){
+  .dash-row,.dash-row.three{grid-template-columns:1fr}
+  .container,.dash,.settings-view{padding:16px}
+  .kpi-row{grid-template-columns:1fr 1fr}
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-top">
+    <div>
+      <h1>&#127859; ABC Kochwerk Gruppe · Einkauf</h1>
+      <p>Digitale Tools für Produktvorgaben, Ausschreibungen und Beschaffungsanalysen</p>
+    </div>
+  </div>
+  <div class="tab-bar">
+    <button class="tab active" id="tab-tools" onclick="switchTab('tools')">&#128736; Tools</button>
+    <button class="tab" id="tab-dash" onclick="switchTab('dash')">&#128202; Dashboard</button>
+    <button class="tab" id="tab-settings" onclick="switchTab('settings')">&#9881; Einstellungen</button>
+  </div>
+</div>
+
+<!-- ═══ TOOLS TAB ═══ -->
+<div id="view-tools" class="container">
+  <div id="inaktiv-warn" class="warn-bar" style="display:none;margin-top:0;margin-bottom:16px">
+    &#9888; <span id="inaktiv-warn-text"></span>
+    <span style="margin-left:auto;cursor:pointer;text-decoration:underline" onclick="switchTab('settings')">Einstellungen öffnen →</span>
+  </div>
+  <div class="info-bar" style="margin-top:0;margin-bottom:20px">
+    <span style="font-size:18px">&#9432;</span>
+    <span>Alle Tools laufen direkt im Browser – keine Installation nötig. Änderungen in den <strong>Produktvorgaben</strong> werden in Echtzeit für alle Kollegen gespeichert.</span>
+  </div>
+
+  <div class="section-title">Haupttools</div>
+  <div class="tools" id="tools-grid">
+    <a class="tool-card" id="card-produktvorgaben" href="./produktvorgaben/index.html">
+      <div class="tool-header">
+        <div class="tool-icon" style="background:#EBF3FB">&#128203;</div>
+        <div class="tool-name">Produktvorgaben</div>
+      </div>
+      <div class="tool-desc">Zentrale Verwaltung aller Artikelvorgaben: Status, Bio-Pflicht, Vegan, Glutenfrei, Festvergabe, Gebindegröße und mehr. Mit Bestelldaten 2025 und Ausschreibungspreisen.</div>
+      <div class="tool-tags">
+        <span class="tag tag-blue">Supabase Live-Sync</span>
+        <span class="tag tag-green">1.380 Artikel</span>
+        <span class="tag tag-purple">Kollaborativ</span>
+      </div>
+      <div class="arrow">&#8594;</div>
+    </a>
+    <a class="tool-card" id="card-generator" href="./Ausschreibungs_Generator.html">
+      <div class="tool-header">
+        <div class="tool-icon" style="background:#f0fff4">&#128196;</div>
+        <div class="tool-name">Ausschreibungs-Generator</div>
+      </div>
+      <div class="tool-desc">WaWi-Export hochladen, Lieferanten &amp; Kategorien auswählen und Ausschreibungsformulare automatisch generieren – mit Produktvorgaben vorausgefüllt.</div>
+      <div class="tool-tags">
+        <span class="tag tag-green">Excel-Export</span>
+        <span class="tag tag-orange">Pro Lieferant</span>
+        <span class="tag tag-blue">→ Auswertung</span>
+      </div>
+      <div class="arrow">&#8594;</div>
+    </a>
+  </div>
+
+  <div class="divider"></div>
+  <div class="section-title">Auswertung &amp; Analyse</div>
+  <div class="tools">
+    <a class="tool-card" id="card-auswertung" href="./Ausschreibungs_Auswertung.html">
+      <div class="tool-header">
+        <div class="tool-icon" style="background:#fff3e0">&#128202;</div>
+        <div class="tool-name">Ausschreibungs-Auswertung</div>
+      </div>
+      <div class="tool-desc">Lieferanten-Rückläufe hochladen, Vorgaben prüfen, Preisranking mit Zahlungs- und Lieferbedingungen erstellen. <strong>Speichert Ergebnisse ins Dashboard.</strong></div>
+      <div class="tool-tags">
+        <span class="tag tag-green">Excel-Export</span>
+        <span class="tag tag-orange">Ranking</span>
+        <span class="tag tag-blue">→ Dashboard</span>
+      </div>
+      <div class="arrow">&#8594;</div>
+    </a>
+    <div class="tool-card" style="opacity:.6;cursor:default">
+      <div class="tool-header">
+        <div class="tool-icon" style="background:#f9f9f9">&#128260;</div>
+        <div class="tool-name">WaWi-Import Generator</div>
+      </div>
+      <div class="tool-desc">Ausschreibung wählen und pro Lieferant eine fertige WaWi-Import-Excel erzeugen – alle Artikel und Preise im Bartsch-Format.</div>
+      <div class="tool-tags"><span class="tag tag-green">WaWi-Export</span><span class="tag tag-blue">Pro Lieferant</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ DASHBOARD TAB ═══ -->
+<div id="view-dash" class="dash">
+  <div id="dash-loading" class="loading"><div class="spinner"></div> Lade Ausschreibungsdaten aus Supabase...</div>
+  <div id="dash-empty" class="dash-empty" style="display:none">
+    <div class="big-icon">&#128202;</div>
+    <p>Noch keine Ausschreibungsdaten vorhanden.<br>
+    Führe eine Auswertung durch und klicke auf<br>
+    <strong>„In Supabase speichern"</strong> im <a href="./Ausschreibungs_Auswertung.html">Auswertungs-Tool</a>.</p>
+  </div>
+  <div id="dash-content" style="display:none">
+
+    <div class="dash-section-title">&#128202; Ausschreibungs-Auswertung</div>
+
+    <div class="periode-bar">
+      <label>Periode:</label>
+      <div id="periode-btns" style="display:flex;gap:6px;flex-wrap:wrap"></div>
+      <span id="dash-refresh-btn" onclick="loadDashboard()" style="margin-left:auto;cursor:pointer;color:#607080;font-size:11px;text-decoration:underline">&#8635; Aktualisieren</span>
+    </div>
+
+    <div class="kpi-row" id="kpi-row"></div>
+
+    <div class="dash-row">
+      <div class="dash-card">
+        <div class="dash-card-title"><span>&#127942;</span> Lieferanten-Übersicht</div>
+        <div id="sup-scorecard"></div>
+      </div>
+      <div class="dash-card">
+        <div class="dash-card-title"><span>&#128260;</span> Vergleich: vorherige vs. aktuelle Periode</div>
+        <div id="cmp-table-wrap"></div>
+      </div>
+    </div>
+
+    <div class="dash-row single">
+      <div class="dash-card">
+        <div class="dash-card-title"><span>&#128200;</span> Preishistorie pro Artikel &amp; Lieferant</div>
+        <input class="ph-search" id="ph-search" placeholder="Artikel suchen..." oninput="renderHistory()">
+        <div id="ph-table-wrap" style="overflow-x:auto;max-height:420px;overflow-y:auto"></div>
+      </div>
+    </div>
+
+    <div class="dash-row">
+      <div class="dash-card">
+        <div class="dash-card-title"><span>&#128200;</span> Größte Preissteigerungen</div>
+        <div id="top-increase"></div>
+      </div>
+      <div class="dash-card">
+        <div class="dash-card-title"><span>&#128201;</span> Größte Preisrückgänge</div>
+        <div id="top-decrease"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Produktkatalog-Abschnitt (immer sichtbar wenn Daten vorhanden) -->
+  <div id="pk-dash-section" style="display:none">
+    <div class="dash-section-title">&#128230; Produktkatalog 2025 – Einkaufspreise &amp; Mengen</div>
+
+    <div class="kpi-row" id="pk-kpi-row"></div>
+
+    <div class="dash-row">
+      <div class="dash-card">
+        <div class="dash-card-title"><span>&#128178;</span> Monatliches Einkaufsvolumen (€)</div>
+        <div id="pk-monthly-chart"></div>
+      </div>
+      <div class="dash-card">
+        <div class="dash-card-title"><span>&#127937;</span> Volumen nach Kategorie (Top 8)</div>
+        <div id="pk-cat-chart"></div>
+      </div>
+    </div>
+
+    <div class="dash-row">
+      <div class="dash-card">
+        <div class="dash-card-title"><span>&#128230;</span> Artikel nach Lieferant</div>
+        <div id="pk-lief-chart"></div>
+      </div>
+      <div class="dash-card">
+        <div class="dash-card-title"><span>&#128260;</span> EP Konv. vs. Bio – Top 15 (€/Einheit)</div>
+        <div id="pk-preis-chart"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="pk-dash-empty" style="display:none;margin-top:24px" class="dash-empty">
+    <div class="big-icon">&#128230;</div>
+    <p>Keine Produktkatalog-Daten gefunden.<br>
+    Öffne den <strong><a href="./produktkatalog.html">Produktkatalog</a></strong> und lege Artikel mit Einkaufspreisen und Monatsmengen an.</p>
+  </div>
+</div>
+
+<!-- ═══ EINSTELLUNGEN TAB ═══ -->
+<div id="view-settings" class="settings-view">
+
+  <!-- Lieferanten -->
+  <div class="settings-section">
+    <div class="settings-section-head">
+      <div>
+        <h3>&#127968; Lieferanten</h3>
+        <p>Inaktive Lieferanten werden im Dashboard, in Filtern und in der Auswertung ausgeblendet.</p>
+      </div>
+      <button class="btn btn-primary" onclick="openLiefModal(null)">+ Lieferant</button>
+    </div>
+    <table class="settings-table">
+      <thead><tr><th>Name</th><th>Quelle</th><th>Perioden mit Daten</th><th>Status</th><th></th></tr></thead>
+      <tbody id="lief-settings-tbody"></tbody>
+    </table>
+  </div>
+
+  <!-- WA-Perioden -->
+  <div class="settings-section">
+    <div class="settings-section-head">
+      <div>
+        <h3>&#128197; Ausschreibungs-Perioden (WA)</h3>
+        <p>Ausgeblendete Perioden erscheinen nicht im Dashboard und in der Auswertung – Daten bleiben erhalten.</p>
+      </div>
+      <button class="btn btn-primary" onclick="openWAModal(null)">+ Periode</button>
+    </div>
+    <table class="settings-table">
+      <thead><tr><th>Bezeichnung</th><th>Zeitraum</th><th>Sichtbar im Dashboard</th><th>Notiz</th><th></th></tr></thead>
+      <tbody id="wa-settings-tbody"></tbody>
+    </table>
+  </div>
+
+  <!-- Produktkatalog-Verbindung -->
+  <div class="settings-section">
+    <div class="settings-section-head">
+      <div>
+        <h3>&#128203; Produktkatalog</h3>
+        <p>Zeigt den Verbindungsstatus zum Produktkatalog-Tool (localStorage).</p>
+      </div>
+      <a class="btn" href="./produktkatalog.html">Produktkatalog öffnen →</a>
+    </div>
+    <div id="pk-status" style="padding:16px 20px;font-size:13px;color:#607080"></div>
+  </div>
+
+</div>
+
+<!-- MODAL: Lieferant -->
+<div class="modal-overlay" id="modal-lief" style="display:none" onclick="if(event.target===this)closeModal('modal-lief')">
+  <div class="modal">
+    <h2 id="modal-lief-title">Lieferant anlegen</h2>
+    <input type="hidden" id="lief-edit-id">
+    <div class="field">
+      <label>Name *</label>
+      <input type="text" id="f-lief-name" placeholder="Lieferantenname">
+    </div>
+    <div class="field-row">
+      <div class="field">
+        <label>Quelle</label>
+        <select id="f-lief-quelle">
+          <option value="WaWi">WaWi</option>
+          <option value="Manuell">Manuell</option>
+          <option value="WaWi+Manuell">WaWi + Manuell</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Status</label>
+        <select id="f-lief-status">
+          <option value="aktiv">Aktiv</option>
+          <option value="inaktiv">Inaktiv</option>
+        </select>
+      </div>
+    </div>
+    <div class="field">
+      <label>Notiz</label>
+      <input type="text" id="f-lief-notiz" placeholder="Optional">
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('modal-lief')">Abbrechen</button>
+      <button class="btn btn-primary" onclick="saveLieferant()">Speichern</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: WA-Periode -->
+<div class="modal-overlay" id="modal-wa" style="display:none" onclick="if(event.target===this)closeModal('modal-wa')">
+  <div class="modal">
+    <h2 id="modal-wa-title">WA-Periode anlegen</h2>
+    <input type="hidden" id="wa-edit-id">
+    <div class="field">
+      <label>Bezeichnung *</label>
+      <input type="text" id="f-wa-name" placeholder="z.B. WA 2025, WA Test Q1">
+    </div>
+    <div class="field-row">
+      <div class="field">
+        <label>Von</label>
+        <input type="date" id="f-wa-von">
+      </div>
+      <div class="field">
+        <label>Bis</label>
+        <input type="date" id="f-wa-bis">
+      </div>
+    </div>
+    <div class="field">
+      <label>Im Dashboard anzeigen</label>
+      <select id="f-wa-sichtbar">
+        <option value="ja">Ja – sichtbar</option>
+        <option value="nein">Nein – ausgeblendet (Testlauf)</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>Notiz</label>
+      <input type="text" id="f-wa-notiz" placeholder="Optional">
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('modal-wa')">Abbrechen</button>
+      <button class="btn btn-primary" onclick="saveWA()">Speichern</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const SUPA_URL = 'https://ywmimuctohdmxkmexops.supabase.co';
+const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl3bWltdWN0b2hkbXhrbWV4b3BzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYzNzY5MjUsImV4cCI6MjA5MTk1MjkyNX0.eqyCjArkAla2oCxbTUMCAvYzlsJJY6AdI-QXnyKcpy0';
+
+const MONTHS = ['Jan','Feb','Mär','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Dez'];
+const MONTH_KEYS = ['jan','feb','mar','apr','mai','jun','jul','aug','sep','okt','nov','dez'];
+
+// ─── Settings State ──────────────────────────────────────────────────────────
+let settings = { lieferanten: [], waperioden: [] };
+
+function loadSettings() {
+  try { settings = JSON.parse(localStorage.getItem('einkauf_settings_v1') || '{"lieferanten":[],"waperioden":[]}'); } catch(e){}
+  if (!settings.lieferanten) settings.lieferanten = [];
+  if (!settings.waperioden) settings.waperioden = [];
+}
+function saveSettings() { localStorage.setItem('einkauf_settings_v1', JSON.stringify(settings)); }
+function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
+
+function isLieferantAktiv(name) {
+  const l = settings.lieferanten.find(x => x.name === name);
+  return !l || l.status !== 'inaktiv';
+}
+function isWAsichtbar(name) {
+  const w = settings.waperioden.find(x => x.name === name);
+  return !w || w.sichtbar !== 'nein';
+}
+
+// ─── Tab switching ────────────────────────────────────────────────────────────
+function switchTab(tab) {
+  ['tools','dash','settings'].forEach(t => {
+    document.getElementById('view-' + t).style.display = 'none';
+    document.getElementById('tab-' + t).classList.remove('active');
+  });
+  document.getElementById('view-' + tab).style.display = tab === 'dash' ? 'block' : (tab === 'settings' ? 'block' : '');
+  document.getElementById('tab-' + tab).classList.add('active');
+  if (tab === 'dash' && !dashLoaded) loadDashboard();
+  if (tab === 'dash') renderPKDashboard();
+  if (tab === 'settings') renderSettings();
+  if (tab === 'tools') renderToolsWarning();
+}
+
+// ─── Tools Warning (inaktive Lieferanten) ─────────────────────────────────────
+function renderToolsWarning() {
+  const inaktiv = settings.lieferanten.filter(l => l.status === 'inaktiv');
+  const warn = document.getElementById('inaktiv-warn');
+  if (inaktiv.length > 0) {
+    warn.style.display = 'flex';
+    document.getElementById('inaktiv-warn-text').textContent =
+      inaktiv.length + ' Lieferant' + (inaktiv.length > 1 ? 'en' : '') + ' inaktiv: ' + inaktiv.map(l=>l.name).join(', ') + ' – werden im Dashboard ausgeblendet.';
+  } else {
+    warn.style.display = 'none';
+  }
+}
+
+// ─── EINSTELLUNGEN RENDER ─────────────────────────────────────────────────────
+function renderSettings() {
+  // Lieferanten aus Supabase-Daten + manuell
+  const knownFromSupa = [...new Set(allData.map(r => r.lieferant))].sort();
+  // Merge: known + manually added
+  knownFromSupa.forEach(name => {
+    if (!settings.lieferanten.find(l => l.name === name)) {
+      settings.lieferanten.push({ id: uid(), name, quelle: 'WaWi', status: 'aktiv', notiz: '' });
+    }
+  });
+  // Also add lieferanten from Produktkatalog
+  const pkData = getPKData();
+  const pkLiefs = [...new Set(pkData.artikel.map(a => a.lieferant).filter(Boolean))];
+  pkLiefs.forEach(name => {
+    if (!settings.lieferanten.find(l => l.name === name)) {
+      settings.lieferanten.push({ id: uid(), name, quelle: 'Produktkatalog', status: 'aktiv', notiz: '' });
+    }
+  });
+  saveSettings();
+
+  // Perioden aus Supabase-Daten
+  const knownPerioden = [...new Set(allData.map(r => r.periode))].sort();
+  knownPerioden.forEach(name => {
+    if (!settings.waperioden.find(w => w.name === name)) {
+      settings.waperioden.push({ id: uid(), name, von: '', bis: '', sichtbar: 'ja', notiz: '' });
+    }
+  });
+  saveSettings();
+
+  // Render Lieferanten-Tabelle
+  const ltbody = document.getElementById('lief-settings-tbody');
+  ltbody.innerHTML = settings.lieferanten.length === 0
+    ? '<tr><td colspan="5" style="text-align:center;color:#90a0b0;padding:20px">Noch keine Lieferanten. Öffne das Dashboard oder lege manuell an.</td></tr>'
+    : settings.lieferanten.sort((a,b)=>a.name.localeCompare(b.name,'de')).map(l => {
+        const perioden = [...new Set(allData.filter(r=>r.lieferant===l.name).map(r=>r.periode))];
+        return `<tr>
+          <td><strong>${l.name}</strong>${l.notiz ? '<br><span style="font-size:11px;color:#90a0b0">'+l.notiz+'</span>' : ''}</td>
+          <td style="font-size:12px;color:#607080">${l.quelle||'–'}</td>
+          <td style="font-size:11px;color:#607080">${perioden.length > 0 ? perioden.join(', ') : '–'}</td>
+          <td>
+            <label class="toggle">
+              <input type="checkbox" ${l.status==='aktiv'?'checked':''} onchange="toggleLieferant('${l.id}',this.checked)">
+              <span class="toggle-slider"></span>
+            </label>
+            <span class="toggle-label ${l.status==='aktiv'?'on':'off'}" id="lief-label-${l.id}">${l.status==='aktiv'?'Aktiv':'Inaktiv'}</span>
+          </td>
+          <td>
+            <button class="btn btn-sm" onclick="openLiefModal('${l.id}')">✏</button>
+            <button class="btn btn-sm btn-danger" onclick="deleteLieferant('${l.id}')">🗑</button>
+          </td>
+        </tr>`;
+      }).join('');
+
+  // Render WA-Tabelle
+  const wtbody = document.getElementById('wa-settings-tbody');
+  wtbody.innerHTML = settings.waperioden.length === 0
+    ? '<tr><td colspan="5" style="text-align:center;color:#90a0b0;padding:20px">Noch keine Perioden. Lade Dashboard-Daten oder lege manuell an.</td></tr>'
+    : settings.waperioden.sort((a,b)=>a.name.localeCompare(b.name,'de')).map(w => {
+        const zeitraum = w.von && w.bis ? w.von + ' – ' + w.bis : w.von || w.bis || '–';
+        return `<tr>
+          <td><strong>${w.name}</strong></td>
+          <td style="font-size:12px;color:#607080">${zeitraum}</td>
+          <td>
+            <label class="toggle">
+              <input type="checkbox" ${w.sichtbar==='ja'?'checked':''} onchange="toggleWA('${w.id}',this.checked)">
+              <span class="toggle-slider"></span>
+            </label>
+            <span class="toggle-label ${w.sichtbar==='ja'?'on':'off'}" id="wa-label-${w.id}">${w.sichtbar==='ja'?'Sichtbar':'Ausgeblendet'}</span>
+          </td>
+          <td style="font-size:12px;color:#607080">${w.notiz||'–'}</td>
+          <td>
+            <button class="btn btn-sm" onclick="openWAModal('${w.id}')">✏</button>
+            <button class="btn btn-sm btn-danger" onclick="deleteWA('${w.id}')">🗑</button>
+          </td>
+        </tr>`;
+      }).join('');
+
+  // PK Status
+  const pkData2 = getPKData();
+  const pkStatusEl = document.getElementById('pk-status');
+  if (pkData2.artikel.length > 0) {
+    const mitPreis = pkData2.artikel.filter(a => a.preisKonv > 0 || a.preisBio > 0).length;
+    const mitMengen = pkData2.mengen.filter(m => MONTH_KEYS.some(k => m[k] > 0)).length;
+    pkStatusEl.innerHTML = `<span style="color:#155724;font-weight:700">&#9989; Verbunden</span> &nbsp;·&nbsp; ${pkData2.artikel.length} Artikel &nbsp;·&nbsp; ${mitPreis} mit Preisen &nbsp;·&nbsp; ${mitMengen} mit Monatsmengen`;
+  } else {
+    pkStatusEl.innerHTML = '<span style="color:#d32f2f;font-weight:700">&#9888; Keine Daten</span> – Produktkatalog noch nicht befüllt.';
+  }
+}
+
+function toggleLieferant(id, checked) {
+  const l = settings.lieferanten.find(x => x.id === id);
+  if (l) {
+    l.status = checked ? 'aktiv' : 'inaktiv';
+    document.getElementById('lief-label-' + id).textContent = checked ? 'Aktiv' : 'Inaktiv';
+    document.getElementById('lief-label-' + id).className = 'toggle-label ' + (checked ? 'on' : 'off');
+    saveSettings();
+    renderToolsWarning();
+  }
+}
+function toggleWA(id, checked) {
+  const w = settings.waperioden.find(x => x.id === id);
+  if (w) {
+    w.sichtbar = checked ? 'ja' : 'nein';
+    document.getElementById('wa-label-' + id).textContent = checked ? 'Sichtbar' : 'Ausgeblendet';
+    document.getElementById('wa-label-' + id).className = 'toggle-label ' + (checked ? 'on' : 'off');
+    saveSettings();
+  }
+}
+
+function openLiefModal(id) {
+  const l = id ? settings.lieferanten.find(x=>x.id===id) : null;
+  document.getElementById('modal-lief-title').textContent = l ? 'Lieferant bearbeiten' : 'Lieferant anlegen';
+  document.getElementById('lief-edit-id').value = id || '';
+  document.getElementById('f-lief-name').value = l?.name || '';
+  document.getElementById('f-lief-quelle').value = l?.quelle || 'WaWi';
+  document.getElementById('f-lief-status').value = l?.status || 'aktiv';
+  document.getElementById('f-lief-notiz').value = l?.notiz || '';
+  document.getElementById('modal-lief').style.display = 'flex';
+}
+function saveLieferant() {
+  const id = document.getElementById('lief-edit-id').value;
+  const name = document.getElementById('f-lief-name').value.trim();
+  if (!name) { alert('Name ist Pflichtfeld.'); return; }
+  const obj = { id: id||uid(), name, quelle: document.getElementById('f-lief-quelle').value, status: document.getElementById('f-lief-status').value, notiz: document.getElementById('f-lief-notiz').value.trim() };
+  if (id) { const i=settings.lieferanten.findIndex(x=>x.id===id); if(i>=0) settings.lieferanten[i]=obj; }
+  else settings.lieferanten.push(obj);
+  saveSettings(); closeModal('modal-lief'); renderSettings(); renderToolsWarning();
+}
+function deleteLieferant(id) {
+  if (!confirm('Lieferant entfernen?')) return;
+  settings.lieferanten = settings.lieferanten.filter(x=>x.id!==id);
+  saveSettings(); renderSettings();
+}
+
+function openWAModal(id) {
+  const w = id ? settings.waperioden.find(x=>x.id===id) : null;
+  document.getElementById('modal-wa-title').textContent = w ? 'WA-Periode bearbeiten' : 'WA-Periode anlegen';
+  document.getElementById('wa-edit-id').value = id || '';
+  document.getElementById('f-wa-name').value = w?.name || '';
+  document.getElementById('f-wa-von').value = w?.von || '';
+  document.getElementById('f-wa-bis').value = w?.bis || '';
+  document.getElementById('f-wa-sichtbar').value = w?.sichtbar || 'ja';
+  document.getElementById('f-wa-notiz').value = w?.notiz || '';
+  document.getElementById('modal-wa').style.display = 'flex';
+}
+function saveWA() {
+  const id = document.getElementById('wa-edit-id').value;
+  const name = document.getElementById('f-wa-name').value.trim();
+  if (!name) { alert('Bezeichnung ist Pflichtfeld.'); return; }
+  const obj = { id: id||uid(), name, von: document.getElementById('f-wa-von').value, bis: document.getElementById('f-wa-bis').value, sichtbar: document.getElementById('f-wa-sichtbar').value, notiz: document.getElementById('f-wa-notiz').value.trim() };
+  if (id) { const i=settings.waperioden.findIndex(x=>x.id===id); if(i>=0) settings.waperioden[i]=obj; }
+  else settings.waperioden.push(obj);
+  saveSettings(); closeModal('modal-wa'); renderSettings();
+}
+function deleteWA(id) {
+  if (!confirm('WA-Periode entfernen?')) return;
+  settings.waperioden = settings.waperioden.filter(x=>x.id!==id);
+  saveSettings(); renderSettings();
+}
+
+function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+document.addEventListener('keydown', e => { if (e.key==='Escape') document.querySelectorAll('.modal-overlay').forEach(m=>m.style.display='none'); });
+
+// ─── Produktkatalog-Daten lesen ────────────────────────────────────────────
+function getPKData() {
+  try {
+    const raw = localStorage.getItem('produktkatalog_v1');
+    if (raw) { const d = JSON.parse(raw); return { artikel: d.artikel||[], mengen: d.mengen||[] }; }
+  } catch(e) {}
+  return { artikel: [], mengen: [] };
+}
+
+// ─── Produktkatalog-Dashboard ──────────────────────────────────────────────
+function renderPKDashboard() {
+  const { artikel, mengen } = getPKData();
+  const pkSection = document.getElementById('pk-dash-section');
+  const pkEmpty = document.getElementById('pk-dash-empty');
+
+  if (artikel.length === 0) {
+    pkSection.style.display = 'none';
+    pkEmpty.style.display = 'block';
+    return;
+  }
+  pkEmpty.style.display = 'none';
+  pkSection.style.display = 'block';
+
+  // Filter out inaktive Lieferanten
+  const aktArtikel = artikel.filter(a => isLieferantAktiv(a.lieferant||''));
+
+  // KPI
+  const mitPreis = aktArtikel.filter(a => a.preisKonv > 0 || a.preisBio > 0).length;
+  const mitMengen = mengen.filter(m => aktArtikel.find(a=>a.id===m.artikelId) && MONTH_KEYS.some(k=>m[k]>0)).length;
+
+  // Total Volumen
+  let totalVol = 0;
+  aktArtikel.forEach(a => {
+    const m = mengen.find(x=>x.artikelId===a.id)||{};
+    const menge = MONTH_KEYS.reduce((s,k)=>s+(m[k]||0),0);
+    totalVol += menge * (a.preisKonv || a.preisBio || 0);
+  });
+
+  // Konv vs Bio count
+  const konvCount = aktArtikel.filter(a=>a.preisKonv>0&&!a.preisBio).length;
+  const bioCount = aktArtikel.filter(a=>a.preisBio>0).length;
+
+  document.getElementById('pk-kpi-row').innerHTML = [
+    {label:'Aktive Artikel', val: aktArtikel.length, sub: artikel.length + ' gesamt'},
+    {label:'Mit Einkaufspreis', val: mitPreis, sub: konvCount + ' nur Konv. · ' + bioCount + ' mit Bio'},
+    {label:'Mit Monatsmengen', val: mitMengen, sub: 'Artikel mit 2025-Daten'},
+    {label:'Gesamtvolumen 2025', val: '€ ' + Math.round(totalVol).toLocaleString('de-DE'), sub: 'EP × Bestellmenge'},
+  ].map(k=>'<div class="kpi"><div class="kpi-label">'+k.label+'</div><div class="kpi-val">'+k.val+'</div><div class="kpi-sub">'+k.sub+'</div></div>').join('');
+
+  // Monthly Volume bars
+  const monthlyVol = MONTH_KEYS.map((k,i) => {
+    let s = 0;
+    aktArtikel.forEach(a => {
+      const m = mengen.find(x=>x.artikelId===a.id)||{};
+      s += (m[k]||0) * (a.preisKonv || a.preisBio || 0);
+    });
+    return { label: MONTHS[i], value: Math.round(s) };
+  });
+  const maxMonthly = Math.max(...monthlyVol.map(x=>x.value), 1);
+  document.getElementById('pk-monthly-chart').innerHTML = monthlyVol.map(m =>
+    `<div class="pk-bar-row">
+      <span class="pk-bar-label">${m.label}</span>
+      <div class="pk-bar-track"><div class="pk-bar-fill" style="width:${Math.round(m.value/maxMonthly*100)}%;background:#1F4E79"></div></div>
+      <span class="pk-bar-val">${m.value > 0 ? '€ ' + m.value.toLocaleString('de-DE') : '–'}</span>
+    </div>`
+  ).join('');
+
+  // Category chart
+  const byCat = {};
+  aktArtikel.forEach(a => {
+    const cat = a.kategorie || '(keine)';
+    if (!byCat[cat]) byCat[cat] = 0;
+    const m = mengen.find(x=>x.artikelId===a.id)||{};
+    const menge = MONTH_KEYS.reduce((s,k)=>s+(m[k]||0),0);
+    byCat[cat] += menge * (a.preisKonv || a.preisBio || 0);
+  });
+  const catColors = ['#1F4E79','#2e7d32','#854F0B','#A32D2D','#4a0080','#0F6E56','#993556','#444441'];
+  const catSorted = Object.entries(byCat).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  const maxCat = Math.max(...catSorted.map(x=>x[1]), 1);
+  document.getElementById('pk-cat-chart').innerHTML = catSorted.map(([cat, val], i) =>
+    `<div class="pk-bar-row">
+      <span class="pk-bar-label" title="${cat}">${cat}</span>
+      <div class="pk-bar-track"><div class="pk-bar-fill" style="width:${Math.round(val/maxCat*100)}%;background:${catColors[i%catColors.length]}"></div></div>
+      <span class="pk-bar-val">${val > 0 ? '€ ' + Math.round(val).toLocaleString('de-DE') : '–'}</span>
+    </div>`
+  ).join('') || '<div style="color:#90a0b0;font-size:12px;padding:16px">Keine Kategorien vorhanden.</div>';
+
+  // Lieferant chart (Artikel-Anzahl)
+  const byLief = {};
+  aktArtikel.forEach(a => {
+    const l = a.lieferant || '(kein)';
+    if (!byLief[l]) byLief[l] = { konv: 0, bio: 0 };
+    if (a.preisKonv > 0) byLief[l].konv++;
+    if (a.preisBio > 0) byLief[l].bio++;
+  });
+  const liefSorted = Object.entries(byLief).sort((a,b)=>(b[1].konv+b[1].bio)-(a[1].konv+a[1].bio)).slice(0,10);
+  const maxLief = Math.max(...liefSorted.map(([,v])=>v.konv+v.bio), 1);
+  document.getElementById('pk-lief-chart').innerHTML =
+    '<div style="display:flex;gap:12px;margin-bottom:8px;font-size:11px;color:#607080"><span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:2px;background:#1F4E79;display:inline-block"></span>Konv.</span><span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:2px;background:#2e7d32;display:inline-block"></span>Bio</span></div>' +
+    liefSorted.map(([lief, v]) =>
+      `<div class="pk-bar-row">
+        <span class="pk-bar-label" title="${lief}">${lief}</span>
+        <div class="pk-bar-track" style="display:flex;gap:1px">
+          <div style="height:14px;background:#1F4E79;width:${Math.round(v.konv/maxLief*100)}%;border-radius:3px 0 0 3px;transition:width .5s"></div>
+          <div style="height:14px;background:#2e7d32;width:${Math.round(v.bio/maxLief*100)}%;border-radius:0 3px 3px 0;transition:width .5s"></div>
+        </div>
+        <span class="pk-bar-val">${v.konv+v.bio} Art.</span>
+      </div>`
+    ).join('') || '<div style="color:#90a0b0;font-size:12px;padding:16px">Keine Lieferanten vorhanden.</div>';
+
+  // Preisvergleich Konv vs Bio
+  const artikelMitBio = aktArtikel.filter(a=>a.preisBio>0&&a.preisKonv>0).sort((a,b)=>b.preisKonv-a.preisKonv).slice(0,15);
+  if (artikelMitBio.length === 0) {
+    document.getElementById('pk-preis-chart').innerHTML = '<div style="color:#90a0b0;font-size:12px;padding:16px">Keine Artikel mit Konv.- und Bio-Preis vorhanden.</div>';
+  } else {
+    const maxPreis = Math.max(...artikelMitBio.map(a=>Math.max(a.preisKonv,a.preisBio)), 1);
+    document.getElementById('pk-preis-chart').innerHTML =
+      '<div style="display:flex;gap:12px;margin-bottom:8px;font-size:11px;color:#607080"><span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:2px;background:#1F4E79;display:inline-block"></span>Konv.</span><span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:2px;background:#2e7d32;display:inline-block"></span>Bio</span></div>' +
+      artikelMitBio.map(a => {
+        const bez = a.bezeichnung.length > 22 ? a.bezeichnung.slice(0,20)+'…' : a.bezeichnung;
+        return `<div style="margin-bottom:8px">
+          <div style="font-size:11px;color:#607080;margin-bottom:3px" title="${a.bezeichnung}">${bez}</div>
+          <div style="display:flex;flex-direction:column;gap:2px">
+            <div class="pk-bar-row" style="margin-bottom:0">
+              <span style="width:30px;font-size:10px;color:#1F4E79">Konv</span>
+              <div class="pk-bar-track"><div class="pk-bar-fill" style="width:${Math.round(a.preisKonv/maxPreis*100)}%;background:#1F4E79"></div></div>
+              <span class="pk-bar-val" style="font-size:11px">€ ${a.preisKonv.toFixed(3).replace('.',',')}</span>
+            </div>
+            <div class="pk-bar-row" style="margin-bottom:0">
+              <span style="width:30px;font-size:10px;color:#2e7d32">Bio</span>
+              <div class="pk-bar-track"><div class="pk-bar-fill" style="width:${Math.round(a.preisBio/maxPreis*100)}%;background:#2e7d32"></div></div>
+              <span class="pk-bar-val" style="font-size:11px">€ ${a.preisBio.toFixed(3).replace('.',',')}</span>
+            </div>
+          </div>
+        </div>`;
+      }).join('');
+  }
+}
+
+// ─── SUPABASE DASHBOARD ─────────────────────────────────────────────────────
+let allData = [];
+let periodes = [];
+let activePeriode = '';
+let dashLoaded = false;
+
+function fmt(v, d=2) {
+  if (v==null||isNaN(v)) return '–';
+  return Number(v).toFixed(d).replace('.', ',') + ' €';
+}
+function fmtPct(v) {
+  if (v==null||isNaN(v)) return '';
+  return (v>=0?'+':'') + v.toFixed(1).replace('.',',') + ' %';
+}
+
+async function loadDashboard() {
+  dashLoaded = true;
+  document.getElementById('dash-loading').style.display = 'flex';
+  document.getElementById('dash-empty').style.display = 'none';
+  document.getElementById('dash-content').style.display = 'none';
+  try {
+    let rows = [], offset = 0, limit = 1000;
+    while (true) {
+      const resp = await fetch(SUPA_URL + '/rest/v1/ausschreibung_preise?select=*&order=created_at.asc&limit='+limit+'&offset='+offset,
+        { headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer '+SUPA_KEY } });
+      if (!resp.ok) throw new Error('HTTP ' + resp.status);
+      const chunk = await resp.json();
+      rows = rows.concat(chunk);
+      if (chunk.length < limit) break;
+      offset += limit;
+    }
+    if (!rows.length) {
+      document.getElementById('dash-loading').style.display = 'none';
+      document.getElementById('dash-empty').style.display = 'block';
+      renderPKDashboard();
+      return;
+    }
+    allData = rows;
+    // Auto-add perioden to settings if not yet there
+    const knownP = [...new Set(rows.map(r=>r.periode))];
+    knownP.forEach(name => {
+      if (!settings.waperioden.find(w=>w.name===name)) {
+        settings.waperioden.push({ id: uid(), name, von:'', bis:'', sichtbar:'ja', notiz:'' });
+      }
+    });
+    // Auto-add lieferanten
+    const knownL = [...new Set(rows.map(r=>r.lieferant))];
+    knownL.forEach(name => {
+      if (!settings.lieferanten.find(l=>l.name===name)) {
+        settings.lieferanten.push({ id: uid(), name, quelle:'WaWi', status:'aktiv', notiz:'' });
+      }
+    });
+    saveSettings();
+
+    // Filter by settings
+    const visiblePeriodes = [...new Set(rows.map(r=>r.periode))].filter(p => isWAsichtbar(p)).sort();
+    periodes = visiblePeriodes;
+    activePeriode = periodes[periodes.length - 1] || '';
+
+    renderPeriodeBar();
+    if (activePeriode) renderAll();
+
+    document.getElementById('dash-loading').style.display = 'none';
+    document.getElementById('dash-content').style.display = 'block';
+    renderPKDashboard();
+  } catch(e) {
+    document.getElementById('dash-loading').innerHTML = '<span style="color:#d32f2f">&#9888; Fehler: ' + e.message + '</span>';
+  }
+}
+
+function renderPeriodeBar() {
+  // Show all perioden, disabled if ausgeblendet
+  const allPeriodes = [...new Set(allData.map(r=>r.periode))].sort();
+  document.getElementById('periode-btns').innerHTML = allPeriodes.map(p => {
+    const vis = isWAsichtbar(p);
+    const act = p === activePeriode;
+    return `<span class="periode-badge ${act?'active':''} ${!vis?'disabled':''}" 
+      title="${!vis?'Ausgeblendet in Einstellungen':''}"
+      onclick="${vis?'setPeriode(\''+p+'\')':'showDisabledHint()'}">${p}</span>`;
+  }).join('');
+}
+
+function showDisabledHint() {
+  alert('Diese Periode ist in den Einstellungen ausgeblendet. Aktiviere sie dort wieder, um sie anzuzeigen.');
+}
+
+function setPeriode(p) {
+  if (!isWAsichtbar(p)) return;
+  activePeriode = p;
+  renderPeriodeBar();
+  renderAll();
+}
+
+function renderAll() {
+  const cur = allData.filter(r => r.periode === activePeriode && isLieferantAktiv(r.lieferant));
+  const prevIdx = periodes.indexOf(activePeriode) - 1;
+  const prev = prevIdx >= 0 ? allData.filter(r => r.periode === periodes[prevIdx] && isLieferantAktiv(r.lieferant)) : [];
+  renderKPI(cur, prev);
+  renderSupScorecard(cur);
+  renderComparison(cur, prev);
+  renderHistory();
+  renderTrends(prev);
+}
+
+function renderKPI(cur, prev) {
+  const artikel = new Set(cur.map(r=>r.produkt)).size;
+  const lieferanten = new Set(cur.map(r=>r.lieferant)).size;
+  const rank1 = cur.filter(r=>r.rang_eff===1);
+  const avgPreis = cur.length ? cur.reduce((s,r)=>s+(r.preis_kg||0),0)/cur.length : 0;
+  let pctChange = null;
+  if (prev.length) {
+    const prevAvg = prev.reduce((s,r)=>s+(r.preis_kg||0),0)/prev.length;
+    pctChange = prevAvg ? (avgPreis-prevAvg)/prevAvg*100 : null;
+  }
+  document.getElementById('kpi-row').innerHTML = [
+    {label:'Artikel bewertet', val:artikel, sub:activePeriode},
+    {label:'Lieferanten', val:lieferanten, sub:'Angebote eingegangen'},
+    {label:'Rang-1-Artikel', val:rank1.length, sub:new Set(rank1.map(r=>r.lieferant)).size+' verschiedene Lieferanten'},
+    {label:'Ø Preis/kg', val:avgPreis.toFixed(2).replace('.',',')+' €', sub:pctChange!==null?(pctChange>=0?'▲ +':'▼ ')+Math.abs(pctChange).toFixed(1)+'% vs. Vorperiode':'Erste Periode'},
+  ].map(k=>'<div class="kpi"><div class="kpi-label">'+k.label+'</div><div class="kpi-val">'+k.val+'</div><div class="kpi-sub">'+k.sub+'</div></div>').join('');
+}
+
+function renderSupScorecard(cur) {
+  const sups = {};
+  cur.forEach(r => {
+    if (!sups[r.lieferant]) sups[r.lieferant]={name:r.lieferant,total:0,rang1:0,preise:[]};
+    sups[r.lieferant].total++;
+    if (r.rang_eff===1) sups[r.lieferant].rang1++;
+    if (r.preis_kg) sups[r.lieferant].preise.push(r.preis_kg);
+  });
+  const maxRank1 = Math.max(...Object.values(sups).map(s=>s.rang1), 1);
+  document.getElementById('sup-scorecard').innerHTML =
+    '<div class="sup-grid">' +
+    Object.values(sups).sort((a,b)=>b.rang1-a.rang1).map(s => {
+      const avg = s.preise.length ? s.preise.reduce((a,b)=>a+b,0)/s.preise.length : 0;
+      const pct = Math.round(s.rang1/maxRank1*100);
+      return '<div class="sup-card"><div class="sup-name">'+s.name+'</div>'
+        +'<div class="sup-stat"><span>Artikel:</span><strong>'+s.total+'</strong></div>'
+        +'<div class="sup-stat"><span>&#9733; Rang 1:</span><strong>'+s.rang1+'</strong></div>'
+        +'<div class="sup-stat"><span>&#216; Preis/kg:</span><strong>'+avg.toFixed(2).replace('.',',')+'€</strong></div>'
+        +'<div class="sup-bar-wrap"><div class="sup-bar-fill" style="width:'+pct+'%"></div></div>'
+        +'</div>';
+    }).join('')+'</div>';
+}
+
+function renderComparison(cur, prev) {
+  const wrap = document.getElementById('cmp-table-wrap');
+  if (!prev.length) { wrap.innerHTML='<div style="color:#90a0b0;font-size:12px;padding:20px 0">Keine Vorperiode vorhanden.</div>'; return; }
+  const prevMap = {};
+  prev.forEach(r => { prevMap[r.produkt+'|'+r.lieferant] = r.preis_kg; });
+  const rows = cur.map(r => {
+    const prev_kg = prevMap[r.produkt+'|'+r.lieferant];
+    const delta = (prev_kg&&r.preis_kg) ? (r.preis_kg-prev_kg)/prev_kg*100 : null;
+    return {...r, prev_kg, delta};
+  }).filter(r=>r.rang_eff===1).sort((a,b)=>Math.abs(b.delta||0)-Math.abs(a.delta||0)).slice(0,20);
+  wrap.innerHTML = '<div style="font-size:11px;color:#607080;margin-bottom:8px">Nur Rang-1 · '+periodes[periodes.indexOf(activePeriode)-1]+' → '+activePeriode+'</div>'
+    +'<div style="overflow-x:auto;max-height:340px;overflow-y:auto"><table class="tbl"><thead><tr><th>Artikel</th><th>Lieferant</th><th class="r">Vorher</th><th class="r">Aktuell</th><th class="r">Δ</th></tr></thead><tbody>'
+    +rows.map(r => {
+      const badge = r.delta==null?'<span style="color:#ccc">–</span>':r.delta>2?'<span class="delta-badge delta-neg">'+fmtPct(r.delta)+'</span>':r.delta<-2?'<span class="delta-badge delta-pos">'+fmtPct(r.delta)+'</span>':'<span style="color:#607080">'+fmtPct(r.delta)+'</span>';
+      return '<tr><td>'+r.produkt+'</td><td style="font-size:11px;color:#607080">'+r.lieferant+'</td><td class="r num">'+(r.prev_kg?r.prev_kg.toFixed(2).replace('.',',')+'€':'–')+'</td><td class="r num">'+(r.preis_kg?r.preis_kg.toFixed(2).replace('.',',')+'€':'–')+'</td><td class="r">'+badge+'</td></tr>';
+    }).join('')+'</tbody></table></div>';
+}
+
+function renderHistory() {
+  const q = (document.getElementById('ph-search')?.value||'').toLowerCase();
+  const wrap = document.getElementById('ph-table-wrap');
+  const map = {};
+  // Filter data by aktive Lieferanten
+  allData.filter(r => isLieferantAktiv(r.lieferant)).forEach(r => {
+    if (!map[r.produkt]) map[r.produkt]={};
+    if (!map[r.produkt][r.periode]) map[r.produkt][r.periode]={};
+    const ex = map[r.produkt][r.periode][r.lieferant];
+    if (!ex||r.rang_eff<ex.rang_eff) map[r.produkt][r.periode][r.lieferant]=r;
+  });
+  const produkts = Object.keys(map).filter(p=>!q||p.toLowerCase().includes(q)).sort((a,b)=>a.localeCompare(b,'de')).slice(0,80);
+  if (!produkts.length) { wrap.innerHTML='<div style="color:#90a0b0;font-size:12px;padding:16px">Kein Artikel gefunden.</div>'; return; }
+  let html='<table class="tbl"><thead><tr><th>Artikel</th><th>WG</th>'
+    +periodes.map(p=>'<th class="r" style="'+(p===activePeriode?'background:#EBF3FB;color:#1F4E79':'')+'">'+(isWAsichtbar(p)?p:'<s>'+p+'</s>')+'</th>').join('')
+    +'<th>Bester Lieferant</th></tr></thead><tbody>';
+  html+=produkts.map(prod => {
+    const periodeVals=periodes.map(p=>{
+      const entries=map[prod][p];
+      if (!entries) return '<td class="r"><span style="color:#ddd">–</span></td>';
+      const r1=Object.values(entries).find(e=>e.rang_eff===1);
+      const val=r1?r1.preis_kg:Object.values(entries).sort((a,b)=>(a.preis_kg||99)-(b.preis_kg||99))[0].preis_kg;
+      const prevP=periodes[periodes.indexOf(p)-1];
+      let ti='';
+      if (prevP&&map[prod][prevP]) {
+        const pr1=Object.values(map[prod][prevP]).find(e=>e.rang_eff===1);
+        const pv=pr1?pr1.preis_kg:null;
+        if (pv&&val) { const d=(val-pv)/pv*100; ti=d>2?' <span class="trend-up">▲</span>':d<-2?' <span class="trend-dn">▼</span>':''; }
+      }
+      const ic=p===activePeriode;
+      return '<td class="r num" style="'+(ic?'background:#EBF3FB;font-weight:700':'')+'">'+(val?val.toFixed(2).replace('.',',')+' €':'–')+ti+'</td>';
+    }).join('');
+    const wg=(map[prod][activePeriode]||map[prod][periodes[0]])||{};
+    const fr=Object.values(Object.values(wg)[0]||{})[0]||{};
+    const wgStr=fr.warengruppe||'';
+    const curE=map[prod][activePeriode]?Object.values(map[prod][activePeriode]):[];
+    const best=curE.find(e=>e.rang_eff===1);
+    return '<tr><td><strong>'+prod+'</strong></td><td style="font-size:10px;color:#90a0b0">'+wgStr+'</td>'+periodeVals+'<td>'+(best?'<span class="rank-1">'+best.lieferant+'</span>':'<span style="color:#ccc">–</span>')+'</td></tr>';
+  }).join('');
+  html+='</tbody></table>';
+  wrap.innerHTML=html;
+}
+
+function renderTrends(prev) {
+  const wu=document.getElementById('top-increase'), wd=document.getElementById('top-decrease');
+  if (!prev.length) { wu.innerHTML=wd.innerHTML='<div style="color:#90a0b0;font-size:12px;padding:16px">Keine Vorperiode.</div>'; return; }
+  const prevMap={};
+  prev.forEach(r=>{prevMap[r.produkt+'|'+r.lieferant]=r.preis_kg;});
+  const changes=allData.filter(r=>r.periode===activePeriode&&r.rang_eff===1&&isLieferantAktiv(r.lieferant))
+    .map(r=>{const pk=prevMap[r.produkt+'|'+r.lieferant];if(!pk||!r.preis_kg)return null;return{produkt:r.produkt,lieferant:r.lieferant,prev:pk,cur:r.preis_kg,delta:(r.preis_kg-pk)/pk*100};})
+    .filter(Boolean).sort((a,b)=>b.delta-a.delta);
+  function tbl(rows,cls){if(!rows.length)return'<div style="color:#90a0b0;font-size:12px;padding:16px">Keine Daten.</div>';
+    return'<table class="tbl"><thead><tr><th>Artikel</th><th>Lieferant</th><th class="r">Vorher</th><th class="r">Aktuell</th><th class="r">Δ</th></tr></thead><tbody>'+rows.map(r=>'<tr><td><strong>'+r.produkt+'</strong></td><td style="font-size:10px;color:#607080">'+r.lieferant+'</td><td class="r num">'+r.prev.toFixed(2).replace('.',',')+'€</td><td class="r num">'+r.cur.toFixed(2).replace('.',',')+'€</td><td class="r"><span class="delta-badge '+cls+'">'+fmtPct(r.delta)+'</span></td></tr>').join('')+'</tbody></table>';}
+  wu.innerHTML=tbl(changes.filter(r=>r.delta>0).slice(0,10),'delta-neg');
+  wd.innerHTML=tbl(changes.filter(r=>r.delta<0).sort((a,b)=>a.delta-b.delta).slice(0,10),'delta-pos');
+}
+
+// ─── INIT ──────────────────────────────────────────────────────────────────
+loadSettings();
+renderToolsWarning();
+</script>
+
+<script>
+
+// ===== PRODUKTVORGABEN ERWEITERUNG v3 =====
+(function() {
+  function waitReady(cb) {
+    if (typeof ART !== 'undefined' && typeof GROUPS !== 'undefined' && document.querySelector('.vbtn')) {
+      cb();
+    } else {
+      setTimeout(function(){ waitReady(cb); }, 200);
+    }
+  }
+
+  var SUPA_URL = 'https://ywmimuctohdmxkmexops.supabase.co';
+  var SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl3bWltdWN0b2hkbXhrbWV4b3BzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYzNzY5MjUsImV4cCI6MjA5MTk1MjkyNX0.eqyCjArkAla2oCxbTUMCAvYzlsJJY6AdI-QXnyKcpy0';
+  var LIEFERANTEN = [];
+
+  function supFetch(path, method, body) {
+    var opts = {method: method || 'GET', headers: {'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY, 'Content-Type': 'application/json'}};
+    if (body) opts.body = JSON.stringify(body);
+    return fetch(SUPA_URL + '/rest/v1/' + path, opts);
+  }
+
+  function loadLieferanten() {
+    return supFetch('lieferanten?select=*&order=name').then(function(r){return r.json();}).then(function(data){
+      LIEFERANTEN = data || [];
+      return LIEFERANTEN;
+    });
+  }
+
+  waitReady(function() {
+    var topbar = document.querySelector('.topbar');
+    if (!topbar) return;
+
+    // Load lieferanten
+    loadLieferanten().then(function() { renderLieferantenList(); });
+
+    // === 1. EINSTELLUNGEN BUTTON ===
+    var viewBtns = topbar.querySelector('.view-btns');
+    if (viewBtns && !document.getElementById('btn-settings')) {
+      var btn = document.createElement('button');
+      btn.className = 'vbtn'; btn.id = 'btn-settings'; btn.textContent = 'Einstellungen';
+      btn.onclick = function() { switchView('settings'); };
+      viewBtns.appendChild(btn);
+    }
+
+    // === 2. TOPBAR ROW 2 ===
+    var row2 = document.createElement('div');
+    row2.id = 'filter-row';
+    row2.style.cssText = 'background:#1a4570;padding:5px 16px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;position:sticky;top:40px;z-index:199';
+    var sw = topbar.querySelector('.sw');
+    if (sw) row2.appendChild(sw);
+    topbar.querySelectorAll('.fbtn').forEach(function(fb) { row2.appendChild(fb); });
+    topbar.querySelectorAll('.chk-lbl').forEach(function(cl) { row2.appendChild(cl); });
+    if (!document.getElementById('f-nonecta')) {
+      var lbl = document.createElement('label');
+      lbl.className = 'chk-lbl';
+      lbl.style.cssText = 'color:#fff;font-size:12px;display:flex;align-items:center;gap:4px;cursor:pointer';
+      lbl.innerHTML = '<input type="checkbox" id="f-nonecta"> Fehlende Necta ID';
+      lbl.querySelector('input').addEventListener('change', function() { render(); });
+      row2.appendChild(lbl);
+    }
+    topbar.querySelectorAll('.tb-sep').forEach(function(s) { s.remove(); });
+    topbar.parentNode.insertBefore(row2, topbar.nextSibling);
+
+    // === 3. STYLES ===
+    var style = document.createElement('style');
+    style.textContent =
+      '#filter-row .fbtn{color:#fff!important;border-color:rgba(255,255,255,.3)!important;background:transparent!important}' +
+      '#filter-row .fbtn.active{background:#fff!important;color:#1F4E79!important}' +
+      '#filter-row .fbtn:hover{background:rgba(255,255,255,.15)!important}' +
+      '#filter-row .chk-lbl{color:#fff!important;font-size:12px!important}' +
+      '#filter-row .sw input{background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.25);border-radius:5px}' +
+      '#filter-row .sw input::placeholder{color:rgba(255,255,255,.5)}' +
+      '#panel-settings{padding:24px;display:none}' +
+      '#panel-settings h2{color:#1F4E79;margin:0 0 20px 0;font-size:20px}' +
+      '#panel-settings h3{color:#1F4E79;margin:0 0 12px 0;font-size:15px}' +
+      '.settings-tabs{display:flex;gap:4px;margin-bottom:20px;border-bottom:2px solid #dbe4ee;padding-bottom:0}' +
+      '.settings-tab{padding:8px 16px;cursor:pointer;font-size:13px;color:#607080;border-bottom:2px solid transparent;margin-bottom:-2px}' +
+      '.settings-tab.active{color:#1F4E79;font-weight:700;border-bottom-color:#1F4E79}' +
+      '.settings-panel{display:none}.settings-panel.active{display:block}' +
+      '.kat-card{background:#fff;border:1px solid #dbe4ee;border-radius:8px;padding:10px 16px;font-size:13px;display:inline-flex;align-items:center;gap:8px}' +
+      '.kat-card .name{font-weight:700;color:#1F4E79}.kat-card .cnt{color:#888;font-size:11px}' +
+      '.kat-card .del-kat{color:#ccc;cursor:pointer;font-size:14px;margin-left:4px}.kat-card .del-kat:hover{color:#dc3545}' +
+      '.necta-row{display:flex;justify-content:space-between;align-items:center;padding:8px 12px;border-bottom:1px solid #f0f0f0;cursor:pointer;font-size:12px}' +
+      '.necta-row:hover{background:#e8f4fd!important}.necta-row .art-name{color:#1F4E79;font-weight:600}.necta-row .art-kat{color:#888;font-size:10px}' +
+      '.bem-text{font-size:10px;color:#607080;font-style:italic;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}' +
+      '.lief-table{width:100%;border-collapse:collapse;font-size:13px}' +
+      '.lief-table th{background:#f0f4f8;padding:8px 10px;text-align:left;font-weight:600;color:#1F4E79;border-bottom:2px solid #dbe4ee}' +
+      '.lief-table td{padding:8px 10px;border-bottom:1px solid #f0f0f0}' +
+      '.lief-table tr:hover{background:#f8fafc}' +
+      '.lief-form{background:#f8fafc;border:1px solid #dbe4ee;border-radius:8px;padding:16px;margin-bottom:16px}' +
+      '.lief-form label{font-size:12px;color:#607080;display:block;margin-bottom:2px}' +
+      '.lief-form input,.lief-form textarea{width:100%;padding:6px 10px;border:1px solid #ccc;border-radius:5px;font-size:13px;box-sizing:border-box}' +
+      '.lief-form .fg2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}' +
+      '.lief-form .fg3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:10px}' +
+      '.lief-form .fg4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;margin-bottom:10px}' +
+      '.bulk-bar{background:#e8f4fd;border:1px solid #c5d8ea;border-radius:8px;padding:10px 16px;margin:8px 0;display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:12px}' +
+      '.bulk-bar select{padding:4px 8px;border-radius:4px;border:1px solid #ccc;font-size:12px}' +
+      '.bulk-bar button{background:#1F4E79;color:#fff;border:none;padding:4px 12px;border-radius:4px;cursor:pointer;font-size:12px}';
+    document.head.appendChild(style);
+
+    // === 4. SETTINGS PANEL ===
+    var panel = document.createElement('div');
+    panel.id = 'panel-settings';
+    panel.innerHTML = '<h2>Einstellungen</h2>' +
+      '<div class="settings-tabs">' +
+      '<div class="settings-tab active" onclick="switchSettingsTab(\'kat\')">Kategorien</div>' +
+      '<div class="settings-tab" onclick="switchSettingsTab(\'necta\')">Fehlende Necta ID</div>' +
+      '<div class="settings-tab" onclick="switchSettingsTab(\'lieferanten\')">Lieferanten</div>' +
+      '<div class="settings-tab" onclick="switchSettingsTab(\'auto\')">Auto-Erkennung</div>' +
+      '</div>' +
+      // Kategorien
+      '<div id="stab-kat" class="settings-panel active">' +
+      '<div style="display:flex;gap:8px;margin-bottom:16px">' +
+      '<input id="new-kat-input" placeholder="Neue Kategorie..." style="flex:1;padding:8px 12px;border:1px solid #ccc;border-radius:6px;font-size:13px">' +
+      '<button onclick="addKategorie()" style="background:#1F4E79;color:#fff;border:none;padding:8px 16px;border-radius:6px;cursor:pointer;font-size:13px">+ Hinzuf\u00fcgen</button>' +
+      '</div><div id="kat-list" style="display:flex;flex-wrap:wrap;gap:8px"></div></div>' +
+      // Necta ID
+      '<div id="stab-necta" class="settings-panel">' +
+      '<div id="no-necta-count" style="margin-bottom:8px;font-size:13px"></div>' +
+      '<div id="no-necta-list" style="max-height:500px;overflow-y:auto;border:1px solid #dbe4ee;border-radius:8px"></div></div>' +
+      // Lieferanten
+      '<div id="stab-lieferanten" class="settings-panel">' +
+      '<div id="lief-form-area"></div>' +
+      '<div id="lief-list-area"></div></div>' +
+      // Auto
+      '<div id="stab-auto" class="settings-panel">' +
+      '<p style="font-size:12px;color:#888;margin-bottom:12px">Setzt Vorgaben automatisch basierend auf dem Artikelnamen</p>' +
+      '<button onclick="autoFlagAll()" style="background:#28a745;color:#fff;border:none;padding:10px 20px;border-radius:6px;cursor:pointer;font-size:13px">\u26a1 Auto-Flags setzen (Bio, Vegan, GF, Veg, TK)</button>' +
+      '<div id="auto-flag-result" style="margin-top:8px;font-size:12px"></div></div>';
+
+    var container = document.querySelector('.container');
+    if (container) container.parentNode.insertBefore(panel, container);
+
+    window.switchSettingsTab = function(tab) {
+      document.querySelectorAll('.settings-tab').forEach(function(t){t.classList.remove('active');});
+      document.querySelectorAll('.settings-panel').forEach(function(p){p.classList.remove('active');});
+      var tabs = document.querySelectorAll('.settings-tab');
+      var panels = {'kat':0,'necta':1,'lieferanten':2,'auto':3};
+      if (panels[tab] !== undefined && tabs[panels[tab]]) tabs[panels[tab]].classList.add('active');
+      var p = document.getElementById('stab-'+tab);
+      if (p) p.classList.add('active');
+      if (tab === 'kat') renderKatList();
+      if (tab === 'necta') renderNoNectaList();
+      if (tab === 'lieferanten') renderLieferantenTab();
+    };
+
+    // === 5. SWITCH VIEW ===
+    var _origSwitch = switchView;
+    window.switchView = function(view) {
+      var sp = document.getElementById('panel-settings');
+      var cont = document.querySelector('.container');
+      var selBar = document.getElementById('sel-bar');
+      var filterRow = document.getElementById('filter-row');
+      document.querySelectorAll('.vbtn').forEach(function(b){b.classList.remove('active');});
+      var btnId = view==='table'?'btn-table':view==='dashboard'?'btn-dash':'btn-'+view;
+      var ab = document.getElementById(btnId); if(ab) ab.classList.add('active');
+      if (view === 'settings') {
+        if(cont)cont.style.display='none'; if(selBar)selBar.style.display='none';
+        if(filterRow)filterRow.style.display='none'; if(sp)sp.style.display='block';
+        renderKatList(); renderNoNectaList();
+        return;
+      }
+      if(cont)cont.style.display=''; if(filterRow)filterRow.style.display='';
+      if(sp)sp.style.display='none';
+      _origSwitch(view);
+    };
+
+    // === 6. KATEGORIE ===
+    window.addKategorie = function() {
+      var inp=document.getElementById('new-kat-input'); var nm=inp.value.trim();
+      if(!nm)return; if(GROUPS.some(function(g){return g.kategorie===nm;})){alert('Existiert bereits!');return;}
+      GROUPS.push({kategorie:nm,articles:[]}); inp.value=''; renderKatList(); render();
+    };
+    window.deleteKategorie = function(name) {
+      var grp=GROUPS.find(function(g){return g.kategorie===name;});
+      if(!grp)return;
+      if(grp.articles&&grp.articles.length>0){
+        if(!confirm('"'+name+'" hat '+grp.articles.length+' Artikel. Artikel werden zu "Sonstige" verschoben.'))return;
+        grp.articles.forEach(function(a){a.kategorie='Sonstige';dbUpdate(a.id,{kategorie:'Sonstige'});});
+      }
+      GROUPS.splice(GROUPS.indexOf(grp),1); renderKatList(); render();
+    };
+    window.renderKatList = function() {
+      var el=document.getElementById('kat-list'); if(!el)return;
+      var kats=GROUPS.map(function(g){return g.kategorie;}).filter(function(v,i,a){return a.indexOf(v)===i;}).sort();
+      el.innerHTML=kats.map(function(k){
+        var grp=GROUPS.find(function(g){return g.kategorie===k;}); var cnt=grp?grp.articles.length:0;
+        return '<div class="kat-card"><span class="name">'+k+'</span><span class="cnt">('+cnt+')</span>'+
+          '<span class="del-kat" onclick="deleteKategorie(\''+k.replace(/'/g,"\\'")+'\')" title="L\u00f6schen">\u2715</span></div>';
+      }).join('');
+    };
+    window.renderNoNectaList = function() {
+      var el=document.getElementById('no-necta-list');var ce=document.getElementById('no-necta-count');if(!el)return;
+      var nn=Object.values(ART).filter(function(a){return !a.necta_id;});
+      if(ce)ce.innerHTML=nn.length===0?'<span style="color:#28a745;font-weight:700">\u2713 Alle haben Necta ID</span>':'<span style="color:#dc3545;font-weight:700">'+nn.length+' ohne Necta ID</span>';
+      if(!nn.length){el.innerHTML='';return;}
+      el.innerHTML=nn.sort(function(a,b){return(a.kategorie+a.name).localeCompare(b.kategorie+b.name,'de');}).map(function(a,i){
+        return '<div class="necta-row" style="background:'+(i%2?'#f8f9fc':'#fff')+'" onclick="switchView(\'table\');setTimeout(function(){openEdit(\''+a.id+'\');},300)">'+
+          '<span class="art-name">'+a.name+'</span><span class="art-kat">'+(a.kategorie||'')+'</span></div>';
+      }).join('');
+    };
+
+    // === 7. LIEFERANTEN TAB ===
+    window.renderLieferantenTab = function() {
+      var formArea = document.getElementById('lief-form-area');
+      var listArea = document.getElementById('lief-list-area');
+      if (!formArea || !listArea) return;
+
+      formArea.innerHTML = '<div class="lief-form" id="lief-add-form">' +
+        '<h3 style="margin-top:0">Neuen Lieferanten anlegen</h3>' +
+        '<div class="fg2"><div><label>Name *</label><input id="lf-name"></div><div><label>Status</label><select id="lf-status"><option>aktiv</option><option>inaktiv</option></select></div></div>' +
+        '<div class="fg3"><div><label>Kontakt Name</label><input id="lf-kontakt"></div><div><label>E-Mail</label><input id="lf-email" type="email"></div><div><label>Telefon</label><input id="lf-telefon"></div></div>' +
+        '<div class="fg2"><div><label>Adresse</label><input id="lf-adresse"></div><div><label>Notizen</label><input id="lf-notizen"></div></div>' +
+        '<h3>Konditionen</h3>' +
+        '<div class="fg4"><div><label>Skonto %</label><input id="lf-skonto" type="number" value="0" step="0.1"></div><div><label>Zahlungsziel (Tage)</label><input id="lf-zz" type="number" value="14"></div><div><label>Lieferkosten (\u20ac)</label><input id="lf-lk" type="number" value="0" step="0.5"></div><div><label>MBW (\u20ac)</label><input id="lf-mbw" type="number" value="500" step="50"></div></div>' +
+        '<button onclick="saveLieferant()" style="background:#1F4E79;color:#fff;border:none;padding:8px 20px;border-radius:6px;cursor:pointer;font-size:13px;margin-top:8px">+ Lieferant speichern</button>' +
+        '</div>';
+
+      listArea.innerHTML = '<h3 style="margin-top:20px">Lieferanten (' + LIEFERANTEN.length + ')</h3>' +
+        '<table class="lief-table"><thead><tr><th>Name</th><th>Kontakt</th><th>E-Mail</th><th>Skonto</th><th>ZZ</th><th>LK</th><th>MBW</th><th>Status</th><th></th></tr></thead><tbody>' +
+        LIEFERANTEN.map(function(l) {
+          return '<tr>' +
+            '<td><strong>' + l.name + '</strong></td>' +
+            '<td>' + (l.kontakt_name||'\u2013') + '</td>' +
+            '<td>' + (l.kontakt_email ? '<a href="mailto:'+l.kontakt_email+'">'+l.kontakt_email+'</a>' : '\u2013') + '</td>' +
+            '<td>' + (l.skonto||0) + '%</td>' +
+            '<td>' + (l.zahlungsziel||14) + 'T</td>' +
+            '<td>' + (l.lieferkosten||0) + '\u20ac</td>' +
+            '<td>' + (l.mindestbestellwert||500) + '\u20ac</td>' +
+            '<td><span style="color:'+(l.status==='aktiv'?'#28a745':'#dc3545')+'">' + (l.status||'aktiv') + '</span></td>' +
+            '<td><button onclick="editLieferant(\''+l.id+'\')" style="background:none;border:1px solid #ccc;border-radius:4px;padding:2px 8px;cursor:pointer;font-size:11px">\u270e</button></td>' +
+            '</tr>';
+        }).join('') + '</tbody></table>';
+    };
+
+    window.saveLieferant = function() {
+      var name = document.getElementById('lf-name').value.trim();
+      if (!name) { alert('Name ist Pflicht!'); return; }
+      var data = {
+        name: name,
+        status: document.getElementById('lf-status').value,
+        kontakt_name: document.getElementById('lf-kontakt').value.trim() || null,
+        kontakt_email: document.getElementById('lf-email').value.trim() || null,
+        kontakt_telefon: document.getElementById('lf-telefon').value.trim() || null,
+        adresse: document.getElementById('lf-adresse').value.trim() || null,
+        notizen: document.getElementById('lf-notizen').value.trim() || null,
+        skonto: parseFloat(document.getElementById('lf-skonto').value) || 0,
+        zahlungsziel: parseInt(document.getElementById('lf-zz').value) || 14,
+        lieferkosten: parseFloat(document.getElementById('lf-lk').value) || 0,
+        mindestbestellwert: parseFloat(document.getElementById('lf-mbw').value) || 500
+      };
+      supFetch('lieferanten', 'POST', data).then(function(r) {
+        if (!r.ok) return r.text().then(function(t){ alert('Fehler: '+t); });
+        return r.json();
+      }).then(function() {
+        loadLieferanten().then(function() { renderLieferantenTab(); });
+        // Clear form
+        ['lf-name','lf-kontakt','lf-email','lf-telefon','lf-adresse','lf-notizen'].forEach(function(id){
+          var el=document.getElementById(id); if(el)el.value='';
+        });
+        document.getElementById('lf-skonto').value='0';
+        document.getElementById('lf-zz').value='14';
+        document.getElementById('lf-lk').value='0';
+        document.getElementById('lf-mbw').value='500';
+      });
+    };
+
+    window.editLieferant = function(id) {
+      var l = LIEFERANTEN.find(function(x){return x.id===id;});
+      if (!l) return;
+      document.getElementById('lf-name').value = l.name;
+      document.getElementById('lf-status').value = l.status || 'aktiv';
+      document.getElementById('lf-kontakt').value = l.kontakt_name || '';
+      document.getElementById('lf-email').value = l.kontakt_email || '';
+      document.getElementById('lf-telefon').value = l.kontakt_telefon || '';
+      document.getElementById('lf-adresse').value = l.adresse || '';
+      document.getElementById('lf-notizen').value = l.notizen || '';
+      document.getElementById('lf-skonto').value = l.skonto || 0;
+      document.getElementById('lf-zz').value = l.zahlungsziel || 14;
+      document.getElementById('lf-lk').value = l.lieferkosten || 0;
+      document.getElementById('lf-mbw').value = l.mindestbestellwert || 500;
+      // Change save button to update
+      var saveBtn = document.querySelector('#lief-add-form button');
+      if (saveBtn) {
+        saveBtn.textContent = '\u2713 Aktualisieren';
+        saveBtn.onclick = function() { updateLieferant(id); };
+      }
+      document.getElementById('lief-add-form').querySelector('h3').textContent = 'Lieferant bearbeiten: ' + l.name;
+    };
+
+    window.updateLieferant = function(id) {
+      var data = {
+        name: document.getElementById('lf-name').value.trim(),
+        status: document.getElementById('lf-status').value,
+        kontakt_name: document.getElementById('lf-kontakt').value.trim() || null,
+        kontakt_email: document.getElementById('lf-email').value.trim() || null,
+        kontakt_telefon: document.getElementById('lf-telefon').value.trim() || null,
+        adresse: document.getElementById('lf-adresse').value.trim() || null,
+        notizen: document.getElementById('lf-notizen').value.trim() || null,
+        skonto: parseFloat(document.getElementById('lf-skonto').value) || 0,
+        zahlungsziel: parseInt(document.getElementById('lf-zz').value) || 14,
+        lieferkosten: parseFloat(document.getElementById('lf-lk').value) || 0,
+        mindestbestellwert: parseFloat(document.getElementById('lf-mbw').value) || 500,
+        updated_at: new Date().toISOString()
+      };
+      supFetch('lieferanten?id=eq.' + id, 'PATCH', data).then(function(r) {
+        if (!r.ok) return r.text().then(function(t){ alert('Fehler: '+t); });
+        loadLieferanten().then(function() { renderLieferantenTab(); });
+      });
+    };
+
+    // === 8. AUTO-FLAGS ===
+    window.autoFlagAll = function() {
+      var changes = {bio:0, vegan:0, veg:0, gf:0, tk:0};
+      Object.values(ART).forEach(function(a) {
+        var n = a.name.toLowerCase();
+        var updates = {};
+        if (n.indexOf('bio') >= 0 && a.bio_pflicht !== 'Ja') { updates.bio_pflicht='Ja'; a.bio_pflicht='Ja'; changes.bio++; }
+        if (n.indexOf('vegan') >= 0 && a.vegan_pflicht !== 'Ja') { updates.vegan_pflicht='Ja'; a.vegan_pflicht='Ja'; changes.vegan++; }
+        if (n.indexOf('vegetarisch') >= 0 && a.veg_pflicht !== 'Ja') { updates.veg_pflicht='Ja'; a.veg_pflicht='Ja'; changes.veg++; }
+        if ((n.indexOf('glutenfrei')>=0||n.indexOf('gluten frei')>=0) && a.glutenfrei_pflicht!=='Ja') { updates.glutenfrei_pflicht='Ja'; a.glutenfrei_pflicht='Ja'; changes.gf++; }
+        if ((n.indexOf(' tk ')>=0||n.match(/\btk$/)||n.indexOf('tk ')===0||n.indexOf('tiefk')>=0) && a.kategorie!=='Tiefk\u00fchl') { changes.tk++; }
+        if (Object.keys(updates).length > 0) dbUpdate(a.id, updates);
+      });
+      document.getElementById('auto-flag-result').innerHTML = '<span style="color:#28a745">\u2713</span> Bio:'+changes.bio+' Vegan:'+changes.vegan+' Veg:'+changes.veg+' GF:'+changes.gf+' TK:'+changes.tk;
+      render();
+    };
+
+    // === 9. MASSENBEARBEITUNG ===
+    // Add bulk edit bar to sel-bar
+    var selBar = document.getElementById('sel-bar');
+    if (selBar && !document.getElementById('bulk-edit-bar')) {
+      var bulkBar = document.createElement('div');
+      bulkBar.id = 'bulk-edit-bar';
+      bulkBar.className = 'bulk-bar';
+      bulkBar.innerHTML = '<span style="font-weight:700;color:#1F4E79">Massenbearbeitung:</span>' +
+        '<select id="bulk-field"><option value="">Feld w\u00e4hlen...</option>' +
+        '<option value="bio_pflicht">Bio-Pflicht</option><option value="vegan_pflicht">Vegan-Pflicht</option>' +
+        '<option value="veg_pflicht">Vegetarisch-Pflicht</option><option value="glutenfrei_pflicht">Glutenfrei-Pflicht</option>' +
+        '<option value="status">Status</option><option value="kategorie">Kategorie</option></select>' +
+        '<select id="bulk-value"><option value="">Wert...</option></select>' +
+        '<button onclick="applyBulkEdit()">\u2713 Anwenden</button>';
+      selBar.appendChild(bulkBar);
+
+      // Update bulk-value options when field changes
+      document.getElementById('bulk-field').addEventListener('change', function() {
+        var val = this.value;
+        var valSel = document.getElementById('bulk-value');
+        if (val === 'bio_pflicht' || val === 'vegan_pflicht' || val === 'veg_pflicht' || val === 'glutenfrei_pflicht') {
+          valSel.innerHTML = '<option value="Ja">Ja</option><option value="keine Vorgabe">Keine Vorgabe</option><option value="Nein">Nein</option>';
+        } else if (val === 'status') {
+          valSel.innerHTML = '<option value="offen">Offen</option><option value="definiert">Definiert</option><option value="gesperrt">Gesperrt</option>';
+        } else if (val === 'kategorie') {
+          var kats = GROUPS.map(function(g){return g.kategorie;}).filter(function(v,i,a){return a.indexOf(v)===i;}).sort();
+          valSel.innerHTML = kats.map(function(k){return '<option value="'+k+'">'+k+'</option>';}).join('');
+        } else {
+          valSel.innerHTML = '<option value="">Wert...</option>';
+        }
+      });
+    }
+
+    window.applyBulkEdit = function() {
+      var field = document.getElementById('bulk-field').value;
+      var value = document.getElementById('bulk-value').value;
+      if (!field || !value) { alert('Bitte Feld und Wert ausw\u00e4hlen'); return; }
+      var ids = Array.from(selectedIds);
+      if (!ids.length) { alert('Keine Artikel ausgew\u00e4hlt'); return; }
+      if (!confirm(ids.length + ' Artikel: "' + field + '" auf "' + value + '" setzen?')) return;
+      var count = 0;
+      ids.forEach(function(id) {
+        if (ART[id]) {
+          ART[id][field] = value;
+          var upd = {}; upd[field] = value;
+          dbUpdate(id, upd);
+          count++;
+        }
+      });
+      // Rebuild groups if kategorie changed
+      if (field === 'kategorie') {
+        var allRows = Object.values(ART);
+        buildFromRows(allRows);
+      }
+      render();
+      alert(count + ' Artikel aktualisiert');
+    };
+
+    // === 10. PATCH getFiltered ===
+    var _origGetFiltered = getFiltered;
+    window.getFiltered = function() {
+      var result = _origGetFiltered();
+      var fNecta = document.getElementById('f-nonecta');
+      if (fNecta && fNecta.checked) {
+        result = result.map(function(g) {
+          return {kategorie:g.kategorie, articles:g.articles.filter(function(a){return !a.necta_id;})};
+        });
+      }
+      return result;
+    };
+
+    // === 11. PATCH buildTable for Bemerkungen ===
+    var _origBuildTable = buildTable;
+    window.buildTable = function(gname, articles) {
+      var html = _origBuildTable(gname, articles);
+      html = html.replace('<th class="c">Aktion</th>', '<th class="c" style="width:12%">Bemerkungen</th><th class="c">Aktion</th>');
+      articles.forEach(function(a) {
+        var bem = a.bemerkungen ? '<span class="bem-text" title="'+String(a.bemerkungen).replace(/"/g,'&quot;')+'">'+String(a.bemerkungen).substring(0,40)+'</span>' : '<span style="color:#ddd">\u2013</span>';
+        html = html.replace(
+          '<button class="edit-btn" data-id="'+a.id+'">',
+          '</td><td class="c">'+bem+'</td><td class="c"><button class="edit-btn" data-id="'+a.id+'">'
+        );
+      });
+      return html;
+    };
+
+    // === 12. PATCH openEdit ===
+    var _origOpenEdit = openEdit;
+    window.openEdit = function(id) {
+      _origOpenEdit(id);
+      var a = ART[id]; if(!a) return;
+      var kSel = document.getElementById('e-kategorie');
+      if (kSel) {
+        var kats = GROUPS.map(function(g){return g.kategorie;}).filter(function(v,i,arr){return arr.indexOf(v)===i;}).sort();
+        kSel.innerHTML = kats.map(function(k){return '<option value="'+k+'"'+(a.kategorie===k?' selected':'')+'>'+k+'</option>';}).join('');
+      }
+      var nidEl = document.getElementById('e-necta-id');
+      if (nidEl) nidEl.value = a.necta_id || '';
+    };
+
+    // === 13. PATCH saveModal ===
+    var _origSave = saveModal;
+    window.saveModal = function() {
+      if (editKey && ART[editKey]) {
+        var kSel = document.getElementById('e-kategorie');
+        var nidEl = document.getElementById('e-necta-id');
+        if (kSel) ART[editKey].kategorie = kSel.value;
+        if (nidEl) ART[editKey].necta_id = nidEl.value.trim() || null;
+      }
+      _origSave();
+      if (editKey) {
+        var extra = {};
+        var kSel = document.getElementById('e-kategorie');
+        var nidEl = document.getElementById('e-necta-id');
+        if (kSel) extra.kategorie = kSel.value;
+        if (nidEl) extra.necta_id = nidEl.value.trim() || null;
+        dbUpdate(editKey, extra);
+      }
+    };
+    if (typeof saveAndNext === 'function') {
+      var _origSaveNext = saveAndNext;
+      window.saveAndNext = function() {
+        if (editKey && ART[editKey]) {
+          var kSel = document.getElementById('e-kategorie');
+          var nidEl = document.getElementById('e-necta-id');
+          if (kSel) ART[editKey].kategorie = kSel.value;
+          if (nidEl) ART[editKey].necta_id = nidEl.value.trim() || null;
+        }
+        _origSaveNext();
+      };
+    }
+
+    // Make LIEFERANTEN available globally
+    window.LIEFERANTEN_DATA = LIEFERANTEN;
+    window.loadLieferanten = loadLieferanten;
+    window.renderLieferantenList = renderLieferantenTab;
+  });
+})();
+
+</script>
+
+<script>
+
+// ===== STARTSEITE DASHBOARD =====
+(function() {
+  var SUPA_URL = 'https://ywmimuctohdmxkmexops.supabase.co';
+  var SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl3bWltdWN0b2hkbXhrbWV4b3BzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYzNzY5MjUsImV4cCI6MjA5MTk1MjkyNX0.eqyCjArkAla2oCxbTUMCAvYzlsJJY6AdI-QXnyKcpy0';
+
+  function supFetch(path) {
+    return fetch(SUPA_URL + '/rest/v1/' + path, {
+      headers: {'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY}
+    }).then(function(r) { return r.json(); });
+  }
+
+  function waitReady(cb) {
+    if (document.getElementById('tab-dash')) { cb(); }
+    else { setTimeout(function(){ waitReady(cb); }, 200); }
+  }
+
+  waitReady(function() {
+    // Find or create dashboard panel
+    var dashTab = document.getElementById('tab-dash');
+    if (!dashTab) return;
+
+    // Find the section that shows when Dashboard tab is active
+    // The tab switches sections - find the dashboard section
+    var sections = document.querySelectorAll('.section');
+    var dashSection = null;
+    sections.forEach(function(s) {
+      if (s.querySelector('[class*="dash"]') || s.id === 'section-dash') dashSection = s;
+    });
+
+    // If no dash section, create one after the tools section
+    if (!dashSection) {
+      dashSection = document.createElement('div');
+      dashSection.className = 'section';
+      dashSection.id = 'section-dash';
+      dashSection.style.display = 'none';
+      var toolsSection = sections[0];
+      if (toolsSection) toolsSection.parentNode.insertBefore(dashSection, toolsSection.nextSibling);
+    }
+
+    // Build dashboard HTML
+    dashSection.innerHTML = '<div style="max-width:1200px;margin:0 auto;padding:24px">' +
+      '<h2 style="color:#1F4E79;margin-bottom:20px">Dashboard</h2>' +
+      '<div id="dash-loading" style="text-align:center;padding:40px;color:#888"><div style="font-size:24px;margin-bottom:8px">\u23f3</div>Daten werden geladen...</div>' +
+      '<div id="dash-content" style="display:none">' +
+      // KPI Cards
+      '<div id="dash-kpis" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;margin-bottom:24px"></div>' +
+      // Charts row
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:24px">' +
+      '<div style="background:#fff;border-radius:12px;padding:20px;box-shadow:0 2px 8px rgba(0,0,0,.06)">' +
+      '<h3 style="color:#1F4E79;font-size:14px;margin:0 0 12px 0">Artikel nach Kategorie</h3>' +
+      '<div id="dash-kat-chart"></div></div>' +
+      '<div style="background:#fff;border-radius:12px;padding:20px;box-shadow:0 2px 8px rgba(0,0,0,.06)">' +
+      '<h3 style="color:#1F4E79;font-size:14px;margin:0 0 12px 0">Artikel nach Status</h3>' +
+      '<div id="dash-status-chart"></div></div>' +
+      '</div>' +
+      // Lieferanten overview
+      '<div style="background:#fff;border-radius:12px;padding:20px;box-shadow:0 2px 8px rgba(0,0,0,.06);margin-bottom:24px">' +
+      '<h3 style="color:#1F4E79;font-size:14px;margin:0 0 12px 0">Top Lieferanten nach Artikelanzahl</h3>' +
+      '<div id="dash-lief-chart"></div></div>' +
+      // Recent activity
+      '<div style="background:#fff;border-radius:12px;padding:20px;box-shadow:0 2px 8px rgba(0,0,0,.06)">' +
+      '<h3 style="color:#1F4E79;font-size:14px;margin:0 0 12px 0">\u00dcbersicht</h3>' +
+      '<div id="dash-summary"></div></div>' +
+      '</div></div>';
+
+    // Override switchTab to show/hide dashboard
+    var _origSwitchTab = typeof switchTab === 'function' ? switchTab : null;
+    window.switchTab = function(tab) {
+      if (_origSwitchTab) _origSwitchTab(tab);
+      var ds = document.getElementById('section-dash');
+      if (ds) ds.style.display = tab === 'dash' ? 'block' : 'none';
+      if (tab === 'dash') loadDashboard();
+    };
+
+    // Dashboard data loader
+    var dashLoaded = false;
+    function loadDashboard() {
+      if (dashLoaded) return;
+      dashLoaded = true;
+
+      Promise.all([
+        supFetch('produktvorgaben?select=id,name,kategorie,status,necta_id,bio_pflicht,vegan_pflicht,veg_pflicht,glutenfrei_pflicht,kg_2025,spend_2025,lieferanten,festvergeben'),
+        supFetch('lieferanten?select=*&order=name')
+      ]).then(function(results) {
+        var articles = results[0] || [];
+        var lieferanten = results[1] || [];
+
+        document.getElementById('dash-loading').style.display = 'none';
+        document.getElementById('dash-content').style.display = 'block';
+
+        // KPIs
+        var totalArt = articles.length;
+        var definiert = articles.filter(function(a){return a.status==='definiert';}).length;
+        var offen = articles.filter(function(a){return a.status==='offen';}).length;
+        var gesperrt = articles.filter(function(a){return a.status==='gesperrt';}).length;
+        var mitNecta = articles.filter(function(a){return a.necta_id;}).length;
+        var mitLief = articles.filter(function(a){return a.lieferanten;}).length;
+        var totalSpend = articles.reduce(function(s,a){return s+(a.spend_2025||0);},0);
+        var totalKg = articles.reduce(function(s,a){return s+(a.kg_2025||0);},0);
+
+        var kpiData = [
+          {label:'Artikel gesamt',value:totalArt,color:'#1F4E79'},
+          {label:'Definiert',value:definiert,color:'#28a745'},
+          {label:'Offen',value:offen,color:'#ffc107'},
+          {label:'Gesperrt',value:gesperrt,color:'#dc3545'},
+          {label:'Mit Necta ID',value:mitNecta+'/'+totalArt,color:'#17a2b8'},
+          {label:'Mit Lieferanten',value:mitLief,color:'#6f42c1'},
+          {label:'Lieferanten',value:lieferanten.length,color:'#1F4E79'},
+          {label:'Menge 2025',value:Math.round(totalKg/1000)+'t',color:'#607080'}
+        ];
+
+        document.getElementById('dash-kpis').innerHTML = kpiData.map(function(k) {
+          return '<div style="background:#fff;border-radius:12px;padding:16px 20px;box-shadow:0 2px 8px rgba(0,0,0,.06);border-left:4px solid '+k.color+'">' +
+            '<div style="font-size:24px;font-weight:800;color:'+k.color+'">'+k.value+'</div>' +
+            '<div style="font-size:11px;color:#607080;margin-top:2px">'+k.label+'</div></div>';
+        }).join('');
+
+        // Kategorie chart (horizontal bars)
+        var katCount = {};
+        articles.forEach(function(a) { katCount[a.kategorie||'Sonstige'] = (katCount[a.kategorie||'Sonstige']||0)+1; });
+        var katSorted = Object.entries(katCount).sort(function(a,b){return b[1]-a[1];});
+        var maxKat = katSorted[0] ? katSorted[0][1] : 1;
+        document.getElementById('dash-kat-chart').innerHTML = katSorted.map(function(kv) {
+          var pct = Math.round(kv[1]/maxKat*100);
+          return '<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;font-size:11px">' +
+            '<div style="width:120px;text-align:right;color:#607080;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="'+kv[0]+'">'+kv[0]+'</div>' +
+            '<div style="flex:1;background:#f0f4f8;border-radius:4px;height:18px;overflow:hidden"><div style="width:'+pct+'%;height:100%;background:linear-gradient(90deg,#1F4E79,#2B7FBF);border-radius:4px"></div></div>' +
+            '<div style="width:30px;color:#1F4E79;font-weight:700">'+kv[1]+'</div></div>';
+        }).join('');
+
+        // Status chart (donut-style)
+        var statusData = [
+          {label:'Definiert',count:definiert,color:'#28a745'},
+          {label:'Offen',count:offen,color:'#ffc107'},
+          {label:'Gesperrt',count:gesperrt,color:'#dc3545'}
+        ];
+        document.getElementById('dash-status-chart').innerHTML =
+          '<div style="display:flex;gap:16px;align-items:center;justify-content:center">' +
+          statusData.map(function(s) {
+            var pct = totalArt>0?Math.round(s.count/totalArt*100):0;
+            return '<div style="text-align:center"><div style="font-size:28px;font-weight:800;color:'+s.color+'">'+pct+'%</div>' +
+              '<div style="font-size:20px;font-weight:600;color:#333">'+s.count+'</div>' +
+              '<div style="font-size:11px;color:#888">'+s.label+'</div></div>';
+          }).join('') + '</div>';
+
+        // Top Lieferanten
+        var liefCount = {};
+        articles.forEach(function(a) {
+          if (a.lieferanten) {
+            a.lieferanten.split('|').forEach(function(part) {
+              var name = part.split(':')[0].trim();
+              if (name) liefCount[name] = (liefCount[name]||0)+1;
+            });
+          }
+        });
+        var liefSorted = Object.entries(liefCount).sort(function(a,b){return b[1]-a[1];}).slice(0,15);
+        var maxLief = liefSorted[0] ? liefSorted[0][1] : 1;
+        document.getElementById('dash-lief-chart').innerHTML = liefSorted.map(function(lv,i) {
+          var pct = Math.round(lv[1]/maxLief*100);
+          var colors = ['#1F4E79','#2B7FBF','#3498DB','#5DADE2','#85C1E9','#AED6F1'];
+          var c = colors[i%colors.length];
+          return '<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;font-size:11px">' +
+            '<div style="width:180px;text-align:right;color:#607080;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="'+lv[0]+'">'+lv[0]+'</div>' +
+            '<div style="flex:1;background:#f0f4f8;border-radius:4px;height:18px;overflow:hidden"><div style="width:'+pct+'%;height:100%;background:'+c+';border-radius:4px"></div></div>' +
+            '<div style="width:40px;color:#1F4E79;font-weight:700">'+lv[1]+'</div></div>';
+        }).join('');
+
+        // Summary
+        var bio = articles.filter(function(a){return a.bio_pflicht==='Ja';}).length;
+        var vegan = articles.filter(function(a){return a.vegan_pflicht==='Ja';}).length;
+        var veg = articles.filter(function(a){return a.veg_pflicht==='Ja';}).length;
+        var gf = articles.filter(function(a){return a.glutenfrei_pflicht==='Ja';}).length;
+        var fv = articles.filter(function(a){return a.festvergeben;}).length;
+        document.getElementById('dash-summary').innerHTML =
+          '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;font-size:13px">' +
+          '<div><span style="color:#28a745;font-weight:700">'+bio+'</span> Bio-Pflicht</div>' +
+          '<div><span style="color:#6f42c1;font-weight:700">'+vegan+'</span> Vegan-Pflicht</div>' +
+          '<div><span style="color:#17a2b8;font-weight:700">'+veg+'</span> Vegetarisch-Pflicht</div>' +
+          '<div><span style="color:#e67e22;font-weight:700">'+gf+'</span> Glutenfrei-Pflicht</div>' +
+          '<div><span style="color:#dc3545;font-weight:700">'+fv+'</span> Festvergeben</div>' +
+          '<div><span style="color:#1F4E79;font-weight:700">'+(totalArt-mitNecta)+'</span> Fehlende Necta ID</div>' +
+          '</div>';
+      });
+    }
+  });
+})();
+
+</script>
+</body>
+</html>
