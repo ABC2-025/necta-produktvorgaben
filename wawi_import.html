@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>WaWi-Import Generator · ABC Kochwerk</title>
+<title>WaWi-Import Generator Â· ABC Kochwerk</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
   :root {
@@ -112,10 +112,10 @@
 <body>
 
 <header>
-  <a href="index.html">← Zurück zur Übersicht</a>
+  <a href="index.html">â ZurÃ¼ck zur Ãbersicht</a>
   <span>|</span>
   <h1>WaWi-Import Generator</h1>
-  <small>ABC Kochwerk Gruppe · Einkauf</small>
+  <small>ABC Kochwerk Gruppe Â· Einkauf</small>
 </header>
 
 <div class="wrap">
@@ -126,15 +126,15 @@
       <div class="step-num">1</div>
       <div>
         <div class="step-title">Abgabe-Excels hochladen</div>
-        <div class="step-sub">Alle Lieferanten-Dateien gleichzeitig – nur Artikel mit Preis UND Art-Nr werden übernommen</div>
+        <div class="step-sub">Alle Lieferanten-Dateien gleichzeitig â nur Artikel mit Preis UND Art-Nr werden Ã¼bernommen</div>
       </div>
     </div>
     <div class="step-body">
       <div class="dropzone" id="dropzone" onclick="document.getElementById('fileInput').click()">
         <input type="file" id="fileInput" multiple accept=".xlsx,.xls" onchange="handleFiles(this.files)">
         <svg width="36" height="36" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" style="margin:0 auto 8px;display:block;color:#94a3b8"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
-        <p><strong>Dateien auswählen</strong> oder hierher ziehen</p>
-        <p style="margin-top:4px;font-size:11px">Mehrere .xlsx gleichzeitig möglich</p>
+        <p><strong>Dateien auswÃ¤hlen</strong> oder hierher ziehen</p>
+        <p style="margin-top:4px;font-size:11px">Mehrere .xlsx gleichzeitig mÃ¶glich</p>
       </div>
       <div class="file-grid" id="fileGrid"></div>
     </div>
@@ -146,13 +146,13 @@
       <div class="step-num">2</div>
       <div>
         <div class="step-title">Preisanpassungen <span style="font-weight:400;color:var(--muted)">(optional)</span></div>
-        <div class="step-sub">Pro Lieferant: Preisprüfungs-Excel und/oder Preisnachbesserungs-Excel hochladen, oder manuell anpassen</div>
+        <div class="step-sub">Pro Lieferant: PreisprÃ¼fungs-Excel und/oder Preisnachbesserungs-Excel hochladen, oder manuell anpassen</div>
       </div>
     </div>
     <div class="step-body">
       <div class="alert alert-info">
-        <strong>Preisprüfungs-Excel:</strong> Enthält die ursprünglichen Preise aus der Ausschreibung zum Vergleich.<br>
-        <strong>Preisnachbesserungs-Excel:</strong> Enthält die vom Lieferanten nachgebesserten Preise – diese werden übernommen.<br>
+        <strong>PreisprÃ¼fungs-Excel:</strong> EnthÃ¤lt die ursprÃ¼nglichen Preise aus der Ausschreibung zum Vergleich.<br>
+        <strong>Preisnachbesserungs-Excel:</strong> EnthÃ¤lt die vom Lieferanten nachgebesserten Preise â diese werden Ã¼bernommen.<br>
         Matching erfolgt per <strong>Lieferanten-Art-Nr</strong>.
       </div>
       <div id="supPriceList" class="sup-price-list">
@@ -180,19 +180,19 @@
 </div>
 
 <script>
-// ── State ──────────────────────────────────────────────────────────────────
+// ââ State ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 // suppliers[supName] = { rows: [{artnr,artbeschr,ve,menge_ve,einheit,preis}], fileName }
 // overrides[supName] = { [artnr]: { newPrice, oldPrice, source } }
 var suppliers = {};
 var overrides = {};
 
-// ── Drag & Drop ────────────────────────────────────────────────────────────
+// ââ Drag & Drop ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 var dz = document.getElementById('dropzone');
 dz.addEventListener('dragover', function(e){e.preventDefault();dz.classList.add('drag');});
 dz.addEventListener('dragleave', function(){dz.classList.remove('drag');});
 dz.addEventListener('drop', function(e){e.preventDefault();dz.classList.remove('drag');handleFiles(e.dataTransfer.files);});
 
-// ── Abgabe-Excel einlesen ──────────────────────────────────────────────────
+// ââ Abgabe-Excel einlesen ââââââââââââââââââââââââââââââââââââââââââââââââââ
 function handleFiles(files) {
   Array.from(files).forEach(function(file) {
     var r = new FileReader();
@@ -213,7 +213,7 @@ function parseAbgabe(fileName, buffer) {
       hdrIdx=i; break;
     }
   }
-  if (hdrIdx<0){alert('Kein gültiges Ausschreibungs-Format:\n'+fileName);return;}
+  if (hdrIdx<0){alert('Kein gÃ¼ltiges Ausschreibungs-Format:\n'+fileName);return;}
 
   var hdrs = raw[hdrIdx].map(function(c){return String(c||'').replace(/\s+/g,'').toLowerCase();});
   function fi(terms){
@@ -273,7 +273,7 @@ function parseAbgabe(fileName, buffer) {
   renderAll();
 }
 
-// ── Preis-Excel einlesen (Prüfung oder Nachbesserung) ───────────────────────
+// ââ Preis-Excel einlesen (PrÃ¼fung oder Nachbesserung) âââââââââââââââââââââââ
 // mode: 'pruefung' oder 'nachbesserung'
 function parsePriceFile(supName, file, mode) {
   var reader = new FileReader();
@@ -282,7 +282,40 @@ function parsePriceFile(supName, file, mode) {
     var ws = wb.Sheets[wb.SheetNames[0]];
     var raw = XLSX.utils.sheet_to_json(ws, {header:1, defval:null});
 
-    // Spalten erkennen – flexibel
+    // ââ Necta-PreisprÃ¼fungs-Format erkennen ââââââââââââââââââââââââââââââââââ
+    // Format: Zeile 0 = Titel "ABC Kochwerk â PreisprÃ¼fung: ...",
+    //         Zeile 3 = Header (Status, Grundprodukt, ..., Korrigierter Preis â¬, ...)
+    //         Spalte K (10) = Lieferanten-Art-Nr (kein Header in Zeile 3!)
+    var isNectaPruefung = raw[0] && raw[0][0] && String(raw[0][0]).includes('PreisprÃ¼fung');
+    if (isNectaPruefung) {
+      // Header in Zeile 3 (Index 3)
+      var hdrs3 = (raw[3]||[]).map(function(c){return String(c||'').replace(/\s+/g,'').toLowerCase();});
+      // Preis: "korrigierterpreis" (Spalte G=6) bevorzugen, sonst "ihrpreis" (Spalte F=5)
+      var iP3 = hdrs3.findIndex(function(h){return h.includes('korrigierterpreis');});
+      if (iP3<0) iP3 = hdrs3.findIndex(function(h){return h.includes('ihrpreis');});
+      if (iP3<0) iP3 = 6; // Fallback: Spalte G
+      // Art-Nr: Spalte K (10) hat keinen Header â fix
+      var iA3 = 10;
+      var imported=0, skipped=0;
+      var supArtnrs = {};
+      if (suppliers[supName]) suppliers[supName].rows.forEach(function(x){supArtnrs[x.artnr]=x.preis;});
+      for (var r=4; r<raw.length; r++) {
+        var row=raw[r]; if(!row) continue;
+        var artnr=String(row[iA3]||'').trim();
+        var preis=parseFloat(String(row[iP3]||'').replace(',','.'));
+        if (!artnr||isNaN(preis)||preis<=0){skipped++;continue;}
+        var oldPrice=supArtnrs[artnr]!==undefined?supArtnrs[artnr]:null;
+        if (mode==='nachbesserung'&&oldPrice!==null&&Math.abs(oldPrice-preis)<0.00001){skipped++;continue;}
+        overrides[supName][artnr]={newPrice:Math.round(preis*1000000)/1000000,oldPrice:oldPrice,source:mode==='nachbesserung'?'Preisnachbesserung':'PreisprÃ¼fung'};
+        imported++;
+      }
+      renderAll();
+      var msg=imported+' Preise importiert';
+      if(skipped>0) msg+=' ('+skipped+' Ã¼bersprungen)';
+      alert(msg+'.');
+      return;
+    }
+    // ââ Allgemeines Format ââââââââââââââââââââââââââââââââââââââââââââââââââââ
     var hdrIdx=-1, iA=-1, iP=-1;
     for (var i=0; i<Math.min(raw.length,15); i++) {
       if (!raw[i]) continue;
@@ -292,7 +325,7 @@ function parsePriceFile(supName, file, mode) {
         return h.includes('artikelnummer')||h.includes('artikel-nummer')||
                h==='artnr'||h.includes('artnr')||h.includes('articlenumber');
       });
-      // Preis: bei Prüfung suche 'neu' oder 'nachgebessert'; sonst einfach Preis
+      // Preis: bei Nachbesserung bevorzuge korrigiert/neu; sonst einfach Preis
       var p = -1;
       if (mode==='nachbesserung') {
         p = hdrs.findIndex(function(h){return h.includes('preis')&&(h.includes('neu')||h.includes('nachbesser')||h.includes('final')||h.includes('korr'));});
@@ -306,7 +339,7 @@ function parsePriceFile(supName, file, mode) {
     // Fallback: wenn Header nicht erkannt, zeige Spalten
     if (hdrIdx<0) {
       var sample = raw.slice(0,5).map(function(r,i){return '['+i+'] '+JSON.stringify(r);}).join('\n');
-      alert('Spalten Art-Nr und Preis nicht erkannt.\n\nBitte prüfe das Format.\nErste Zeilen:\n'+sample);
+      alert('Spalten Art-Nr und Preis nicht erkannt.\n\nBitte prÃ¼fe das Format.\nErste Zeilen:\n'+sample);
       return;
     }
 
@@ -324,26 +357,26 @@ function parsePriceFile(supName, file, mode) {
       if (!artnr||isNaN(preis)||preis<=0){skipped++;continue;}
 
       var oldPrice = supArtnrs[artnr]!==undefined ? supArtnrs[artnr] : null;
-      // Bei Nachbesserung: nur übernehmen wenn Preis sich geändert hat
+      // Bei Nachbesserung: nur Ã¼bernehmen wenn Preis sich geÃ¤ndert hat
       if (mode==='nachbesserung' && oldPrice!==null && Math.abs(oldPrice-preis)<0.00001) {skipped++;continue;}
 
       overrides[supName][artnr]={
         newPrice: Math.round(preis*1000000)/1000000,
         oldPrice: oldPrice,
-        source:   mode==='nachbesserung'?'Preisnachbesserung':'Preisprüfung'
+        source:   mode==='nachbesserung'?'Preisnachbesserung':'PreisprÃ¼fung'
       };
       imported++;
     }
 
     renderAll();
     var msg = imported+' Preise importiert';
-    if (skipped>0) msg += ' ('+skipped+' übersprungen – kein Preis/Art-Nr oder keine Änderung)';
+    if (skipped>0) msg += ' ('+skipped+' Ã¼bersprungen â kein Preis/Art-Nr oder keine Ãnderung)';
     alert(msg+'.');
   };
   reader.readAsArrayBuffer(file);
 }
 
-// ── renderAll ──────────────────────────────────────────────────────────────
+// ââ renderAll ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 function renderAll() {
   renderFileGrid();
   renderPriceSection();
@@ -354,11 +387,11 @@ function renderFileGrid() {
   var html='';
   Object.keys(suppliers).sort().forEach(function(sup){
     var s=suppliers[sup];
-    html+='<div class="file-card"><div class="icon">📄</div><div class="info">'+
+    html+='<div class="file-card"><div class="icon">ð</div><div class="info">'+
       '<div class="sup">'+esc(sup)+'</div>'+
       '<div class="fname">'+esc(s.fileName)+'</div>'+
-      '<div class="stats">'+s.rows.length+' Artikel mit Preis &amp; Art-Nr ✓</div>'+
-      '</div><button class="remove" onclick="removeSup(\''+esc2(sup)+'\')">✕</button></div>';
+      '<div class="stats">'+s.rows.length+' Artikel mit Preis &amp; Art-Nr â</div>'+
+      '</div><button class="remove" onclick="removeSup(\''+esc2(sup)+'\')">â</button></div>';
   });
   document.getElementById('fileGrid').innerHTML = html;
 }
@@ -369,7 +402,7 @@ function removeSup(sup) {
   renderAll();
 }
 
-// ── Preis-Sektion pro Lieferant ────────────────────────────────────────────
+// ââ Preis-Sektion pro Lieferant ââââââââââââââââââââââââââââââââââââââââââââ
 function renderPriceSection() {
   var sups = Object.keys(suppliers).sort();
   if (!sups.length) {
@@ -386,14 +419,14 @@ function renderPriceSection() {
       '<div class="sup-price-header" onclick="togglePriceBody(\'pb_'+esc(sup).replace(/\s/g,'_')+'\')">'+
         '<span class="sup-price-name">'+esc(sup)+'</span>'+
         '<span class="badge-count'+(count>0?' has-changes':'')+'">'+
-          (count>0?count+' Preisänderungen':'Keine Änderungen')+
+          (count>0?count+' PreisÃ¤nderungen':'Keine Ãnderungen')+
         '</span>'+
       '</div>'+
       '<div class="sup-price-body" id="pb_'+esc(sup).replace(/\s/g,'_')+'">'+
 
         '<div class="upload-row">'+
           '<div>'+
-            '<label>Preisprüfungs-Excel</label>'+
+            '<label>PreisprÃ¼fungs-Excel</label>'+
             '<div class="mini-drop" id="drop_pruef_'+s2+'" onclick="triggerFile(\'fi_pruef_'+s2+'\')">'+
               '<input type="file" id="fi_pruef_'+s2+'" accept=".xlsx,.xls" onchange="parsePriceFile(\''+s2+'\',this.files[0],\'pruefung\');this.value=\'\'">'+
               '<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1M12 12V4m0 0L8 8m4-4l4 4"/></svg>'+
@@ -419,7 +452,7 @@ function renderPriceSection() {
           '<div class="add-manual-row">'+
             '<input id="man_artnr_'+s2+'" placeholder="Art-Nr" style="width:120px;">'+
             '<input id="man_preis_'+s2+'" placeholder="Neuer Preis" type="number" step="0.001" style="width:120px;">'+
-            '<button class="btn btn-outline btn-xs" onclick="addManual(\''+s2+'\')">+ Hinzufügen</button>'+
+            '<button class="btn btn-outline btn-xs" onclick="addManual(\''+s2+'\')">+ HinzufÃ¼gen</button>'+
           '</div>'+
         '</div>'+
 
@@ -451,9 +484,9 @@ function renderOvTable(sup) {
     html+='<tr>'+
       '<td><code>'+esc(artnr)+'</code></td>'+
       '<td><input type="number" step="0.001" value="'+o.newPrice+'" onchange="setOverride(\''+s2+'\',\''+a2+'\',parseFloat(this.value))"></td>'+
-      '<td style="color:var(--muted)">'+(o.oldPrice!==null&&o.oldPrice!==undefined?o.oldPrice.toFixed(4):'–')+'</td>'+
+      '<td style="color:var(--muted)">'+(o.oldPrice!==null&&o.oldPrice!==undefined?o.oldPrice.toFixed(4):'â')+'</td>'+
       '<td><span class="tag '+(o.source==='Preisnachbesserung'?'tag-orange':'tag-green')+'">'+esc(o.source||'Manuell')+'</span></td>'+
-      '<td><button class="del-btn" onclick="delOverride(\''+s2+'\',\''+a2+'\')">✕</button></td>'+
+      '<td><button class="del-btn" onclick="delOverride(\''+s2+'\',\''+a2+'\')">â</button></td>'+
     '</tr>';
   });
   return html+'</tbody></table>';
@@ -494,7 +527,7 @@ function addManual(sup) {
   renderAll();
 }
 
-// ── Export ─────────────────────────────────────────────────────────────────
+// ââ Export âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 function renderExportArea() {
   var area=document.getElementById('exportArea');
   var sups=Object.keys(suppliers).sort();
@@ -514,10 +547,10 @@ function renderExportArea() {
       '<div class="sup-name">'+esc(sup)+'</div>'+
       '<div class="stat-row">'+
         '<div class="stat"><span class="stat-val c-blue">'+total+'</span><span class="stat-lbl">Artikel</span></div>'+
-        (oc>0?'<div class="stat"><span class="stat-val c-orange">'+oc+'</span><span class="stat-lbl">Preisänderungen</span></div>':'')+
+        (oc>0?'<div class="stat"><span class="stat-val c-orange">'+oc+'</span><span class="stat-lbl">PreisÃ¤nderungen</span></div>':'')+
         '<div class="stat"><span class="stat-val c-green">100%</span><span class="stat-lbl">Art-Nr</span></div>'+
       '</div>'+
-      '<div class="ok-box">✓ Bereit – alle Artikel haben Preis &amp; Art-Nr</div>'+
+      '<div class="ok-box">â Bereit â alle Artikel haben Preis &amp; Art-Nr</div>'+
       '<div class="row-actions">'+
         '<button class="btn btn-green btn-sm" data-sup="'+esc(sup)+'" onclick="exportWawi(this.getAttribute(\'data-sup\'))">&#8595; WaWi-Import Excel</button>'+
       '</div>'+
@@ -536,7 +569,7 @@ function getRows(sup) {
 
 function exportWawi(sup) {
   var rows=getRows(sup);
-  if(!rows.length){alert('Keine Artikel für '+sup);return;}
+  if(!rows.length){alert('Keine Artikel fÃ¼r '+sup);return;}
   rows.sort(function(a,b){return(a.artbeschr||'').localeCompare(b.artbeschr||'','de');});
 
   var data=[['Art Nr*','Beschreibung*','VE*','Stkve*','AE*','Stkae*','MG/AE*','Einh*','Preis*',
@@ -555,7 +588,7 @@ function exportWawi(sup) {
   var wbOut=XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wbOut,ws,sup.substring(0,30).replace(/[\/\\?*:[\]]/g,'_'));
   var today=new Date().toISOString().split('T')[0];
-  XLSX.writeFile(wbOut,today+'_WaWi_Import_'+sup.replace(/[^a-zA-Z0-9äöüÄÖÜß]/g,'_')+'.xlsx');
+  XLSX.writeFile(wbOut,today+'_WaWi_Import_'+sup.replace(/[^a-zA-Z0-9Ã¤Ã¶Ã¼ÃÃÃÃ]/g,'_')+'.xlsx');
 }
 
 function exportAll(){Object.keys(suppliers).sort().forEach(function(s){exportWawi(s);});}
