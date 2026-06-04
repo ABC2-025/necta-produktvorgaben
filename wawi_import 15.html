@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WaWi-Import Generator · ABC Kochwerk</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+  :root {
+    --bg:#f4f6f9;--card:#ffffff;--border:#e2e8f0;--primary:#1e3a5f;
+    --accent:#2563eb;--green:#16a34a;--orange:#ea580c;--red:#dc2626;
+    --text:#1e293b;--muted:#64748b;--radius:10px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);}
+  header{background:var(--primary);color:white;padding:14px 24px;display:flex;align-items:center;gap:12px;box-shadow:0 2px 8px rgba(0,0,0,.18);}
+  header a{color:rgba(255,255,255,.7);text-decoration:none;font-size:13px;}
+  header a:hover{color:white;}
+  header span{color:rgba(255,255,255,.4);margin:0 4px;}
+  header h1{font-size:17px;font-weight:600;}
+  header small{margin-left:auto;opacity:.6;font-size:12px;}
+  .wrap{max-width:1100px;margin:0 auto;padding:28px 20px;}
+  .step{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:20px;overflow:hidden;}
+  .step-head{padding:16px 20px;display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--border);background:#f8fafc;}
+  .step-num{width:28px;height:28px;border-radius:50%;background:var(--accent);color:white;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .step-title{font-size:15px;font-weight:600;}
+  .step-sub{font-size:12px;color:var(--muted);margin-top:1px;}
+  .step-body{padding:20px;}
+  .dropzone{border:2px dashed #cbd5e1;border-radius:8px;padding:32px 20px;text-align:center;cursor:pointer;transition:.15s;background:#f8fafc;}
+  .dropzone:hover,.dropzone.drag{border-color:var(--accent);background:#eff6ff;}
+  .dropzone input{display:none;}
+  .dropzone svg{color:var(--muted);margin-bottom:8px;}
+  .dropzone p{font-size:14px;color:var(--muted);}
+  .dropzone strong{color:var(--accent);}
+  .file-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;margin-top:16px;}
+  .file-card{border:1px solid var(--border);border-radius:8px;padding:12px 14px;display:flex;align-items:flex-start;gap:10px;background:var(--card);}
+  .file-card .icon{font-size:22px;flex-shrink:0;margin-top:2px;}
+  .file-card .info{flex:1;min-width:0;}
+  .file-card .fname{font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .file-card .sup{font-size:14px;font-weight:600;margin-bottom:2px;}
+  .file-card .stats{font-size:12px;color:var(--green);margin-top:4px;}
+  .file-card .remove{background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;padding:2px 4px;border-radius:4px;flex-shrink:0;}
+  .file-card .remove:hover{background:#fee2e2;color:var(--red);}
+  .sup-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;}
+  .sup-card{border:1px solid var(--border);border-radius:8px;padding:14px 16px;background:var(--card);}
+  .sup-card .sup-name{font-size:14px;font-weight:600;margin-bottom:10px;}
+  .stat-row{display:flex;gap:16px;margin-bottom:8px;}
+  .stat{text-align:center;}
+  .stat-val{display:block;font-size:20px;font-weight:700;line-height:1;}
+  .stat-lbl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;}
+  .c-blue{color:var(--accent);}
+  .c-green{color:var(--green);}
+  .c-orange{color:var(--orange);}
+  .ok-box{font-size:11px;color:var(--green);background:#f0fdf4;border:1px solid #bbf7d0;border-radius:5px;padding:5px 8px;margin-top:6px;}
+  .row-actions{margin-top:10px;}
+  .override-table{width:100%;border-collapse:collapse;font-size:13px;}
+  .override-table th{text-align:left;padding:8px 10px;background:#f8fafc;border-bottom:2px solid var(--border);font-weight:600;font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;}
+  .override-table td{padding:7px 10px;border-bottom:1px solid var(--border);}
+  .override-table tr:hover td{background:#f8fafc;}
+  .override-table input{border:1px solid var(--border);border-radius:5px;padding:4px 8px;font-size:13px;width:110px;}
+  .override-table input:focus{outline:none;border-color:var(--accent);}
+  .del-btn{background:none;border:none;color:var(--muted);cursor:pointer;font-size:15px;}
+  .del-btn:hover{color:var(--red);}
+  .add-row{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;align-items:center;}
+  .add-row input,.add-row select{border:1px solid var(--border);border-radius:6px;padding:7px 10px;font-size:13px;}
+  .add-row input:focus,.add-row select:focus{outline:none;border-color:var(--accent);}
+  .btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:7px;font-size:13px;font-weight:600;cursor:pointer;border:none;transition:.15s;}
+  .btn-primary{background:var(--accent);color:white;}
+  .btn-primary:hover{background:#1d4ed8;}
+  .btn-green{background:var(--green);color:white;}
+  .btn-green:hover{background:#15803d;}
+  .btn-outline{background:white;color:var(--accent);border:1.5px solid var(--accent);}
+  .btn-outline:hover{background:#eff6ff;}
+  .btn-sm{padding:6px 12px;font-size:12px;}
+  .empty{text-align:center;padding:40px 20px;color:var(--muted);}
+  .empty p{font-size:14px;}
+  .alert{padding:10px 14px;border-radius:7px;font-size:13px;margin-bottom:14px;}
+  .alert-info{background:#eff6ff;border:1px solid #bfdbfe;color:#1d4ed8;}
+  .toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:16px;}
+  .price-drop{border:2px dashed #cbd5e1;border-radius:8px;padding:16px 20px;cursor:pointer;transition:.15s;background:#f8fafc;margin-bottom:16px;}
+  .price-drop:hover{border-color:var(--accent);background:#eff6ff;}
+  .price-drop input{display:none;}
+  .price-drop p{font-size:13px;color:var(--muted);}
+  .price-drop strong{color:var(--accent);}
+</style>
+</head>
+<body>
+
+<header>
+  <a href="index.html">← Zurück zur Übersicht</a>
+  <span>|</span>
+  <h1>WaWi-Import Generator</h1>
+  <small>ABC Kochwerk Gruppe · Einkauf</small>
+</header>
+
+<div class="wrap">
+
+  <div class="step">
+    <div class="step-head">
+      <div class="step-num">1</div>
+      <div>
+        <div class="step-title">Abgabe-Excels hochladen</div>
+        <div class="step-sub">Alle Lieferanten-Dateien gleichzeitig – nur Artikel mit Preis UND Art-Nr werden übernommen</div>
+      </div>
+    </div>
+    <div class="step-body">
+      <div class="dropzone" id="dropzone" onclick="document.getElementById('fileInput').click()">
+        <input type="file" id="fileInput" multiple accept=".xlsx,.xls" onchange="handleFiles(this.files)">
+        <svg width="36" height="36" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+        <p><strong>Dateien auswählen</strong> oder hierher ziehen</p>
+        <p style="margin-top:4px;font-size:11px">Mehrere .xlsx gleichzeitig möglich</p>
+      </div>
+      <div class="file-grid" id="fileGrid"></div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-head">
+      <div class="step-num">2</div>
+      <div>
+        <div class="step-title">Preisanpassungen <span style="font-weight:400;color:var(--muted)">(optional)</span></div>
+        <div class="step-sub">Einzelne Preise überschreiben oder Preisprüfungs-Excel importieren (Matching per Art-Nr)</div>
+      </div>
+    </div>
+    <div class="step-body">
+      <div class="alert alert-info">Preisanpassungen überschreiben die Preise aus den Abgabe-Excels. Matching erfolgt per Lieferanten-Art-Nr.</div>
+
+      <div class="price-drop" onclick="document.getElementById('priceInput').click()">
+        <input type="file" id="priceInput" accept=".xlsx,.xls" onchange="handlePriceFile(this.files[0])">
+        <p><strong>Preisprüfungs-Excel importieren</strong> – Art-Nr und neuer Preis werden gematcht</p>
+      </div>
+
+      <label style="font-size:13px;font-weight:600;display:block;margin-bottom:8px;">Manuelle Preisanpassung</label>
+      <div class="add-row">
+        <select id="oSup" style="min-width:200px;"><option value="">— Lieferant —</option></select>
+        <input id="oArtnr" placeholder="Art-Nr" style="width:130px;">
+        <input id="oPreis" placeholder="Preis je AE" type="number" step="0.001" style="width:130px;">
+        <button class="btn btn-outline btn-sm" onclick="addOverride()">+ Hinzufügen</button>
+      </div>
+
+      <div id="overrideSection" style="display:none;margin-top:16px;">
+        <table class="override-table">
+          <thead><tr><th>Lieferant</th><th>Art-Nr</th><th>Neuer Preis</th><th>Original</th><th></th></tr></thead>
+          <tbody id="overrideTbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-head">
+      <div class="step-num">3</div>
+      <div>
+        <div class="step-title">WaWi-Import Excel exportieren</div>
+        <div class="step-sub">Pro Lieferant eine fertige Import-Datei im Bartsch-Format</div>
+      </div>
+    </div>
+    <div class="step-body">
+      <div id="exportArea">
+        <div class="empty"><p>Erst Abgabe-Excels hochladen (Schritt 1)</p></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+var suppliers = {};
+var overrides = {};
+
+// Drag & Drop
+var dz = document.getElementById('dropzone');
+dz.addEventListener('dragover', function(e){e.preventDefault();dz.classList.add('drag');});
+dz.addEventListener('dragleave', function(){dz.classList.remove('drag');});
+dz.addEventListener('drop', function(e){e.preventDefault();dz.classList.remove('drag');handleFiles(e.dataTransfer.files);});
+
+function handleFiles(files) {
+  Array.from(files).forEach(function(file) {
+    var reader = new FileReader();
+    reader.onload = function(e) { parseAbgabe(file.name, e.target.result); };
+    reader.readAsArrayBuffer(file);
+  });
+}
+
+function parseAbgabe(fileName, buffer) {
+  var wb = XLSX.read(buffer, {type:'array'});
+  var ws = wb.Sheets[wb.SheetNames[0]];
+  var raw = XLSX.utils.sheet_to_json(ws, {header:1, defval:null});
+
+  // Find header row (has 'Necta ID')
+  var hdrIdx = -1;
+  for (var i = 0; i < Math.min(raw.length,20); i++) {
+    if (raw[i] && raw[i].some(function(c){return String(c||'').toLowerCase().includes('necta');})) {
+      hdrIdx = i; break;
+    }
+  }
+  if (hdrIdx < 0) { alert('Kein gültiges Format: ' + fileName); return; }
+
+  var hdrs = raw[hdrIdx].map(function(c){return String(c||'').replace(/\s+/g,'').toLowerCase();});
+  function fi(terms) {
+    for (var j=0;j<hdrs.length;j++)
+      if (terms.some(function(t){return hdrs[j].includes(t.replace(/\s+/g,'').toLowerCase());})) return j;
+    return -1;
+  }
+
+  var iArtnr    = fi(['artikel-nummer','artikelnummer']);
+  var iArtbeschr= fi(['artikelbeschreibung']);
+  var iHerstell = fi(['hersteller']);
+  var iMengeVE  = fi(['mengejeve','menge-jeve','stkve']);
+  var iVE       = fi(['ve']);
+  var iEinheit  = fi(['einheit']);
+  var iPreis    = fi(['preisjae','preisjeae','preis/ae','preisjeae']);
+  var iNichtL   = fi(['nichtlieferbar','nichtliefer','nicht-liefer']);
+
+  // fallback: preis is always col 20 in standard template
+  if (iPreis < 0) iPreis = 20;
+  if (iArtnr < 0) iArtnr = 14;
+
+  // Detect supplier name from filename
+  var supName = fileName
+    .replace(/\.[^.]+$/, '')
+    .replace(/^\d{4}-\d{2}-_?\d{2}_/, '')
+    .replace(/^Kopie_von_\d{4}-\d{2}-\d{2}_/, '')
+    .replace(/\d{4}-\d{2}-\d{2}_/, '')
+    .replace(/ABC_\d{4}-\d{2}M?_Ausschreibung_/, '')
+    .replace(/_Abgabe$/, '').replace(/_fertig$/, '').replace(/_vorbereitung$/, '')
+    .replace(/_{2,}/g,'_').replace(/^_|_$/g,'')
+    .replace(/_/g, ' ').trim();
+
+  var rows = [];
+  for (var r = hdrIdx+1; r < raw.length; r++) {
+    var row = raw[r];
+    if (!row || row[1] === null || row[1] === undefined || String(row[1]).trim() === '') continue;
+
+    // Skip not-deliverable
+    if (iNichtL >= 0 && String(row[iNichtL]||'').trim().toUpperCase() === 'X') continue;
+
+    // Must have price > 0
+    var preisRaw = row[iPreis];
+    var preis = parseFloat(String(preisRaw||'').replace(',','.'));
+    if (!preis || isNaN(preis) || preis <= 0) continue;
+
+    // Must have Art-Nr
+    var artnr = String(row[iArtnr]||'').trim();
+    if (!artnr || artnr === '0' || artnr.toLowerCase() === 'null' || artnr === '#N/A') continue;
+
+    var artbeschr = (iArtbeschr >= 0 ? String(row[iArtbeschr]||'').trim() : '') || String(row[1]||'').trim();
+
+    rows.push({
+      artnr:     artnr,
+      artbeschr: artbeschr,
+      hersteller: iHerstell >= 0 ? String(row[iHerstell]||'').trim() : '',
+      menge_ve:  iMengeVE >= 0 && row[iMengeVE] !== null ? row[iMengeVE] : '',
+      ve:        iVE >= 0 ? String(row[iVE]||'').trim() : '',
+      einheit:   iEinheit >= 0 ? String(row[iEinheit]||'').trim() : '',
+      preis:     Math.round(preis * 1000000) / 1000000,
+    });
+  }
+
+  if (rows.length === 0) {
+    alert('Keine Artikel mit Preis UND Art-Nr gefunden in:\n' + fileName + '\n\nMögliche Ursache: Lieferant hat keine Preise oder keine Art-Nummern eingetragen.');
+    return;
+  }
+
+  suppliers[supName] = {rows: rows, fileName: fileName};
+  renderFileGrid();
+  renderExportArea();
+  updateSupDrop();
+}
+
+function renderFileGrid() {
+  var html = '';
+  Object.keys(suppliers).sort().forEach(function(sup) {
+    var s = suppliers[sup];
+    html += '<div class="file-card"><div class="icon">📄</div><div class="info">' +
+      '<div class="sup">' + esc(sup) + '</div>' +
+      '<div class="fname">' + esc(s.fileName) + '</div>' +
+      '<div class="stats">' + s.rows.length + ' Artikel mit Preis &amp; Art-Nr ✓</div>' +
+      '</div><button class="remove" onclick="removeSup(\'' + esc2(sup) + '\')">✕</button></div>';
+  });
+  document.getElementById('fileGrid').innerHTML = html;
+}
+
+function removeSup(sup) {
+  delete suppliers[sup];
+  // Remove overrides for this supplier
+  Object.keys(overrides).forEach(function(k){if(k.startsWith(sup+'||'))delete overrides[k];});
+  renderFileGrid(); renderExportArea(); updateSupDrop(); renderOverrides();
+}
+
+function handlePriceFile(file) {
+  if (!file) return;
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    var wb = XLSX.read(e.target.result, {type:'array'});
+    var ws = wb.Sheets[wb.SheetNames[0]];
+    var raw = XLSX.utils.sheet_to_json(ws, {header:1, defval:null});
+
+    var hdrIdx=-1, iA=-1, iP=-1, iS=-1;
+    for (var i=0; i<Math.min(raw.length,10); i++) {
+      if (!raw[i]) continue;
+      var hdrs = raw[i].map(function(c){return String(c||'').replace(/\s+/g,'').toLowerCase();});
+      var a = hdrs.findIndex(function(h){return h.includes('artikelnummer')||h.includes('artikel-nummer')||h.includes('artnr');});
+      var p = hdrs.findIndex(function(h){return h.includes('preis')&&(h.includes('ae')||h.includes('neu')||h.includes('final'));});
+      if (p<0) p = hdrs.findIndex(function(h){return h.includes('preis');});
+      var s = hdrs.findIndex(function(h){return h.includes('lieferant')||h.includes('supplier');});
+      if (a>=0 && p>=0) {hdrIdx=i;iA=a;iP=p;iS=s;break;}
+    }
+    if (hdrIdx<0) {alert('Format nicht erkannt. Benötigt: Art-Nr Spalte + Preis Spalte.');return;}
+
+    var imported=0;
+    for (var r=hdrIdx+1;r<raw.length;r++) {
+      var row=raw[r]; if(!row) continue;
+      var artnr=String(row[iA]||'').trim();
+      var preis=parseFloat(String(row[iP]||'').replace(',','.'));
+      if (!artnr||isNaN(preis)||preis<=0) continue;
+
+      var supName = iS>=0 ? String(row[iS]||'').trim() : '';
+      if (!supName) {
+        Object.keys(suppliers).forEach(function(s){
+          if (suppliers[s].rows.some(function(x){return x.artnr===artnr;})) supName=s;
+        });
+      }
+      if (!supName) continue;
+
+      var oldPreis=null;
+      if (suppliers[supName]) suppliers[supName].rows.forEach(function(x){if(x.artnr===artnr)oldPreis=x.preis;});
+      overrides[supName+'||'+artnr]={sup:supName,artnr:artnr,newPrice:Math.round(preis*1000000)/1000000,oldPrice:oldPreis};
+      imported++;
+    }
+
+    renderOverrides(); renderExportArea();
+    document.getElementById('priceInput').value='';
+    if (imported>0) alert(imported+' Preisanpassungen importiert.');
+    else alert('Keine passenden Artikel gefunden.');
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function updateSupDrop() {
+  var sel=document.getElementById('oSup');
+  var cur=sel.value;
+  sel.innerHTML='<option value="">— Lieferant —</option>';
+  Object.keys(suppliers).sort().forEach(function(s){
+    sel.innerHTML+='<option value="'+esc(s)+'"'+(s===cur?' selected':'')+'>'+esc(s)+'</option>';
+  });
+}
+
+function addOverride() {
+  var sup=document.getElementById('oSup').value;
+  var artnr=document.getElementById('oArtnr').value.trim();
+  var preis=parseFloat(document.getElementById('oPreis').value);
+  if (!sup||!artnr||isNaN(preis)||preis<=0){alert('Bitte Lieferant, Art-Nr und Preis angeben.');return;}
+  var oldPreis=null;
+  if (suppliers[sup]) suppliers[sup].rows.forEach(function(x){if(x.artnr===artnr)oldPreis=x.preis;});
+  overrides[sup+'||'+artnr]={sup:sup,artnr:artnr,newPrice:Math.round(preis*1000000)/1000000,oldPrice:oldPreis};
+  document.getElementById('oArtnr').value='';
+  document.getElementById('oPreis').value='';
+  renderOverrides(); renderExportArea();
+}
+
+function removeOverride(key) {
+  delete overrides[key]; renderOverrides(); renderExportArea();
+}
+
+function renderOverrides() {
+  var keys=Object.keys(overrides);
+  var sec=document.getElementById('overrideSection');
+  if (!keys.length){sec.style.display='none';return;}
+  sec.style.display='block';
+  var html='';
+  keys.forEach(function(k){
+    var o=overrides[k];
+    var ks=k.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+    html+='<tr><td>'+esc(o.sup)+'</td><td><code>'+esc(o.artnr)+'</code></td>' +
+      '<td><input type="number" step="0.001" value="'+o.newPrice+'" onchange="overrides[\''+ks+'\'].newPrice=parseFloat(this.value)||0;renderExportArea()"></td>' +
+      '<td style="color:var(--muted)">'+(o.oldPrice!==null?o.oldPrice.toFixed(4):'–')+'</td>' +
+      '<td><button class="del-btn" onclick="removeOverride(\''+ks+'\')">✕</button></td></tr>';
+  });
+  document.getElementById('overrideTbody').innerHTML=html;
+}
+
+function renderExportArea() {
+  var area=document.getElementById('exportArea');
+  var sups=Object.keys(suppliers).sort();
+  if (!sups.length){
+    area.innerHTML='<div class="empty"><p>Erst Abgabe-Excels hochladen (Schritt 1)</p></div>';
+    return;
+  }
+  var html='<div class="toolbar"><button class="btn btn-primary" onclick="exportAll()">&#8595; Alle Lieferanten exportieren</button>' +
+    '<span style="font-size:12px;color:var(--muted)">oder einzeln:</span></div><div class="sup-grid">';
+
+  sups.forEach(function(sup){
+    var total=suppliers[sup].rows.length;
+    var oc=Object.keys(overrides).filter(function(k){return k.startsWith(sup+'||');}).length;
+    html+='<div class="sup-card"><div class="sup-name">'+esc(sup)+'</div>' +
+      '<div class="stat-row">' +
+        '<div class="stat"><span class="stat-val c-blue">'+total+'</span><span class="stat-lbl">Artikel</span></div>' +
+        (oc>0?'<div class="stat"><span class="stat-val c-orange">'+oc+'</span><span class="stat-lbl">Preisänderungen</span></div>':'') +
+        '<div class="stat"><span class="stat-val c-green">100%</span><span class="stat-lbl">Art-Nr</span></div>' +
+      '</div>' +
+      '<div class="ok-box">✓ Bereit – alle Artikel haben Preis &amp; Art-Nr</div>' +
+      '<div class="row-actions"><button class="btn btn-green btn-sm" data-sup="'+esc(sup)+'" onclick="exportWawi(this.getAttribute(\'data-sup\'))">&#8595; WaWi-Import Excel</button></div>' +
+    '</div>';
+  });
+  area.innerHTML=html+'</div>';
+}
+
+function getRows(sup) {
+  return (suppliers[sup]&&suppliers[sup].rows||[]).map(function(r){
+    var k=sup+'||'+r.artnr;
+    return Object.assign({},r,{preis:overrides[k]?overrides[k].newPrice:r.preis});
+  }).filter(function(r){return r.preis>0;});
+}
+
+function exportWawi(sup) {
+  var rows=getRows(sup);
+  if (!rows.length){alert('Keine Artikel für '+sup);return;}
+  rows.sort(function(a,b){return (a.artbeschr||'').localeCompare(b.artbeschr||'','de');});
+
+  var data=[['Art Nr*','Beschreibung*','VE*','Stkve*','AE*','Stkae*','MG/AE*','Einh*','Preis*',
+    'Preis bei Anbruch','EAN-AE','EAN-VE','Artikelzusatztext','Fixpreiskennung',
+    'Warenkorbkennung','Rabatt in Prozent','Gueltig von (TT.MM.JJJJ)','Gueltig bis (TT.MM.JJJJ)',
+    'Aktion','Zus. Artnr','Ausgelistet']];
+
+  rows.forEach(function(r){
+    var p=Math.round(parseFloat(r.preis)*1000)/1000;
+    data.push([r.artnr,r.artbeschr,r.ve||'',r.menge_ve!==''?r.menge_ve:'',
+      r.einheit||'',1,1,r.einheit||'',p,'','','','','','','','','','','','']);
+  });
+
+  var ws=XLSX.utils.aoa_to_sheet(data);
+  ws['!cols']=[12,50,8,8,8,8,8,8,12,12,12,12,25,12,12,12,16,16,10,12,10].map(function(w){return{wch:w};});
+  var wbOut=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wbOut,ws,sup.substring(0,30).replace(/[\/\\?*:[\]]/g,'_'));
+  var today=new Date().toISOString().split('T')[0];
+  XLSX.writeFile(wbOut,today+'_WaWi_Import_'+sup.replace(/[^a-zA-Z0-9äöüÄÖÜß]/g,'_')+'.xlsx');
+}
+
+function exportAll(){Object.keys(suppliers).sort().forEach(function(s){exportWawi(s);});}
+
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function esc2(s){return s.replace(/\\/g,'\\\\').replace(/'/g,"\\'");}
+</script>
+</body>
+</html>
