@@ -543,7 +543,6 @@ function renderExportArea() {
   sups.forEach(function(sup){
     var total=suppliers[sup].rows.length;
     var oc=Object.keys(overrides[sup]||{}).length;
-    html+='<div class="sup-card">'+
       '<div class="sup-name">'+esc(sup)+'</div>'+
       '<div class="stat-row">'+
         '<div class="stat"><span class="stat-val c-blue">'+total+'</span><span class="stat-lbl">Artikel</span></div>'+
@@ -559,6 +558,7 @@ function renderExportArea() {
   area.innerHTML=html+'</div>';
 }
 
+
 function getRows(sup) {
   var ov=overrides[sup]||{};
   return (suppliers[sup]&&suppliers[sup].rows||[]).map(function(r){
@@ -567,22 +567,29 @@ function getRows(sup) {
   }).filter(function(r){return r.preis>0;});
 }
 
+
 function exportWawi(sup) {
   var rows=getRows(sup);
   if(!rows.length){alert('Keine Artikel fÃ¼r '+sup);return;}
   rows.sort(function(a,b){return(a.artbeschr||'').localeCompare(b.artbeschr||'','de');});
+
 
   var data=[['Art Nr*','Beschreibung*','VE*','Stkve*','AE*','Stkae*','MG/AE*','Einh*','Preis*',
     'Preis bei Anbruch','EAN-AE','EAN-VE','Artikelzusatztext','Fixpreiskennung',
     'Warenkorbkennung','Rabatt in Prozent','Gueltig von (TT.MM.JJJJ)','Gueltig bis (TT.MM.JJJJ)',
     'Aktion','Zus. Artnr','Ausgelistet']];
 
+
   rows.forEach(function(r){
-    var p=Math.round(parseFloat(r.preis)*1000)/1000;
+    var p=Math.round(parseFloat(String(r.preis||'').replace(',','.'))*1000)/1000;
+    if(isNaN(p)||p<=0) return;
     var ve=r.ve||''; if(ve===''&&r.menge_ve!=='') ve=r.menge_ve;
-    data.push([r.artnr,r.artbeschr,ve,r.menge_ve!==''?r.menge_ve:'',
+    var veNum=parseFloat(String(ve||'').replace(',','.'))||ve||'';
+    var stkNum=r.menge_ve!==''?(parseFloat(String(r.menge_ve).replace(',','.'))||r.menge_ve):'';
+    data.push([r.artnr,r.artbeschr,veNum,stkNum,
       r.einheit||'',1,1,r.einheit||'',p,'','','','','','','','','','','','']);
   });
+
 
   var ws=XLSX.utils.aoa_to_sheet(data);
   ws['!cols']=[12,50,8,8,8,8,8,8,12,12,12,12,25,12,12,12,16,16,10,12,10].map(function(w){return{wch:w};});
@@ -592,7 +599,9 @@ function exportWawi(sup) {
   XLSX.writeFile(wbOut,today+'_WaWi_Import_'+sup.replace(/[^a-zA-Z0-9Ã¤Ã¶Ã¼ÃÃÃÃ]/g,'_')+'.xlsx');
 }
 
+
 function exportAll(){Object.keys(suppliers).sort().forEach(function(s){exportWawi(s);});}
+
 
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 function esc2(s){return String(s||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'");}
