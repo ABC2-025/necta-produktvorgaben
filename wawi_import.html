@@ -579,7 +579,8 @@ function exportWawi(sup) {
 
   rows.forEach(function(r){
     var p=Math.round(parseFloat(r.preis)*1000)/1000;
-    data.push([r.artnr,r.artbeschr,r.ve||'',r.menge_ve!==''?r.menge_ve:'',
+    var ve=r.ve||''; if(ve===''&&r.menge_ve!=='') ve=r.menge_ve;
+    data.push([r.artnr,r.artbeschr,ve,r.menge_ve!==''?r.menge_ve:'',
       r.einheit||'',1,1,r.einheit||'',p,'','','','','','','','','','','','']);
   });
 
