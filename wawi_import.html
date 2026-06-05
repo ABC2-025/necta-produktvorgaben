@@ -286,7 +286,7 @@ function parsePriceFile(supName, file, mode) {
     // Format: Zeile 0 = Titel "ABC Kochwerk â PreisprÃ¼fung: ...",
     //         Zeile 3 = Header (Status, Grundprodukt, ..., Korrigierter Preis â¬, ...)
     //         Spalte K (10) = Lieferanten-Art-Nr (kein Header in Zeile 3!)
-    var isNectaPruefung = raw[0] && raw[0][0] && String(raw[0][0]).includes('PreisprÃ¼fung');
+    var isNectaPruefung = (function(){var r0=raw[0]&&raw[0][0]?String(raw[0][0]).toLowerCase():'';return r0.includes('preispr')&&(String((raw[1]&&raw[1][0])||'').toLowerCase().includes('spalte')||r0.includes('abc kochwerk')||r0.includes('fung'));})();
     if (isNectaPruefung) {
       // Header in Zeile 3 (Index 3)
       var hdrs3 = (raw[3]||[]).map(function(c){return String(c||'').replace(/\s+/g,'').toLowerCase();});
