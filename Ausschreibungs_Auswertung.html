@@ -860,10 +860,20 @@ async function saveToSupabase() {
       status.textContent = 'Gespeichert: ' + Math.min(i + BATCH, rows.length) + ' / ' + rows.length;
     }
 
+    status.textContent = 'Aktualisiere fehlende Einheiten in den Produktvorgaben...';
+    let einheitInfo = '';
+    try {
+      const n = await updateEinheitVorgaben(rows);
+      einheitInfo = n > 0 ? (' · ' + n + ' fehlende Einheit(en) in den Produktvorgaben nachgetragen.') : '';
+    } catch(e2) {
+      console.error('Einheit-Update fehlgeschlagen:', e2);
+      einheitInfo = ' · ⚠ Einheiten-Update fehlgeschlagen: ' + e2.message;
+    }
+
     icon.textContent = '✓';
     btn.style.background = '#198754';
     status.style.color = '#198754';
-    status.textContent = '✓ ' + rows.length + ' Einträge für Periode „' + periode + '" in Supabase gespeichert. Dashboard auf der Startseite wird aktualisiert.';
+    status.textContent = '✓ ' + rows.length + ' Einträge für Periode „' + periode + '" in Supabase gespeichert. Dashboard auf der Startseite wird aktualisiert.' + einheitInfo;
   } catch(e) {
     icon.textContent = '⚠';
     btn.style.background = '#dc3545';
@@ -873,6 +883,74 @@ async function saveToSupabase() {
   } finally {
     btn.disabled = false;
   }
+}
+
+// ── Häufigste Einheit pro Artikel ermitteln und in produktvorgaben.einheit_vorgabe
+//    nachtragen (nur für Artikel, die dort noch KEINE Einheit gesetzt haben, damit
+//    manuell gepflegte Werte nicht überschrieben werden).
+function cleanUnitForVorgabe(raw) {
+  if (!raw) return null;
+  const u = String(raw).trim().toUpperCase();
+  if (u === 'KG') return 'KG';
+  if (u === 'L' || u === 'LITER') return 'L';
+  if (u === 'STÜCK' || u === 'STUECK' || u === 'STK') return 'Stück';
+  if (u.includes('KG') && !u.includes('STK') && !u.includes('STÜCK')) return 'KG';
+  if ((u === 'L' || u.includes('LITER') || u.includes('FLASCHE')) && !u.includes('STK')) return 'L';
+  if (u.includes('STK') || u.includes('STÜCK') || u.includes('STUECK') || u.includes('PACKUNG') || u.includes('KARTON')) return 'Stück';
+  if (u === 'GRAMM' || u === 'G') return 'KG';
+  return null;
+}
+
+async function updateEinheitVorgaben(rows) {
+  // 1. Häufigste (bereinigte) Einheit pro Artikel aus den gerade hochgeladenen
+  //    Lieferanten-Rückläufen ermitteln
+  const byProdukt = {};
+  rows.forEach(r => {
+    if (!r.produkt) return;
+    const clean = cleanUnitForVorgabe(r.einheit);
+    if (!clean) return;
+    if (!byProdukt[r.produkt]) byProdukt[r.produkt] = {};
+    byProdukt[r.produkt][clean] = (byProdukt[r.produkt][clean] || 0) + 1;
+  });
+  const bestUnitByProdukt = {};
+  Object.keys(byProdukt).forEach(p => {
+    const counts = byProdukt[p];
+    let best = null, bestCount = 0;
+    Object.keys(counts).forEach(e => { if (counts[e] > bestCount) { best = e; bestCount = counts[e]; } });
+    if (best) bestUnitByProdukt[p] = best;
+  });
+  const produktNamen = Object.keys(bestUnitByProdukt);
+  if (!produktNamen.length) return 0;
+
+  // 2. Passende produktvorgaben-Zeilen laden (nur die betroffenen Namen, nur wenn
+  //    einheit_vorgabe dort noch leer ist)
+  const namesParam = produktNamen.map(n => '"' + n.replace(/"/g, '\\"') + '"').join(',');
+  const pvResp = await fetch(SUPA_URL + '/rest/v1/produktvorgaben?select=id,name,einheit_vorgabe&name=in.(' + encodeURIComponent(namesParam) + ')', {
+    headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY }
+  });
+  if (!pvResp.ok) throw new Error('Konnte Produktvorgaben nicht laden: ' + pvResp.status);
+  const pvRows = await pvResp.json();
+
+  const updates = pvRows.filter(pv => !pv.einheit_vorgabe && bestUnitByProdukt[pv.name]);
+  if (!updates.length) return 0;
+
+  // 3. Schreiben (in Batches von 20 parallel, wie beim einmaligen historischen Lauf)
+  async function patchOne(pv) {
+    const r = await fetch(SUPA_URL + '/rest/v1/produktvorgaben?id=eq.' + pv.id, {
+      method: 'PATCH',
+      headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+      body: JSON.stringify({ einheit_vorgabe: bestUnitByProdukt[pv.name] })
+    });
+    return r.ok;
+  }
+  let okCount = 0;
+  const BATCH = 20;
+  for (let i = 0; i < updates.length; i += BATCH) {
+    const batch = updates.slice(i, i + BATCH);
+    const results = await Promise.all(batch.map(patchOne));
+    okCount += results.filter(Boolean).length;
+  }
+  return okCount;
 }
 
 function exportSupplier(sup) {
