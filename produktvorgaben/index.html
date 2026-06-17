@@ -203,6 +203,7 @@ tbody tr.row-selected td{outline:2px solid #2E75B6;outline-offset:-1px}
     <label class="chk-lbl"><input type="checkbox" id="f-no2025" onchange="render()"> Nicht eingekauft 2025</label>
     <label class="chk-lbl"><input type="checkbox" id="f-tk" onchange="render()"> 🧊 TK</label>
     <label class="chk-lbl"><input type="checkbox" id="f-hide-gesperrt" onchange="render()"> Gesperrte ausblenden</label>
+    <label class="chk-lbl"><input type="checkbox" id="f-no-einheit" onchange="render()"> ⚠ Einheit fehlt</label>
     <select id="f-kat" onchange="render()" style="background:rgba(255,255,255,.12);color:#fff;border:1.5px solid rgba(255,255,255,.35);border-radius:4px;font-size:11px;font-weight:600;padding:3px 8px;cursor:pointer;outline:none;max-width:180px"><option value="">Alle Kategorien</option></select>
     <select id="f-wg" onchange="render()" style="background:rgba(255,255,255,.12);color:#fff;border:1.5px solid rgba(255,255,255,.35);border-radius:4px;font-size:11px;font-weight:600;padding:3px 8px;cursor:pointer;outline:none;max-width:180px"><option value="">Alle Warengruppen</option></select>
     <button class="fbtn" onclick="exportFiltered()" title="Gefilterte Artikel mit Artikeldaten, Grammaturen und Abnahmemengen exportieren" style="background:rgba(255,160,0,.25);border-color:rgba(255,160,0,.6)">&#8595; Export (gefiltert)</button>
@@ -275,6 +276,8 @@ tbody tr.row-selected td{outline:2px solid #2E75B6;outline-offset:-1px}
             <input type="number" id="e-mhd" placeholder="z.B. 5"></div>
           <div class="fi"><label>Gebinde- / Gr&ouml;&szlig;envorgabe</label>
             <input type="text" id="e-groesse" placeholder="z.B. 500g Gebinde"></div>
+          <div class="fi"><label>Einheit (f&uuml;r Ausschreibung) ⚠</label>
+            <select id="e-einheit"><option value="">-- nicht gesetzt --</option><option value="KG">KG</option><option value="L">L</option><option value="Stück">Stück</option></select></div>
           <div class="fi"><label>Verpackungsvorgabe</label>
             <input type="text" id="e-verpackung" placeholder="z.B. Karton"></div>
           <div class="fi"><label>Zertifizierung / Label</label>
@@ -543,6 +546,7 @@ function getFiltered() {
   const fNo2025 = document.getElementById('f-no2025').checked;
   const fTK = document.getElementById('f-tk') && document.getElementById('f-tk').checked;
   const fHideGesperrt = document.getElementById('f-hide-gesperrt') && document.getElementById('f-hide-gesperrt').checked;
+  const fNoEinheit = document.getElementById('f-no-einheit') && document.getElementById('f-no-einheit').checked;
   const fKat = document.getElementById('f-kat') ? document.getElementById('f-kat').value : '';
   const fWg  = document.getElementById('f-wg')  ? document.getElementById('f-wg').value  : '';
   return GROUPS.map(function(g) {
@@ -565,6 +569,7 @@ function getFiltered() {
         if (fGluten && a.glutenfrei_pflicht !== 'Ja') return false;
         if (fPairs && !(a.bio_pp && a.conv_pp)) return false;
         if (fNo2025 && a.kg_2025 != null && a.kg_2025 > 0) return false;
+        if (fNoEinheit && a.einheit_vorgabe) return false;
                 // TK-Filter (Checkbox ODER Kategorie-Auswahl '🧊 TK')
         var isTK = (a.warengruppe||'').toLowerCase().indexOf('tiefkühl') >= 0
                 || (a.warengruppe||'').toLowerCase().indexOf('tiefkuehl') >= 0
@@ -667,6 +672,7 @@ function render() {
   const fg = getFiltered();
   let ta=0, match=0, tSpend=0;
   const cnt = {offen:0, definiert:0, gesperrt:0};
+  let noEinheit = 0;
   fg.forEach(function(g) {
     g.articles.forEach(function(a) {
       ta++;
@@ -674,6 +680,7 @@ function render() {
       tSpend += a.spend_2025 || 0;
       const s = a.status || 'offen';
       cnt[s] = (cnt[s]||0) + 1;
+      if (!a.einheit_vorgabe) noEinheit++;
     });
   });
   document.getElementById('scards').innerHTML =
@@ -682,7 +689,8 @@ function render() {
     '<div class="sc" style="border-top:3px solid #ffc107"><div class="lbl">Offen</div><div class="val" style="color:#856404">'+cnt.offen+'</div></div>' +
     '<div class="sc" style="border-top:3px solid #28a745"><div class="lbl">Definiert</div><div class="val" style="color:#155724">'+cnt.definiert+'</div></div>' +
     '<div class="sc" style="border-top:3px solid #dc3545"><div class="lbl">Gesperrt</div><div class="val" style="color:#721c24">'+cnt.gesperrt+'</div></div>' +
-    '<div class="sc"><div class="lbl">Mit Bestelldaten</div><div class="val">'+match+'</div><div class="sub">von '+ta+'</div></div>';
+    '<div class="sc"><div class="lbl">Mit Bestelldaten</div><div class="val">'+match+'</div><div class="sub">von '+ta+'</div></div>' +
+    '<div class="sc" style="border-top:3px solid #ff9800;cursor:pointer" onclick="document.getElementById(\'f-no-einheit\').checked=true;render();" title="Klicken zum Filtern"><div class="lbl">⚠ Einheit fehlt</div><div class="val" style="color:#e65100">'+noEinheit+'</div><div class="sub">von '+ta+'</div></div>';
 
   const gc = document.getElementById('gc');
   gc.innerHTML = '';
@@ -958,6 +966,7 @@ function openEdit(id) {
   document.getElementById('e-veg').value = a.veg_pflicht || 'keine Vorgabe';
   document.getElementById('e-gluten').value = a.glutenfrei_pflicht || 'keine Vorgabe';
   setf('e-mhd', a.mhd); setf('e-groesse', a.groesse);
+  document.getElementById('e-einheit').value = a.einheit_vorgabe || '';
   setf('e-verpackung', a.verpackung); setf('e-zert', a.zertifizierung);
   setf('e-herkunft', a.herkunft); setf('e-bev', a.bevorzugt);
   setf('e-aus', a.ausschluss); setf('e-bem', a.bemerkungen);
@@ -1027,6 +1036,7 @@ async function saveModal() {
     veg_pflicht: document.getElementById('e-veg').value,
     glutenfrei_pflicht: document.getElementById('e-gluten').value,
     mhd: gv('e-mhd'), groesse: gv('e-groesse'),
+    einheit_vorgabe: gv('e-einheit') || null,
     verpackung: gv('e-verpackung'), zertifizierung: gv('e-zert'),
     herkunft: gv('e-herkunft'), bevorzugt: gv('e-bev'),
     ausschluss: gv('e-aus'), bemerkungen: gv('e-bem'),
@@ -1925,7 +1935,7 @@ init();
         '<select id="bulk-field"><option value="">Feld w\u00e4hlen...</option>' +
         '<option value="bio_pflicht">Bio-Pflicht</option><option value="vegan_pflicht">Vegan-Pflicht</option>' +
         '<option value="veg_pflicht">Vegetarisch-Pflicht</option><option value="glutenfrei_pflicht">Glutenfrei-Pflicht</option>' +
-        '<option value="status">Status</option><option value="kategorie">Kategorie</option><option value="warengruppe">Warengruppe / TK</option></select>' +
+        '<option value="status">Status</option><option value="kategorie">Kategorie</option><option value="warengruppe">Warengruppe / TK</option><option value="einheit_vorgabe">Einheit (Ausschreibung)</option></select>' +
         '<select id="bulk-value"><option value="">Wert...</option></select>' +
         '<button onclick="applyBulkEdit()">\u2713 Anwenden</button>';
       selBar.appendChild(bulkBar);
@@ -1954,6 +1964,8 @@ init();
           valSel.innerHTML = wgList.map(function(w){
             return '<option value="'+w+'">'+(w==='Tiefkühlprodukte'?'🧊 '+w:w)+'</option>';
           }).join('');
+        } else if (val === 'einheit_vorgabe') {
+          valSel.innerHTML = '<option value="">-- entfernen --</option><option value="KG">KG</option><option value="L">L</option><option value="Stück">Stück</option>';
         } else {
           valSel.innerHTML = '<option value="">Wert...</option>';
         }
@@ -1963,21 +1975,23 @@ init();
     window.applyBulkEdit = function() {
       var field = document.getElementById('bulk-field').value;
       var value = document.getElementById('bulk-value').value;
-      if (!field || !value) { alert('Bitte Feld und Wert ausw\u00e4hlen'); return; }
+      if (!field) { alert('Bitte Feld auswählen'); return; }
+      if (!value && field !== 'einheit_vorgabe') { alert('Bitte Wert auswählen'); return; }
       var ids = Array.from(selectedIds);
       if (!ids.length) { alert('Keine Artikel ausgew\u00e4hlt'); return; }
       if (!confirm(ids.length + ' Artikel: "' + field + '" auf "' + value + '" setzen?')) return;
       var count = 0;
+      var dbValue = (value === '' ? null : value);
       ids.forEach(function(id) {
         if (ART[id]) {
-          ART[id][field] = value;
-          var upd = {}; upd[field] = value;
+          ART[id][field] = dbValue;
+          var upd = {}; upd[field] = dbValue;
           dbUpdate(id, upd);
           count++;
         }
       });
       // Rebuild groups if kategorie or warengruppe changed
-      if (field === 'kategorie' || field === 'warengruppe') {
+      if (field === 'kategorie' || field === 'warengruppe' || field === 'einheit_vorgabe') {
         var allRows = Object.values(ART);
         buildFromRows(allRows);
       }
