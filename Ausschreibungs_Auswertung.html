@@ -268,20 +268,55 @@ async function processSupplierFile(file) {
     const raw = XLSX.utils.sheet_to_json(ws, {header:1, defval:''});
 
     // Find header row (look for 'Produkt' and 'Preis')
+    // Unterstützt zwei Formate:
+    //  a) einzeilig: 'Produkt' UND 'Preis je AE' stehen in derselben Zeile
+    //  b) zweizeilig: 'Produkt' steht in Zeile i, 'Preis je AE' erst in Zeile i+1
+    //     (typisch für ältere Ausschreibungs-Vorlagen) -> Header-Zeilen werden
+    //     zusammengeführt (Spalte für Spalte das erste nicht-leere Feld)
+    // 'hasPreis' darf nicht auf jedes Vorkommen von "preis" reagieren (z.B. "Preisbindung"
+    // in einer Hinweisspalte würde sonst fälschlich als Preis-Spalte gewertet). Es muss
+    // konkret eine "Preis je ..."-Spalte sein.
+    const looksLikePriceCol = c => /preis\s*(je|\/)/i.test(c.replace(/[\r\n]+/g,' '));
     let headerRow = -1;
+    let headers = null;
     for (let i=0; i<Math.min(30,raw.length); i++) {
       const r = raw[i].map(c=>String(c));
-      if (r.some(c => c.trim()==='Produkt') && r.some(c => c.replace(/[\r\n]+/g,' ').toLowerCase().includes('preis'))) {
-        headerRow = i; break;
+      const hasProdukt = r.some(c => c.trim()==='Produkt');
+      const hasPreis = r.some(looksLikePriceCol);
+      if (hasProdukt && hasPreis) {
+        headerRow = i;
+        headers = r.map(c=>c.trim());
+        break;
+      }
+      if (hasProdukt && !hasPreis && i+1 < raw.length) {
+        // Prüfe ob die nächste Zeile (oder die übernächste) die Preis-Spalten ergänzt
+        for (let j=i+1; j<=Math.min(i+2,raw.length-1); j++) {
+          const r2 = raw[j].map(c=>String(c));
+          const hasPreis2 = r2.some(looksLikePriceCol);
+          if (hasPreis2) {
+            headerRow = j; // Datenzeilen beginnen nach der UNTEREN Header-Zeile
+            // Merge: pro Spalte den ersten nicht-leeren Wert aus den beteiligten Zeilen nehmen
+            const maxLen = Math.max(r.length, r2.length);
+            headers = [];
+            for (let c=0; c<maxLen; c++) {
+              const v1 = (r[c]||'').trim();
+              const v2 = (r2[c]||'').trim();
+              headers.push(v2 || v1);
+            }
+            break;
+          }
+        }
+        if (headerRow>=0) break;
       }
     }
     if (headerRow<0) { alert('Konnte Header nicht finden in: '+file.name); return; }
-    const headers = raw[headerRow].map(c=>String(c).trim());
     const col = name => headers.findIndex(h=>h.replace(/[\r\n]+/g,' ').toLowerCase().includes(name.toLowerCase()));
+    // Exakter Match (nach Normalisierung) - vermeidet Fehltreffer wie 'Grundprodukte' bei Suche nach 'Produkt'
+    const colExact = name => headers.findIndex(h=>h.replace(/[\r\n]+/g,' ').trim().toLowerCase() === name.toLowerCase());
     const colAny = (...names) => { for(const n of names){ const i=col(n); if(i>=0)return i; } return -1; };
 
 
-    const iProdukt=col('Produkt'), iWG=col('Warengruppe'), iNecta=col('Necta ID')||col('necta');
+    const iProdukt=colExact('Produkt'), iWG=colExact('Warengruppe'), iNecta=colExact('Necta ID')||col('necta');
     const iBio=col('Bio'), iArtnr=col('Artikelnummer'), iArtbeschr=col('Artikelbeschreibung');
     const iHersteller=col('Hersteller'), iVE=col('VE'), iAEjeVE=col('AE je VE');
     const iAE=col(' AE'), iMengeAE=col('Menge je AE'), iEinheit=col('Einheit');
