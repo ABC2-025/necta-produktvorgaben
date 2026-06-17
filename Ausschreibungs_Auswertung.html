@@ -328,16 +328,37 @@ async function processSupplierFile(file) {
 
    // Extract supplier name from sheet name, filename, or cell content
         let supplierName = '';
-        
-        // 1. Try sheet name first (most reliable in new format)
-        const sheetName = wb.SheetNames[0];
-        if (sheetName && sheetName.length > 2 && sheetName.length < 60 
-            && !sheetName.toLowerCase().includes('sheet') 
-            && !sheetName.toLowerCase().includes('tabelle')) {
-          supplierName = sheetName;
+
+        // Hinweis: Bei gemeinsam genutzten Vorlagen ist der Sheet-Name für ALLE
+        // Lieferanten identisch (z.B. "1.1 WE Formular OGv6"), was sonst dazu führt,
+        // dass mehrere hochgeladene Dateien sich gegenseitig überschreiben (nur eine
+        // landet am Ende in der Liste). Daher: generische Sheet-Namen verwerfen und
+        // stattdessen den Dateinamen-Suffix nach " - " nehmen, der bei dieser Vorlage
+        // zuverlässig den Lieferanten enthält (z.B. "..._05_26_-_Transgourmet.xlsx").
+
+        const sheetName0 = wb.SheetNames[0] || '';
+        const looksGeneric = /^[\d.]*\s*(WE|Formular|Vorlage|Template)/i.test(sheetName0)
+                           || sheetName0.toLowerCase().includes('sheet')
+                           || sheetName0.toLowerCase().includes('tabelle');
+
+        // 1. Sheet-Name, wenn er NICHT generisch aussieht (z.B. unser eigener Generator
+        //    schreibt hier bereits den echten Lieferantennamen, z.B. "Chefs Culinar Nord Hambur")
+        if (sheetName0.length > 2 && sheetName0.length < 60 && !looksGeneric) {
+          supplierName = sheetName0;
         }
-        
-        // 2. Fallback: extract from filename
+
+        // 2. Sonst: Dateinamen-Suffix nach " - " (typisch für gemeinsame Vorlagen mit
+        //    generischem Sheet-Namen, z.B. "..._05_26_-_Transgourmet.xlsx" -> "Transgourmet")
+        if (!supplierName) {
+          const baseName = file.name.replace(/\.xlsx?$/i, '');
+          const dashMatch = baseName.match(/-\s*([A-Za-zÄÖÜäöüß0-9_ ]+)$/);
+          if (dashMatch) {
+            const cand = dashMatch[1].replace(/_/g, ' ').trim();
+            if (cand.length > 1 && cand.length < 60 && !/^\d+$/.test(cand)) supplierName = cand;
+          }
+        }
+
+        // 3. Fallback: ganzer (bereinigter) Dateiname ohne Datums-/Ausschreibungspräfix
         if (!supplierName) {
           supplierName = file.name.replace(/\.xlsx?$/i, '').replace(/^[^_]*_[^_]*_[^_]*_Ausschreibung_/, '').replace(/_/g, ' ').trim();
         }
