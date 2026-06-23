@@ -901,7 +901,7 @@ function fmtPct(v) {
   return (v>=0?'+':'') + v.toFixed(1).replace('.',',') + ' %';
 }
 
-async // ── Auto-Refresh Setup ────────────────────────────────────────────────────────
+// ── Auto-Refresh Setup ────────────────────────────────────────────────────────
 let _dashRefreshTimer = null;
 const DASH_REFRESH_MS = 5 * 60 * 1000; // 5 Minuten
 
