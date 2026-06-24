@@ -758,6 +758,7 @@ function getPKData() {
 
 // ─── Produktkatalog-Dashboard ──────────────────────────────────────────────
 function renderPKDashboard() {
+    if (!document.getElementById('pk-dash-section')) return;
   const { artikel, mengen } = getPKData();
   const pkSection = document.getElementById('pk-dash-section');
   const pkEmpty = document.getElementById('pk-dash-empty');
@@ -1015,6 +1016,7 @@ function loadDashboard(showLoading) {
 }
 
 function renderPeriodeBar() {
+    if (!document.getElementById('periode-btns')) return;
   // Show all perioden, disabled if ausgeblendet
   const allPeriodes = [...new Set(allData.map(r=>r.periode))].sort();
   document.getElementById('periode-btns').innerHTML = allPeriodes.map(p => {
