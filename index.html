@@ -922,7 +922,7 @@ function renderInlinePerBar() {
   const allP = [...new Set(allData.map(r=>r.periode))].sort();
   bar.innerHTML = allP.map(function(p) {
     const aktiv = isWAsichtbar(p);
-    return '<button onclick="togglePeriode(''+p+'')" style="'
+    return '<button onclick="togglePeriode(\'+p+\')" style="'
       +'padding:4px 12px;border-radius:20px;border:none;cursor:pointer;font-size:12px;font-weight:600;'
       +'background:'+(aktiv?'#1F4E79':'#ddd')+';color:'+(aktiv?'#fff':'#999')+'">'
       +(aktiv?'✓ ':'')+p+'</button>';
