@@ -248,7 +248,12 @@ body{font-family:Arial,sans-serif;background:#f0f4f8;color:#1a2332;min-height:10
 </div>
 
   <!-- ═══ INLINE DASHBOARD (direkt in Tools-Tab) ═══ -->
-  <div id="inline-dash" style="margin-top:28px">
+  <!-- /inline-dash -->
+
+</div><!-- /view-tools -->
+
+<!-- ═══ DASHBOARD TAB (leer – wird nicht mehr genutzt) ═══ -->
+<div id="view-dash" style="display:none"><div id="inline-dash" style="margin-top:28px">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
       <div class="section-title" style="margin:0">&#128202; Ausschreibungs-Dashboard</div>
       <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
@@ -378,12 +383,7 @@ body{font-family:Arial,sans-serif;background:#f0f4f8;color:#1a2332;min-height:10
       </div>
 
     </div><!-- /inline-dash-content -->
-  </div><!-- /inline-dash -->
-
-</div><!-- /view-tools -->
-
-<!-- ═══ DASHBOARD TAB (leer – wird nicht mehr genutzt) ═══ -->
-<div id="view-dash" style="display:none"></div>
+  </div></div>
 
 <!-- ═══ EINSTELLUNGEN TAB ═══ -->
 <div id="view-settings" class="settings-view">
@@ -1007,6 +1007,7 @@ function loadDashboard(showLoading) {
       updateAutoStatus('Zuletzt: '+now+' · Auto-Refresh alle 5 Min.');
       startAutoRefresh();
     } catch(e) {
+      console.error('Dashboard Ladefehler:', e);
       elLoad.innerHTML='<span style="color:#d32f2f">&#9888; Fehler: '+e.message+'</span>';
       updateAutoStatus('Fehler beim Laden');
     }
