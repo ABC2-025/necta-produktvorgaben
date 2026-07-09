@@ -969,7 +969,7 @@ function openEdit(id) {
   document.getElementById('e-einheit').value = a.einheit_vorgabe || '';
   setf('e-verpackung', a.verpackung); setf('e-zert', a.zertifizierung);
   setf('e-herkunft', a.herkunft); setf('e-bev', a.bevorzugt);
-  setf('e-aus', a.ausschluss); setf('e-bem', a.bemerkungen);
+  setf('e-aus', a.ausschluss); setf('e-bem', a.bemerkungen); setf('e-bem-public', a.bem_public||''); setf('e-bem-intern', a.bem_intern||'');
 
   // Checkboxes
   const ausschr = a.separate_ausschreibung === true || a.separate_ausschreibung === 'true';
@@ -1043,6 +1043,8 @@ async function saveModal() {
     separate_ausschreibung: document.getElementById('e-ausschreibung').checked,
     festvergeben: document.getElementById('e-festvergeben').checked,
     festvergeben_kommentar: gv('e-festvergeben-kommentar'),
+    bem_public: gv('e-bem-public')||null,
+    bem_intern: gv('e-bem-intern')||null,
     updated_at: new Date().toISOString()
   };
   Object.assign(a, updates);
