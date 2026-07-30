@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Ausschreibungen · ABC Kochwerk</title>
+<style>
+  *{box-sizing:border-box}
+  body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#f0f4f8;color:#1a2332}
+  .hdr{background:#1F4E79;color:#fff;padding:12px 24px;display:flex;align-items:center;gap:16px}
+  .hdr h1{font-size:17px;margin:0;font-weight:700}
+  .hdr .back{margin-left:auto;color:#cfe0f5;font-size:12px;text-decoration:none}
+  .hdr .back:hover{color:#fff;text-decoration:underline}
+  .tabs{display:flex;gap:2px;background:#1F4E79;padding:0 24px}
+  .tab{padding:10px 22px;border:none;background:transparent;color:rgba(255,255,255,.75);font-size:14px;font-weight:600;cursor:pointer;border-radius:8px 8px 0 0}
+  .tab.active{background:#f0f4f8;color:#1F4E79}
+  .tab:hover:not(.active){background:rgba(255,255,255,.12);color:#fff}
+  .frame-wrap{height:calc(100vh - 92px)}
+  iframe{width:100%;height:100%;border:0;display:none;background:#fff}
+  iframe.active{display:block}
+</style>
+</head>
+<body>
+  <div class="hdr">
+    <h1>&#128196; Ausschreibungen</h1>
+    <a class="back" href="./index.html">&#8592; Startseite</a>
+  </div>
+  <div class="tabs">
+    <button class="tab active" id="t-gen" onclick="showTab('gen')">Ausschreibung erstellen</button>
+    <button class="tab" id="t-aus" onclick="showTab('aus')">Auswertung</button>
+  </div>
+  <div class="frame-wrap">
+    <iframe id="f-gen" class="active" src="./Ausschreibungs_Generator.html" title="Ausschreibungs-Generator"></iframe>
+    <iframe id="f-aus" title="Ausschreibungs-Auswertung"></iframe>
+  </div>
+<script>
+function showTab(w){
+  document.getElementById('t-gen').classList.toggle('active', w==='gen');
+  document.getElementById('t-aus').classList.toggle('active', w==='aus');
+  document.getElementById('f-gen').classList.toggle('active', w==='gen');
+  var fa=document.getElementById('f-aus');
+  fa.classList.toggle('active', w==='aus');
+  // Auswertung erst beim ersten Öffnen laden
+  if(w==='aus' && !fa.getAttribute('src')) fa.setAttribute('src','./Ausschreibungs_Auswertung.html');
+}
+</script>
+</body>
+</html>
