@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Ausschreibungs-Ergebnisse · ABC Kochwerk</title>
+<style>
+  *{box-sizing:border-box}
+  body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#f0f4f8;color:#1a2332;padding:18px 24px}
+  h2{color:#1F4E79;font-size:18px;margin:0 0 4px}
+  .sub{color:#607080;font-size:12px;margin-bottom:16px}
+  .bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:18px}
+  .bar label{font-size:12px;color:#607080;font-weight:700}
+  select{padding:6px 10px;border:1px solid #c8d8e8;border-radius:6px;font-size:13px}
+  .kpis{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:18px}
+  .kpi{background:#fff;border:1px solid #dbe4ee;border-radius:9px;padding:12px 16px;min-width:150px;flex:1}
+  .kpi .l{font-size:11px;color:#607080}
+  .kpi .v{font-size:22px;font-weight:800;color:#1F4E79;margin-top:2px}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media(max-width:820px){.grid{grid-template-columns:1fr}}
+  .panel{background:#fff;border:1px solid #dbe4ee;border-radius:9px;padding:12px 14px}
+  .panel h3{font-size:12px;font-weight:800;color:#1F4E79;margin:0 0 8px;letter-spacing:.02em}
+  table{width:100%;border-collapse:collapse;font-size:12px}
+  th{text-align:left;color:#607080;font-weight:700;padding:4px 6px;border-bottom:1px solid #dbe4ee}
+  td{padding:4px 6px;border-top:1px solid #f0f4f8}
+  .up{color:#c0392b;font-weight:700}.down{color:#1a6b1a;font-weight:700}
+  .muted{color:#8a9ab0}
+  .badge{font-size:9px;background:#ffe8b3;color:#8a5a00;padding:1px 5px;border-radius:3px}
+</style>
+</head>
+<body>
+<h2>&#128202; Ausschreibungs-Ergebnisse</h2>
+<div class="sub" id="sub">Lade Daten…</div>
+<div class="bar">
+  <label>Periode</label><select id="sel-per" onchange="renderDash()"></select>
+  <span class="muted" id="vs"></span>
+</div>
+<div class="kpis" id="kpis"></div>
+<div class="panel" style="margin-bottom:16px">
+  <h3>PREISTREND (INDEX, ERSTE SICHTBARE PERIODE = 100 %)</h3>
+  <div id="trend"></div>
+</div>
+<div class="grid">
+  <div class="panel"><h3>GRÖSSTE PREIS-STEIGERUNGEN</h3><div id="risers"></div></div>
+  <div class="panel"><h3>GRÖSSTE PREIS-SENKUNGEN</h3><div id="fallers"></div></div>
+  <div class="panel"><h3>GÜNSTIGSTER LIEFERANT · WECHSEL ZUR VORPERIODE</h3><div id="wechsel"></div></div>
+  <div class="panel"><h3>LIEFERANTEN-ABDECKUNG (ARTIKEL MIT ANGEBOT)</h3><div id="coverage"></div></div>
+</div>
+
+<script>
+const SUPA_URL = 'https://ywmimuctohdmxkmexops.supabase.co';
+const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl3bWltdWN0b2hkbXhrbWV4b3BzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYzNzY5MjUsImV4cCI6MjA5MTk1MjkyNX0.eqyCjArkAla2oCxbTUMCAvYzlsJJY6AdI-QXnyKcpy0';
+var ALL=[], HIDDEN=new Set();
+
+function parsePeriodeDate(p){
+  var m=String(p||'').match(/(20\d{2})[-_ ]?(\d{2})/); if(m) return new Date(+m[1],(+m[2])-1,1).getTime();
+  var q=String(p||'').match(/(20\d{2}).*?Q([1-4])/i); if(q) return new Date(+q[1],((+q[2])-1)*3,1).getTime();
+  var y=String(p||'').match(/(20\d{2})/); if(y) return new Date(+y[1],0,1).getTime();
+  return 0;
+}
+function artKey(r){ var n=String(r.necta_id==null?'':r.necta_id).trim(); if(n&&n!=='null') return 'n:'+n.replace(/\.0$/,''); return 'p:'+String(r.produkt||'').toLowerCase().trim(); }
+function priceOf(r){ var pk=r.preis_kg!=null?+r.preis_kg:null, pae=r.preis_ae!=null?+r.preis_ae:null; if(pk!=null&&isFinite(pk)&&pk>0) return pk; if(pae!=null&&isFinite(pae)&&pae>0) return pae; return null; }
+function fmtP(v,d){ return v==null?'–':Number(v).toLocaleString('de-DE',{minimumFractionDigits:d||2,maximumFractionDigits:d||2}); }
+function pctSpan(v){ if(v==null) return '<span class="muted">–</span>'; var s=(v>0?'+':'')+fmtP(v,1)+' %'; return '<span class="'+(v>0.0001?'up':(v<-0.0001?'down':'muted'))+'">'+s+'</span>'; }
+
+function computeKPIs(rows, hidden, selected){
+  hidden=hidden||new Set();
+  var byPer={}; rows.forEach(function(r){ if(!r.periode||hidden.has(r.periode)) return; (byPer[r.periode]=byPer[r.periode]||[]).push(r); });
+  var periods=Object.keys(byPer).sort(function(a,b){return parsePeriodeDate(a)-parsePeriodeDate(b);});
+  if(!periods.length) return {periods:[]};
+  var cur=(selected&&byPer[selected])?selected:periods[periods.length-1];
+  var ci=periods.indexOf(cur), prev=ci>0?periods[ci-1]:null;
+  function bestByArt(per){ var m={}; (byPer[per]||[]).forEach(function(r){ var k=artKey(r), p=priceOf(r); if(p==null) return; if(!m[k]||p<m[k].price) m[k]={price:p,lieferant:r.lieferant||'?',produkt:r.produkt||k,wg:r.warengruppe||''}; }); return m; }
+  var curM=bestByArt(cur), prevM=prev?bestByArt(prev):{};
+  var changes=[];
+  Object.keys(curM).forEach(function(k){ if(prevM[k]&&prevM[k].price>0){ var pc=(curM[k].price-prevM[k].price)/prevM[k].price*100; changes.push({art:curM[k].produkt,wg:curM[k].wg,cur:curM[k].price,prev:prevM[k].price,pct:pc,lieferant:curM[k].lieferant,prevLief:prevM[k].lieferant,wechsel:curM[k].lieferant!==prevM[k].lieferant}); } });
+  var avg=changes.length?changes.reduce(function(s,c){return s+c.pct;},0)/changes.length:null;
+  var risers=changes.slice().sort(function(a,b){return b.pct-a.pct;}).filter(function(c){return c.pct>0;}).slice(0,10);
+  var fallers=changes.slice().sort(function(a,b){return a.pct-b.pct;}).filter(function(c){return c.pct<0;}).slice(0,10);
+  var wechsel=changes.filter(function(c){return c.wechsel;}).sort(function(a,b){return a.art.localeCompare(b.art,'de');});
+  var cov={}; (byPer[cur]||[]).forEach(function(r){ var l=r.lieferant||'?'; (cov[l]=cov[l]||{})[artKey(r)]=1; });
+  var coverage=Object.keys(cov).map(function(l){return {lieferant:l,count:Object.keys(cov[l]).length};}).sort(function(a,b){return b.count-a.count;});
+  var base=periods[0], baseM=bestByArt(base);
+  var trend=periods.map(function(per){ var m=bestByArt(per), idxs=[]; Object.keys(m).forEach(function(k){ if(baseM[k]&&baseM[k].price>0) idxs.push(m[k].price/baseM[k].price*100); }); return {periode:per, index:idxs.length?idxs.reduce(function(s,x){return s+x;},0)/idxs.length:null, artikel:Object.keys(m).length}; });
+  return {periods:periods,cur:cur,prev:prev,avg:avg,artikelCur:Object.keys(curM).length,risers:risers,fallers:fallers,wechsel:wechsel,coverage:coverage,trend:trend};
+}
+
+function tbl(head, rowsHtml){ return '<table><thead><tr>'+head+'</tr></thead><tbody>'+(rowsHtml||'<tr><td class="muted" colspan="9">Keine Daten</td></tr>')+'</tbody></table>'; }
+
+function renderDash(){
+  var sel=document.getElementById('sel-per').value;
+  var k=computeKPIs(ALL, HIDDEN, sel);
+  if(!k.periods || !k.periods.length){ document.getElementById('sub').textContent='Keine sichtbaren Perioden-Daten in ausschreibung_preise.'; return; }
+  // populate selector once
+  var selEl=document.getElementById('sel-per');
+  if(selEl.options.length!==k.periods.length){
+    selEl.innerHTML=k.periods.slice().reverse().map(function(p){return '<option value="'+p+'">'+p+'</option>';}).join('');
+    selEl.value=k.cur;
+  }
+  document.getElementById('sub').textContent='Ergebnisse aus '+k.periods.length+' Perioden · Quelle: ausschreibung_preise';
+  document.getElementById('vs').textContent = k.prev? ('verglichen mit '+k.prev) : '(keine Vorperiode)';
+  document.getElementById('kpis').innerHTML =
+    kpi('&#216; Preis&auml;nderung vs. Vorperiode', k.avg==null?'–':((k.avg>0?'+':'')+fmtP(k.avg,1)+' %'), k.avg>0?'#c0392b':(k.avg<0?'#1a6b1a':'#1F4E79'))
+    + kpi('Artikel mit Angebot', k.artikelCur, '#1F4E79')
+    + kpi('Lieferanten-Wechsel (g&uuml;nstigster)', k.wechsel.length, '#1F4E79')
+    + kpi('Lieferanten aktiv', k.coverage.length, '#1F4E79');
+  // trend sparkline
+  document.getElementById('trend').innerHTML = sparkline(k.trend);
+  // risers/fallers
+  document.getElementById('risers').innerHTML = tbl('<th>Artikel</th><th>Vorher</th><th>Jetzt</th><th>&#916;</th>',
+    k.risers.map(function(c){return '<tr><td>'+esc(c.art)+'</td><td>'+fmtP(c.prev,3)+'</td><td>'+fmtP(c.cur,3)+'</td><td>'+pctSpan(c.pct)+'</td></tr>';}).join(''));
+  document.getElementById('fallers').innerHTML = tbl('<th>Artikel</th><th>Vorher</th><th>Jetzt</th><th>&#916;</th>',
+    k.fallers.map(function(c){return '<tr><td>'+esc(c.art)+'</td><td>'+fmtP(c.prev,3)+'</td><td>'+fmtP(c.cur,3)+'</td><td>'+pctSpan(c.pct)+'</td></tr>';}).join(''));
+  document.getElementById('wechsel').innerHTML = tbl('<th>Artikel</th><th>Vorher</th><th>Jetzt (g&uuml;nstigster)</th>',
+    k.wechsel.slice(0,20).map(function(c){return '<tr><td>'+esc(c.art)+'</td><td class="muted">'+esc(c.prevLief)+'</td><td><strong>'+esc(c.lieferant)+'</strong></td></tr>';}).join(''));
+  document.getElementById('coverage').innerHTML = tbl('<th>Lieferant</th><th>Artikel bepreist</th>',
+    k.coverage.map(function(c){return '<tr><td>'+esc(c.lieferant)+'</td><td>'+c.count+'</td></tr>';}).join(''));
+}
+function kpi(l,v,c){ return '<div class="kpi"><div class="l">'+l+'</div><div class="v" style="color:'+(c||'#1F4E79')+'">'+v+'</div></div>'; }
+function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;'); }
+function sparkline(trend){
+  var pts=trend.filter(function(t){return t.index!=null;});
+  if(pts.length<2) return '<div class="muted" style="font-size:12px">Noch nicht genug Perioden f&uuml;r einen Trend.</div>';
+  var vals=pts.map(function(t){return t.index;});
+  var mn=Math.min.apply(null,vals), mx=Math.max.apply(null,vals), rng=(mx-mn)||1, W=Math.max(320,pts.length*80), H=90, pad=24;
+  var coords=pts.map(function(t,i){ var x=pad+i/(pts.length-1)*(W-2*pad); var y=H-pad-((t.index-mn)/rng)*(H-2*pad); return [x,y]; });
+  var line=coords.map(function(c){return c[0].toFixed(1)+','+c[1].toFixed(1);}).join(' ');
+  var last=pts[pts.length-1].index, first=pts[0].index, col=last>first?'#c0392b':(last<first?'#1a6b1a':'#1F4E79');
+  var labels=pts.map(function(t,i){ return '<text x="'+coords[i][0].toFixed(1)+'" y="'+(H-6)+'" font-size="9" fill="#8a9ab0" text-anchor="middle">'+esc(t.periode)+'</text>'; }).join('');
+  var dots=coords.map(function(c,i){ return '<circle cx="'+c[0].toFixed(1)+'" cy="'+c[1].toFixed(1)+'" r="3" fill="'+col+'"/><text x="'+c[0].toFixed(1)+'" y="'+(c[1]-6).toFixed(1)+'" font-size="9" fill="#607080" text-anchor="middle">'+fmtP(pts[i].index,1)+'</text>'; }).join('');
+  return '<svg width="'+W+'" height="'+H+'" style="max-width:100%">'+'<polyline points="'+line+'" fill="none" stroke="'+col+'" stroke-width="2"/>'+dots+labels+'</svg>';
+}
+
+async function loadAll(){
+  // wa_perioden (hidden)
+  try{ var wr=await fetch(SUPA_URL+'/rest/v1/wa_perioden?select=name,sichtbar',{headers:{apikey:SUPA_KEY,Authorization:'Bearer '+SUPA_KEY}}); if(wr.ok){ (await wr.json()).forEach(function(w){ if(w&&w.sichtbar==='nein'&&w.name) HIDDEN.add(w.name); }); } }catch(e){}
+  // ausschreibung_preise (paged)
+  var from=0; ALL=[];
+  while(true){ var to=from+999;
+    var r=await fetch(SUPA_URL+'/rest/v1/ausschreibung_preise?select=periode,produkt,warengruppe,necta_id,lieferant,preis_kg,preis_ae&order=periode',{headers:{apikey:SUPA_KEY,Authorization:'Bearer '+SUPA_KEY,'Range':from+'-'+to,'Range-Unit':'items'}});
+    if(!r.ok){ document.getElementById('sub').textContent='Fehler beim Laden (HTTP '+r.status+').'; return; }
+    var b=await r.json(); if(!b||!b.length) break; ALL=ALL.concat(b); if(b.length<1000) break; from+=1000;
+  }
+  renderDash();
+}
+loadAll();
+</script>
+</body>
+</html>
