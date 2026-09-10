@@ -813,7 +813,7 @@ async function generateSupplierExcel(supplierName, artList, cfg) {
     'Menge\nje VE','VE','Einheit','Preis\nje AE','Preis/kg','Preis/l','Preis/Stk',
     'Anmerkungen\n(Vorgaben)','Anmerkungen\n(Lieferant)'];
   var hSub=['Nr.','','','','Pflicht','Pflicht','Pflicht','Pflicht','Vorgabe','2025','','','',
-    '(X=nein)','Pflicht ✱','Pflicht ✱','optional','Pflicht ✱','Pflicht ✱','Pflicht ✱',
+    '(X=nein)','Pflicht ✱','Pflicht ✱','optional','Pflicht ✱','Pflicht ✱','Vorgabe',
     'Pflicht ✱ €','Formel','Formel','Formel','ABC KW','optional'];
   hTop.forEach(function(h,ci){
     var col=ci+1;
@@ -911,11 +911,11 @@ async function generateSupplierExcel(supplierName, artList, cfg) {
     yi(18,null,fn(10,TXT),ra);
     yi(19,null,fn(10,TXT),ca);
 
-    // Einheit – Lieferant wählt Basis-Einheit (Dropdown kg/Stück/l), Vorgabe als Default
+    // Einheit – fest = Einheitsvorgabe (Vergleichseinheit), vom Lieferanten nicht änderbar
     var ec=ws.getCell(row,20);
-    ec.value=pv.einh||null;
-    ec.font=fn(10,DB,true); ec.fill=fc(YL);
-    ec.alignment=ca; ec.border=yb4; ec.protection={locked:false};
+    if(pv.einh){ ec.value=pv.einh; ec.font=fn(10,DB,true); ec.fill=fc(GRN); }
+    else { ec.value=null; ec.font=fn(10,'AAAAAA'); ec.fill=fc('EEEEEE'); }
+    ec.alignment=ca; ec.border=b4; ec.protection={locked:true};
 
     // Preis je AE
     var pc=yi(21,null,fn(11,DB,true),ra,'#,##0.00 €');
@@ -943,7 +943,6 @@ async function generateSupplierExcel(supplierName, artList, cfg) {
   ws.dataValidations.add('S'+DS+':S'+LR,{type:'list',
     formulae:['"Kiste,Beutel,Eimer,Karton,Sack,Packung,Flasche,Dose,Glas,Kanister,Tray,Palette,Bund,KG,Stück,L"'],
     showDropDown:false,showErrorMessage:false});
-  ws.dataValidations.add('T'+DS+':T'+LR,{type:'list',formulae:['"KG,Stück,L"'],showDropDown:false,showErrorMessage:false});
 
   // ── Conditional Formatting ────────────────────────────────────────────────
   // Pflichtfelder rot wenn leer
@@ -1035,6 +1034,35 @@ async function generateSupplierExcel(supplierName, artList, cfg) {
   });
 
   // ── Export ────────────────────────────────────────────────────────────────
+  // Hinweis-Blatt fuer Lieferanten
+  try{
+    var wsH=wb.addWorksheet('Hinweise');
+    wsH.columns=[{width:4},{width:112}];
+    var HR=1;
+    function hline(txt,opt){ opt=opt||{}; var r=wsH.getRow(HR++); var c=r.getCell(2); c.value=txt||''; c.font={name:'Arial',size:opt.size||10,bold:!!opt.bold,color:{argb:'FF'+(opt.color||'1A1A1A')}}; c.alignment={vertical:'middle',wrapText:true,horizontal:'left'}; r.height=opt.h||16; return r; }
+    hline('Hinweise zum Ausfuellen & zur Auswertung',{bold:true,size:14,color:'1F4E79',h:26});
+    hline('');
+    hline('1. Preisangabe',{bold:true,size:11,color:'1F4E79'});
+    hline('• Der Preis (Spalte U „Preis je AE“) bezieht sich immer auf die von uns vorgegebene Einheit in Spalte T „Einheit“ – z. B. €/kg, €/Liter oder €/Stueck.');
+    hline('• Bitte den Preis genau in dieser Einheit angeben. Die Einheit ist fest vorgegeben und nicht aenderbar (damit alle Angebote vergleichbar sind).');
+    hline('');
+    hline('2. Verpackung & Menge',{bold:true,size:11,color:'1F4E79'});
+    hline('• Spalte S „VE“ = Ihre Verpackungseinheit (Karton, Eimer, Kiste, Sack, Beutel …) – bitte auswaehlen.');
+    hline('• Spalte R „Menge je VE“ = wie viele Basis-Einheiten je Verpackung (Eimer mit 5 kg → 5; Karton mit 12 Stueck → 12).');
+    hline('');
+    hline('3. Pflichtfelder',{bold:true,size:11,color:'1F4E79'});
+    hline('• Bitte je Artikel ausfuellen: O Art-Nr · P Artikelbeschreibung · R Menge je VE · S VE · U Preis je AE.  (Q Hersteller optional)');
+    hline('• Nicht lieferbar: „X“ in Spalte N eintragen.');
+    hline('');
+    hline('4. So wird ausgewertet',{bold:true,size:11,color:'1F4E79'});
+    hline('• Der Vergleich der Angebote erfolgt je Artikel auf Basis Ihres „Preis je AE“ – in genau der vorgegebenen Einheit.');
+    hline('• In die Gesamtbewertung fliessen zusaetzlich Ihre Konditionen ein: Skonto, Zahlungsziel, Lieferkosten und Ø Bestellwert (Effektivpreis).');
+    hline('• Rang 1 = guenstigstes Gesamtangebot je Artikel.');
+    hline('• Artikel mit unvollstaendigen Pflichtfeldern oder die unsere Vorgaben nicht erfuellen, koennen nicht beruecksichtigt werden.');
+    hline('');
+    hline('Ruecksendung an: ausschreibung@abc-kochwerk.de',{bold:true,color:'607080'});
+  }catch(_eh){ console.warn('Hinweis-Blatt:',_eh); }
+
   var buf=await wb.xlsx.writeBuffer();
 
   // ── XML-Patch: sheetProtection korrigieren ────────────────────────────────

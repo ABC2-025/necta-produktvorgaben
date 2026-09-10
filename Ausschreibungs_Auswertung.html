@@ -417,7 +417,7 @@ async function processSupplierFile(file) {
       if (!preis && !preisAE) continue; // skip empty rows
       rows.push({
         produkt, preis_kg: preisKG, preis_l: preisL, preis_ae: preisAE, preis_stk: preisStk,
-        preis_norm: preis || preisAE, // normalized price (kg/l or fallback AE)
+        preis_norm: (preisAE!=null?preisAE:(preisKG||preisL||preisStk||null)), // Ranking-Preis: direkt eingegebener Preis je AE (vorgegebene Einheit) bevorzugt
         warengruppe: String(r[iWG]||'').trim(),
         necta_id: String(r[iNecta]||'').trim(),
         bio_label: String(r[iBio]||'').trim(),
