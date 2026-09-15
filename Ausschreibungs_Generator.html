@@ -791,6 +791,7 @@ async function generateSupplierExcel(supplierName, artList, cfg) {
     '3. Alternativprodukt gleicher Qualität bei Nichtverfügbarkeit',
     '4. Bitte Saison beachten',
     '5. Artikel mit unvollständig ausgefüllten Pflichtfeldern oder Artikel, die unsere Vorgaben nicht erfüllen, können nicht berücksichtigt werden.',
+    '6. Keine Glasverpackungen: In der Großküche können Artikel im Glas nicht verwendet werden – bitte kein Glas anbieten, sondern ein alternatives Gebinde.',
   ].forEach(function(txt,i){
     var r=9+i; ws.mergeCells('B'+r+':L'+r);
     var c=ws.getCell('B'+r); c.value=txt;
@@ -941,7 +942,7 @@ async function generateSupplierExcel(supplierName, artList, cfg) {
   ws.dataValidations.add('N'+DS+':N'+LR,{type:'list',formulae:['"X"'],showDropDown:false,
     showErrorMessage:true,error:'Nur X eingeben',errorTitle:'Ungültige Eingabe'});
   ws.dataValidations.add('S'+DS+':S'+LR,{type:'list',
-    formulae:['"Kiste,Beutel,Eimer,Karton,Sack,Packung,Flasche,Dose,Glas,Kanister,Tray,Palette,Bund,KG,Stück,L"'],
+    formulae:['"Kiste,Beutel,Eimer,Karton,Sack,Packung,Flasche,Dose,Kanister,Tray,Palette,Bund,KG,Stück,L"'],
     showDropDown:false,showErrorMessage:false});
 
   // ── Conditional Formatting ────────────────────────────────────────────────
@@ -1034,34 +1035,91 @@ async function generateSupplierExcel(supplierName, artList, cfg) {
   });
 
   // ── Export ────────────────────────────────────────────────────────────────
-  // Hinweis-Blatt fuer Lieferanten
+  // Ausfuellhilfe-Blatt fuer Lieferanten (2. Blatt)
   try{
-    var wsH=wb.addWorksheet('Hinweise');
-    wsH.columns=[{width:4},{width:112}];
+    var wsH=wb.addWorksheet('Ausfuellhilfe');
+    wsH.views=[{showGridLines:false}];
+    wsH.columns=[{width:2},{width:18},{width:30},{width:80}];
+    var NAVY='FF1F4E79', YEL='FFFFF2CC', GRN='FFE2EFDA', GRY='FFEDEDED', BORDC='FFBFBFBF';
     var HR=1;
-    function hline(txt,opt){ opt=opt||{}; var r=wsH.getRow(HR++); var c=r.getCell(2); c.value=txt||''; c.font={name:'Arial',size:opt.size||10,bold:!!opt.bold,color:{argb:'FF'+(opt.color||'1A1A1A')}}; c.alignment={vertical:'middle',wrapText:true,horizontal:'left'}; r.height=opt.h||16; return r; }
-    hline('Hinweise zum Ausfuellen & zur Auswertung',{bold:true,size:14,color:'1F4E79',h:26});
-    hline('');
-    hline('1. Preisangabe',{bold:true,size:11,color:'1F4E79'});
-    hline('• Der Preis (Spalte U „Preis je AE“) bezieht sich immer auf die von uns vorgegebene Einheit in Spalte T „Einheit“ – z. B. €/kg, €/Liter oder €/Stueck.');
-    hline('• Bitte den Preis genau in dieser Einheit angeben. Die Einheit ist fest vorgegeben und nicht aenderbar (damit alle Angebote vergleichbar sind).');
-    hline('');
-    hline('2. Verpackung & Menge',{bold:true,size:11,color:'1F4E79'});
-    hline('• Spalte S „VE“ = Ihre Verpackungseinheit (Karton, Eimer, Kiste, Sack, Beutel …) – bitte auswaehlen.');
-    hline('• Spalte R „Menge je VE“ = wie viele Basis-Einheiten je Verpackung (Eimer mit 5 kg → 5; Karton mit 12 Stueck → 12).');
-    hline('');
-    hline('3. Pflichtfelder',{bold:true,size:11,color:'1F4E79'});
-    hline('• Bitte je Artikel ausfuellen: O Art-Nr · P Artikelbeschreibung · R Menge je VE · S VE · U Preis je AE.  (Q Hersteller optional)');
-    hline('• Nicht lieferbar: „X“ in Spalte N eintragen.');
-    hline('');
-    hline('4. So wird ausgewertet',{bold:true,size:11,color:'1F4E79'});
-    hline('• Der Vergleich der Angebote erfolgt je Artikel auf Basis Ihres „Preis je AE“ – in genau der vorgegebenen Einheit.');
-    hline('• In die Gesamtbewertung fliessen zusaetzlich Ihre Konditionen ein: Skonto, Zahlungsziel, Lieferkosten und Ø Bestellwert (Effektivpreis).');
-    hline('• Rang 1 = guenstigstes Gesamtangebot je Artikel.');
-    hline('• Artikel mit unvollstaendigen Pflichtfeldern oder die unsere Vorgaben nicht erfuellen, koennen nicht beruecksichtigt werden.');
-    hline('');
-    hline('Ruecksendung an: ausschreibung@abc-kochwerk.de',{bold:true,color:'607080'});
-  }catch(_eh){ console.warn('Hinweis-Blatt:',_eh); }
+    function _fill(c){ return {type:'pattern',pattern:'solid',fgColor:{argb:c}}; }
+    var _box={top:{style:'thin',color:{argb:BORDC}},bottom:{style:'thin',color:{argb:BORDC}},left:{style:'thin',color:{argb:BORDC}},right:{style:'thin',color:{argb:BORDC}}};
+    function _al(o){ o=o||{}; return {vertical:o.v||'middle',horizontal:o.h||'left',wrapText:o.wrap!==false}; }
+    // Titel / Section: ueber B:D gemergt
+    function bandTitle(txt,size,color,h){ var r=wsH.getRow(HR); wsH.mergeCells('B'+HR+':D'+HR); var c=r.getCell(2); c.value=txt; c.font={name:'Calibri',size:size,bold:true,color:{argb:color}}; c.alignment=_al(); r.height=h||18; HR++; return r; }
+    function section(txt){ var r=wsH.getRow(HR); wsH.mergeCells('B'+HR+':D'+HR); var c=r.getCell(2); c.value=txt; c.font={name:'Calibri',size:12,bold:true,color:{argb:'FFFFFFFF'}}; c.fill=_fill(NAVY); c.alignment=_al(); r.height=20; HR++; }
+    function tHead(a,b,cc){ var r=wsH.getRow(HR); [a,b,cc].forEach(function(v,k){ var c=r.getCell(2+k); c.value=v; c.font={name:'Calibri',size:10,bold:true,color:{argb:'FFFFFFFF'}}; c.fill=_fill(NAVY); c.alignment=_al(); c.border=_box; }); r.height=18; HR++; }
+    function dRow(col,feld,txt,swatch){ var r=wsH.getRow(HR);
+      var c1=r.getCell(2); c1.value=col; c1.font={name:'Calibri',size:10,bold:true}; c1.fill=_fill(swatch); c1.alignment=_al({h:'center'}); c1.border=_box;
+      var c2=r.getCell(3); c2.value=feld; c2.font={name:'Calibri',size:10,bold:true}; c2.alignment=_al(); c2.border=_box;
+      var c3=r.getCell(4); c3.value=txt; c3.font={name:'Calibri',size:10}; c3.alignment=_al({v:'top'}); c3.border=_box;
+      HR++; }
+    function legend(swatch,label,txt){ var r=wsH.getRow(HR);
+      var c1=r.getCell(2); c1.value=label; c1.font={name:'Calibri',size:10,bold:true}; c1.fill=_fill(swatch); c1.alignment=_al(); c1.border=_box;
+      wsH.mergeCells('C'+HR+':D'+HR); var c3=r.getCell(3); c3.value=txt; c3.font={name:'Calibri',size:10}; c3.alignment=_al(); c3.border=_box;
+      r.height=18; HR++; }
+    function bullet(txt){ var r=wsH.getRow(HR); wsH.mergeCells('B'+HR+':D'+HR); var c=r.getCell(2); c.value=txt; c.font={name:'Calibri',size:10}; c.alignment=_al(); r.height=16; HR++; }
+    function gap(){ HR++; }
+
+    bandTitle('Ausfuellhilfe – Preisabgabe ABC Kochwerk Gruppe',16,NAVY,28);
+    var rSub=wsH.getRow(HR); wsH.mergeCells('B'+HR+':D'+HR); var cSub=rSub.getCell(2); cSub.value='Bitte im Angebotsblatt nur die farbig markierten Felder ausfuellen. Diese Anleitung erklaert jede Spalte.'; cSub.font={name:'Calibri',size:10,italic:true,color:{argb:'FF606060'}}; cSub.alignment=_al(); rSub.height=20; HR++;
+    gap();
+    var rGl=wsH.getRow(HR); wsH.mergeCells('B'+HR+':D'+HR); var cGl=rGl.getCell(2); cGl.value='Wichtig: Bitte keine Glasverpackungen anbieten – in der Grosskueche koennen Artikel im Glas nicht verwendet werden. Bitte alternatives Gebinde anbieten.'; cGl.font={name:'Calibri',size:10,bold:true,color:{argb:'FF9C0006'}}; cGl.fill=_fill('FFFDE9E9'); cGl.alignment=_al(); cGl.border=_box; rGl.height=30; HR++;
+    gap();
+
+    section('Legende');
+    legend(YEL,'Gelb = Pflichtfeld','von Ihnen auszufuellen (Angebot unvollstaendig, wenn leer)');
+    legend(GRN,'Gruen = optional','duerfen Sie ausfuellen, muessen aber nicht');
+    legend(GRY,'Grau = gesperrt','von uns vorgegeben, bitte nicht aendern (Feld ist schreibgeschuetzt)');
+    gap();
+
+    section('1. Diese Felder bitte ausfuellen (Pflicht)');
+    tHead('Spalte','Feld','Was eintragen');
+    dRow('O','Artikelnummer','Ihre Artikelnummer fuer dieses Produkt.',YEL);
+    dRow('P','Artikelbeschreibung','Ihre genaue Produktbezeichnung (Sorte, Groesse, Qualitaet).',YEL);
+    dRow('R','Menge je VE','Wie viele Basis-Einheiten stecken in einer Verpackung? Beispiel: Eimer mit 5 kg → 5. Karton mit 12 Stueck → 12. (Basis-Einheit = Spalte T)',YEL);
+    dRow('S','VE','Ihre Verpackungseinheit als Auswahl: Karton, Eimer, Kiste, Sack, Beutel, … (Klick ins Feld → Dropdown)',YEL);
+    dRow('U','Preis je AE','Ihr Preis – IMMER pro 1 Basis-Einheit aus Spalte T. Steht in T „KG“, dann der Preis fuer 1 kg. Steht „Stueck“, dann der Preis fuer 1 Stueck. NICHT der Preis pro Karton/VE!',YEL);
+    gap();
+
+    section('2. Optionale Felder');
+    tHead('Spalte','Feld','Was eintragen');
+    dRow('N','Nicht lieferbar','Nur ein „X“ eintragen, wenn Sie den Artikel NICHT anbieten koennen. Dann sind O–U nicht noetig.',GRN);
+    dRow('Q','Hersteller','Hersteller/Marke, falls relevant.',GRN);
+    dRow('Z','Anmerkungen (Lieferant)','Ihre Hinweise, z. B. abweichende Gebinde, Mindestabnahme, Saison.',GRN);
+    gap();
+
+    section('3. Gesperrte Spalten – von uns vorgegeben (bitte nicht aendern)');
+    tHead('Spalte','Feld','Warum gesperrt');
+    dRow('A–D','lfd / Produkt / Warengruppe / Necta ID','Die von uns gesuchte Position inkl. unserer internen Artikel-ID. Dient der eindeutigen Zuordnung.',GRY);
+    dRow('E–H','Bio / Vegan / Veget. / Glutenfrei','Geforderte Produkteigenschaften laut unserer Vorgabe.',GRY);
+    dRow('I–L','Gebindegroesse / Menge / p.M. / Gewicht','Orientierungswerte (u. a. Vorjahresmenge). Nur zur Info.',GRY);
+    dRow('T','Einheit','WICHTIG: die Vergleichseinheit, auf die sich Ihr Preis (Spalte U) bezieht. Fest vorgegeben, damit ALLE Angebote vergleichbar sind. Ihre Verpackung waehlen Sie frei in Spalte S – die Einheit bleibt fix.',GRY);
+    dRow('V–X','Preis/kg · Preis/l · Preis/Stk','Automatische Kontrollspalten. Sie spiegeln nur Ihren Preis aus U in der Basis-Einheit – zur Sichtkontrolle. Nichts eintragen.',GRY);
+    dRow('Y','Anmerkungen (Vorgaben)','Unsere Hinweise zum Artikel.',GRY);
+    gap();
+
+    section('4. Beispiel (so ist es richtig)');
+    var rEx=wsH.getRow(HR); wsH.mergeCells('B'+HR+':D'+HR); var cEx=rEx.getCell(2); cEx.value='Bananen, angeboten fuer 1,85 €/kg:'; cEx.font={name:'Calibri',size:10,bold:true}; cEx.alignment=_al(); rEx.height=18; HR++;
+    tHead('Feld','Eintrag','Erklaerung');
+    function exRow(feld,val,txt){ var r=wsH.getRow(HR);
+      var c1=r.getCell(2); c1.value=feld; c1.font={name:'Calibri',size:10,bold:true}; c1.alignment=_al(); c1.border=_box;
+      var c2=r.getCell(3); c2.value=val; c2.font={name:'Calibri',size:10,bold:true}; c2.alignment=_al({h:'center'}); c2.border=_box;
+      var c3=r.getCell(4); c3.value=txt; c3.font={name:'Calibri',size:10}; c3.alignment=_al({v:'top'}); c3.border=_box; HR++; }
+    exRow('T Einheit','KG','vorgegeben – Preis bezieht sich auf 1 kg');
+    exRow('S VE','Karton','Ihre Verpackung');
+    exRow('R Menge je VE','18','18 kg im Karton');
+    exRow('U Preis je AE','1,85','Preis fuer 1 kg – NICHT 1,85 ÷ 18!');
+    exRow('V Preis/kg','1,85','erscheint automatisch');
+    gap();
+
+    section('5. So werten wir aus');
+    bullet('• Verglichen wird je Artikel Ihr „Preis je AE“ (Spalte U) – in genau der vorgegebenen Einheit (Spalte T).');
+    bullet('• In die Gesamtbewertung fliessen zusaetzlich Ihre Konditionen ein: Skonto, Zahlungsziel, Lieferkosten, Ø Bestellwert (Effektivpreis).');
+    bullet('• Rang 1 = guenstigstes Gesamtangebot je Artikel.');
+    bullet('• Artikel mit unvollstaendigen Pflichtfeldern koennen nicht beruecksichtigt werden.');
+    bullet('• Ruecksendung an: ausschreibung@abc-kochwerk.de');
+  }catch(_eh){ console.warn('Ausfuellhilfe-Blatt:',_eh); }
 
   var buf=await wb.xlsx.writeBuffer();
 
