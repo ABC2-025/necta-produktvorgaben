@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
+  <script src="/necta-produktvorgaben/sbauth.js"></script>
   <!-- deploy-touch 2026-07-10a: Filter-Dropdown + Gesperrt-Default-aus + TK-Fix --> [BUILD v18 · Perioden-Supabase]
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -392,7 +393,7 @@ const PREISE = {"11032698":{"wa":"2025-Q4","d":"30.09.2025","s":[{"f":"EGV","pk"
 async function sbFetch(path, method, body, prefer) {
   const headers = {
     'apikey': SUPA_KEY,
-    'Authorization': 'Bearer ' + SUPA_KEY,
+    'Authorization': 'Bearer ' + (window.SB_TOKEN||SUPA_KEY),
     'Content-Type': 'application/json'
   };
   if (prefer) headers['Prefer'] = prefer;
@@ -412,7 +413,7 @@ async function dbLoadAll() {
     const res = await fetch(SUPA_URL + '/rest/v1/produktvorgaben?select=*&order=kategorie,name', {
       headers: {
         'apikey': SUPA_KEY,
-        'Authorization': 'Bearer ' + SUPA_KEY,
+        'Authorization': 'Bearer ' + (window.SB_TOKEN||SUPA_KEY),
         'Range': from + '-' + to,
         'Range-Unit': 'items'
       }
@@ -1002,7 +1003,7 @@ async function bulkSetStatus(status) {
       method: 'PATCH',
       headers: {
         'apikey': SUPA_KEY,
-        'Authorization': 'Bearer ' + SUPA_KEY,
+        'Authorization': 'Bearer ' + (window.SB_TOKEN||SUPA_KEY),
         'Content-Type': 'application/json',
         'Prefer': 'return=minimal'
       },
@@ -1131,7 +1132,7 @@ async function renderArtikelCharts(a){
   var nid=String(a.necta_id||'').trim(); if(nid.indexOf('.')>=0)nid=nid.split('.')[0];
   var base=SUPA_URL+'/rest/v1/einkauf_artikel?select=monat,menge,betrag&';
   var rows=[];
-  async function _q(u){ try{ var r=await fetch(u,{headers:{apikey:SUPA_KEY,Authorization:'Bearer '+SUPA_KEY}}); if(r.ok) return await r.json(); }catch(e){} return []; }
+  async function _q(u){ try{ var r=await fetch(u,{headers:{apikey:SUPA_KEY,Authorization:'Bearer '+(window.SB_TOKEN||SUPA_KEY)}}); if(r.ok) return await r.json(); }catch(e){} return []; }
   if(nid) rows=await _q(base+'necta_id=eq.'+encodeURIComponent(nid));
   if((!rows||!rows.length) && a.name) rows=await _q(base+'produkt=eq.'+encodeURIComponent(a.name));
   if((!rows||!rows.length) && a.orig_name) rows=await _q(base+'produkt=eq.'+encodeURIComponent(a.orig_name));
@@ -1830,7 +1831,7 @@ function confirmImport() {
           method: 'POST',
           headers: {
             'apikey': SUPA_KEY,
-            'Authorization': 'Bearer ' + SUPA_KEY,
+            'Authorization': 'Bearer ' + (window.SB_TOKEN||SUPA_KEY),
             'Content-Type': 'application/json',
             'Prefer': 'return=representation'
           },
@@ -2199,7 +2200,7 @@ async function mergeAusschreibungPreise(){
     var all=[], from=0;
     while(true){
       var to=from+999;
-      var resp=await fetch(SUPA_URL+'/rest/v1/ausschreibung_preise?select=periode,produkt,necta_id,lieferant,preis_kg,preis_ae,einheit,artnr,artbeschr,hersteller,warengruppe,ve,menge_je_ve&order=periode',{headers:{apikey:SUPA_KEY,Authorization:'Bearer '+SUPA_KEY,'Range':from+'-'+to,'Range-Unit':'items'}});
+      var resp=await fetch(SUPA_URL+'/rest/v1/ausschreibung_preise?select=periode,produkt,necta_id,lieferant,preis_kg,preis_ae,einheit,artnr,artbeschr,hersteller,warengruppe,ve,menge_je_ve&order=periode',{headers:{apikey:SUPA_KEY,Authorization:'Bearer '+(window.SB_TOKEN||SUPA_KEY),'Range':from+'-'+to,'Range-Unit':'items'}});
       if(!resp.ok) return;
       var b=await resp.json(); if(!b||!b.length) break; all=all.concat(b); if(b.length<1000) break; from+=1000;
     }
@@ -2288,16 +2289,16 @@ function buildPreisHistorie(a){
 window.WA_HIDDEN = window.WA_HIDDEN || new Set();
 var WA_PERIODEN = [];
 function loadWAPerioden(){
-  return fetch(SUPA_URL+'/rest/v1/wa_perioden?select=*',{headers:{apikey:SUPA_KEY,Authorization:'Bearer '+SUPA_KEY}}).then(function(r){return r.ok?r.json():[];}).then(function(d){ WA_PERIODEN=Array.isArray(d)?d:[]; window.WA_HIDDEN=new Set(); WA_PERIODEN.forEach(function(w){ if(w && w.sichtbar==='nein' && w.name) window.WA_HIDDEN.add(w.name); }); return WA_PERIODEN; }).catch(function(){ WA_PERIODEN=[]; return []; });
+  return fetch(SUPA_URL+'/rest/v1/wa_perioden?select=*',{headers:{apikey:SUPA_KEY,Authorization:'Bearer '+(window.SB_TOKEN||SUPA_KEY)}}).then(function(r){return r.ok?r.json():[];}).then(function(d){ WA_PERIODEN=Array.isArray(d)?d:[]; window.WA_HIDDEN=new Set(); WA_PERIODEN.forEach(function(w){ if(w && w.sichtbar==='nein' && w.name) window.WA_HIDDEN.add(w.name); }); return WA_PERIODEN; }).catch(function(){ WA_PERIODEN=[]; return []; });
 }
 function _fetchAusschreibungsPerioden(){
-  return fetch(SUPA_URL+'/rest/v1/ausschreibung_preise?select=periode',{headers:{apikey:SUPA_KEY,Authorization:'Bearer '+SUPA_KEY}}).then(function(r){return r.ok?r.json():[];}).then(function(d){ var s={}; (d||[]).forEach(function(x){ if(x.periode) s[x.periode]=1; }); return Object.keys(s); }).catch(function(){return [];});
+  return fetch(SUPA_URL+'/rest/v1/ausschreibung_preise?select=periode',{headers:{apikey:SUPA_KEY,Authorization:'Bearer '+(window.SB_TOKEN||SUPA_KEY)}}).then(function(r){return r.ok?r.json():[];}).then(function(d){ var s={}; (d||[]).forEach(function(x){ if(x.periode) s[x.periode]=1; }); return Object.keys(s); }).catch(function(){return [];});
 }
 function _waWrite(name, patch){
   var exists = WA_PERIODEN.some(function(w){return w.name===name;});
   var url = SUPA_URL+'/rest/v1/wa_perioden'+(exists?('?name=eq.'+encodeURIComponent(name)):'');
   var body = exists?patch:Object.assign({name:name, sichtbar:'ja'}, patch);
-  return fetch(url,{method:(exists?'PATCH':'POST'),headers:{apikey:SUPA_KEY,Authorization:'Bearer '+SUPA_KEY,'Content-Type':'application/json'},body:JSON.stringify(body)});
+  return fetch(url,{method:(exists?'PATCH':'POST'),headers:{apikey:SUPA_KEY,Authorization:'Bearer '+(window.SB_TOKEN||SUPA_KEY),'Content-Type':'application/json'},body:JSON.stringify(body)});
 }
 window.renderPeriodenTab = function(){
   var area=document.getElementById('perioden-area'); if(!area) return;
@@ -2314,7 +2315,7 @@ window.renderPeriodenTab = function(){
 };
 window.toggleWAPeriode = function(enc){ var name=decodeURIComponent(enc); var w=WA_PERIODEN.find(function(x){return x.name===name;}); var nv=(w&&w.sichtbar==='nein')?'ja':'nein'; _waWrite(name,{sichtbar:nv}).then(function(r){ if(!r.ok){ return r.text().then(function(tx){ alert('Fehler: '+tx.slice(0,200)); }); } loadWAPerioden().then(function(){ renderPeriodenTab(); if(typeof render==='function') render(); }); }); };
 window.saveWANotiz = function(enc,val){ var name=decodeURIComponent(enc); _waWrite(name,{notiz:val||null}).then(function(){ loadWAPerioden(); }); };
-window.migratePeriodenFromLocal = function(){ var raw; try{ raw=JSON.parse(localStorage.getItem('einkauf_settings_v1')||'{}'); }catch(e){ raw={}; } var wp=(raw&&raw.waperioden)||[]; if(!wp.length){ alert('Keine localStorage-Perioden gefunden.'); return; } var rows=wp.filter(function(w){return w&&w.name;}).map(function(w){ return {name:w.name, von:w.von||null, bis:w.bis||null, sichtbar:w.sichtbar||'ja', notiz:w.notiz||null}; }); fetch(SUPA_URL+'/rest/v1/wa_perioden',{method:'POST',headers:{apikey:SUPA_KEY,Authorization:'Bearer '+SUPA_KEY,'Content-Type':'application/json','Prefer':'resolution=merge-duplicates'},body:JSON.stringify(rows)}).then(function(r){ if(!r.ok){ return r.text().then(function(tx){ alert('Fehler: '+tx.slice(0,250)); }); } loadWAPerioden().then(function(){ renderPeriodenTab(); alert(rows.length+' Perioden übernommen.'); }); }); };
+window.migratePeriodenFromLocal = function(){ var raw; try{ raw=JSON.parse(localStorage.getItem('einkauf_settings_v1')||'{}'); }catch(e){ raw={}; } var wp=(raw&&raw.waperioden)||[]; if(!wp.length){ alert('Keine localStorage-Perioden gefunden.'); return; } var rows=wp.filter(function(w){return w&&w.name;}).map(function(w){ return {name:w.name, von:w.von||null, bis:w.bis||null, sichtbar:w.sichtbar||'ja', notiz:w.notiz||null}; }); fetch(SUPA_URL+'/rest/v1/wa_perioden',{method:'POST',headers:{apikey:SUPA_KEY,Authorization:'Bearer '+(window.SB_TOKEN||SUPA_KEY),'Content-Type':'application/json','Prefer':'resolution=merge-duplicates'},body:JSON.stringify(rows)}).then(function(r){ if(!r.ok){ return r.text().then(function(tx){ alert('Fehler: '+tx.slice(0,250)); }); } loadWAPerioden().then(function(){ renderPeriodenTab(); alert(rows.length+' Perioden übernommen.'); }); }); };
 
 var WAWI_HEADERS = ["Art Nr*", "Beschreibung*", "VE*", "Stkve*", "AE*", "Stkae*", "MG/AE*", "Einh*", "Preis*", "Preis bei Anbruch", "EAN-AE", "EAN-VE", "Artikelzusatztext", "Fixpreiskennung", "Warenkorbkennung", "Rabatt in Prozent", "Gültig von (TT.MM.JJJJ)", "Gültig bis (TT.MM.JJJJ)", "Aktion", "Zus. Artnr", "Ausgelistet", "Staffelmenge 1", "Staffelpreis 1", "Staffelmenge 2", "Staffelpreis 2", "Staffelmenge 3", "Staffelpreis 3", "Staffelmenge 4", "Staffelpreis 4", "Gluten", "Krebstiere", "Eier", "Fische", "Erdnüsse", "Soja", "Milch", "Schalenfrüchte", "Sellerie", "Senf", "Sesam", "Sulfite", "Lupinien", "Weichtiere", "Reserve", "Reserve", "Reserve", "Reserve", "Reserve", "Reserve", "Reserve", "Reserve", "Reserve", "Reserve", "Weizen", "Roggen", "Gerste", "Hafer", "Dinkel", "Kamut", "Mandel", "Haselnuss", "Walnuss", "Cashew", "Pekannuss", "Paranuss", "Pistazie", "Macadamianuss", "Queenslandnuss", "Reserve", "Reserve", "Reserve", "Reserve", "Reserve", "Reserve", "Reserve", "Reserve", "Reserve", "Reserve", "Reserve", "Reserve", "Reserve", "Reserve", "Reserve", "Farbstoff", "Konservierungsstoff", "Antioxidationsmittel", "Geschmacks-Verstärker", "geschwefelt", "geschwärzt", "gewachst", "Phosphat", "Süßungsmittel", "Phenylalanin-Quelle", "abführend", "Schutzatmosphäre", "Reserve", "Reserve", "Reserve", "Reserve", "Reserve", "Zutaten", "BLS", "Kcal", "Kj", "EW", "Fett", "Ges.FS", "KH", "Zucker", "NaCi", "Ball", "Ursprungsland", "Herkunftsort", "Warengruppe", "Vorlaufzeit"];
 
@@ -2591,9 +2592,9 @@ function parseMengenFile(zeitraum){
       if(!parsed.length){ document.getElementById('import-status').textContent='Keine Datenzeilen gefunden. Erwartet: Zeilentyp / Bezeichnung / Betrag bzw. Einkaufspreis (Lieferant/Kategorie).'; return; }
       window._mengenPending={ zeitraum:zeitraum, rows:parsed, artikel:artikel, dateiname:(window._mengenFileName||null) };
       var sameCount=0;
-      try{ var rs=await fetch(SUPA_URL+'/rest/v1/einkauf_ausgaben?select=id&zeitraum=eq.'+encodeURIComponent(zeitraum),{headers:{apikey:SUPA_KEY,Authorization:'Bearer '+SUPA_KEY}}); if(rs.ok){ var arr=await rs.json(); sameCount=(arr||[]).length; } }catch(_e){}
+      try{ var rs=await fetch(SUPA_URL+'/rest/v1/einkauf_ausgaben?select=id&zeitraum=eq.'+encodeURIComponent(zeitraum),{headers:{apikey:SUPA_KEY,Authorization:'Bearer '+(window.SB_TOKEN||SUPA_KEY)}}); if(rs.ok){ var arr=await rs.json(); sameCount=(arr||[]).length; } }catch(_e){}
       var pm=_prevMonth(zeitraum); var prevKat={}, prevLief={}, prevTot=0, prevCount=0;
-      if(pm){ try{ var rp=await fetch(SUPA_URL+'/rest/v1/einkauf_ausgaben?select=lieferant,kategorie,betrag&zeitraum=eq.'+encodeURIComponent(pm),{headers:{apikey:SUPA_KEY,Authorization:'Bearer '+SUPA_KEY}}); if(rp.ok){ var pr=await rp.json(); (pr||[]).forEach(function(e){ var b=Number(e.betrag||0); prevKat[e.kategorie]=(prevKat[e.kategorie]||0)+b; prevLief[e.lieferant]=(prevLief[e.lieferant]||0)+b; prevTot+=b; prevCount++; }); } }catch(_e2){} }
+      if(pm){ try{ var rp=await fetch(SUPA_URL+'/rest/v1/einkauf_ausgaben?select=lieferant,kategorie,betrag&zeitraum=eq.'+encodeURIComponent(pm),{headers:{apikey:SUPA_KEY,Authorization:'Bearer '+(window.SB_TOKEN||SUPA_KEY)}}); if(rp.ok){ var pr=await rp.json(); (pr||[]).forEach(function(e){ var b=Number(e.betrag||0); prevKat[e.kategorie]=(prevKat[e.kategorie]||0)+b; prevLief[e.lieferant]=(prevLief[e.lieferant]||0)+b; prevTot+=b; prevCount++; }); } }catch(_e2){} }
       var perKat={}, perLief={};
       parsed.forEach(function(e){ perKat[e.kategorie]=(perKat[e.kategorie]||0)+e.betrag; perLief[e.lieferant]=(perLief[e.lieferant]||0)+e.betrag; });
       var tot=parsed.reduce(function(s,e){return s+e.betrag;},0);
@@ -2623,11 +2624,11 @@ async function confirmMengenImport(){
   var btn=document.getElementById('import-confirm-btn'); btn.disabled=true; btn.textContent='Speichert...';
   setSyncStatus('saving','Ausgaben werden gespeichert...');
   try{
-    await fetch(SUPA_URL+'/rest/v1/einkauf_ausgaben?zeitraum=eq.'+encodeURIComponent(p.zeitraum),{method:'DELETE',headers:{apikey:SUPA_KEY,Authorization:'Bearer '+SUPA_KEY,'Prefer':'return=minimal'}});
+    await fetch(SUPA_URL+'/rest/v1/einkauf_ausgaben?zeitraum=eq.'+encodeURIComponent(p.zeitraum),{method:'DELETE',headers:{apikey:SUPA_KEY,Authorization:'Bearer '+(window.SB_TOKEN||SUPA_KEY),'Prefer':'return=minimal'}});
     var payload=p.rows.map(function(e){ return {zeitraum:p.zeitraum, lieferant:e.lieferant, kategorie:e.kategorie, betrag:e.betrag, dateiname:(p.dateiname||null)}; });
     for(var i=0;i<payload.length;i+=200){
       var chunk=payload.slice(i,i+200);
-      var res=await fetch(SUPA_URL+'/rest/v1/einkauf_ausgaben',{method:'POST',headers:{apikey:SUPA_KEY,Authorization:'Bearer '+SUPA_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify(chunk)});
+      var res=await fetch(SUPA_URL+'/rest/v1/einkauf_ausgaben',{method:'POST',headers:{apikey:SUPA_KEY,Authorization:'Bearer '+(window.SB_TOKEN||SUPA_KEY),'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify(chunk)});
       if(!res.ok) throw new Error(await res.text());
       btn.textContent='Speichert '+Math.min(i+200,payload.length)+'/'+payload.length+'...';
     }
@@ -2636,9 +2637,9 @@ async function confirmMengenImport(){
       try{
         var byNid={}, byName={};
         Object.values(ART).forEach(function(a){ var n=String(a.necta_id||'').trim(); if(n.indexOf('.')>=0)n=n.split('.')[0]; if(n) byNid[n]=a; if(a.name) byName[a.name.toLowerCase().trim()]=a; if(a.orig_name) byName[a.orig_name.toLowerCase().trim()]=a; });
-        await fetch(SUPA_URL+'/rest/v1/einkauf_artikel?monat=eq.'+encodeURIComponent(p.zeitraum),{method:'DELETE',headers:{apikey:SUPA_KEY,Authorization:'Bearer '+SUPA_KEY,'Prefer':'return=minimal'}});
+        await fetch(SUPA_URL+'/rest/v1/einkauf_artikel?monat=eq.'+encodeURIComponent(p.zeitraum),{method:'DELETE',headers:{apikey:SUPA_KEY,Authorization:'Bearer '+(window.SB_TOKEN||SUPA_KEY),'Prefer':'return=minimal'}});
         var aPay=p.artikel.map(function(x){ var m=byName[String(x.produkt||'').toLowerCase().trim()]; var nid=m?String(m.necta_id||'').split('.')[0]:''; return {monat:p.zeitraum, produkt:x.produkt, necta_id:(nid||null), kategorie:(x.kategorie||(m&&m.kategorie)||null), menge:x.menge, einheit:(x.einheit||null), betrag:x.betrag, gewicht:x.gewicht}; });
-        for(var ai=0;ai<aPay.length;ai+=300){ var ch=aPay.slice(ai,ai+300); var ra=await fetch(SUPA_URL+'/rest/v1/einkauf_artikel',{method:'POST',headers:{apikey:SUPA_KEY,Authorization:'Bearer '+SUPA_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify(ch)}); if(!ra.ok){ console.warn('einkauf_artikel:',await ra.text()); break; } }
+        for(var ai=0;ai<aPay.length;ai+=300){ var ch=aPay.slice(ai,ai+300); var ra=await fetch(SUPA_URL+'/rest/v1/einkauf_artikel',{method:'POST',headers:{apikey:SUPA_KEY,Authorization:'Bearer '+(window.SB_TOKEN||SUPA_KEY),'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify(ch)}); if(!ra.ok){ console.warn('einkauf_artikel:',await ra.text()); break; } }
       }catch(_ea){ console.warn('Artikel-Ebene speichern fehlgeschlagen:',_ea); }
     }
     window._mengenPending=null;
@@ -2657,7 +2658,7 @@ function exportAusgaben(){
     try{
       var all=[], from=0;
       while(true){
-        var r=await fetch(SUPA_URL+'/rest/v1/einkauf_ausgaben?select=zeitraum,lieferant,kategorie,betrag&order=zeitraum&limit=1000&offset='+from,{headers:{apikey:SUPA_KEY,Authorization:'Bearer '+SUPA_KEY}});
+        var r=await fetch(SUPA_URL+'/rest/v1/einkauf_ausgaben?select=zeitraum,lieferant,kategorie,betrag&order=zeitraum&limit=1000&offset='+from,{headers:{apikey:SUPA_KEY,Authorization:'Bearer '+(window.SB_TOKEN||SUPA_KEY)}});
         if(!r.ok) break; var b=await r.json(); if(!b||!b.length) break; all=all.concat(b); if(b.length<1000) break; from+=1000;
       }
       if(!all.length){ alert('Keine Ausgaben gespeichert. Bitte zuerst eine Mengen/Ausgaben-Datei importieren.'); setSyncStatus('ok','Verbunden'); return; }
@@ -2695,7 +2696,7 @@ function setAusgabenFocus(m){ window._ausgabenFocus=m; renderAusgaben(true); }
 function selectAusgabenRow(enc){ var k=decodeURIComponent(enc); window._ausgabenSel=(window._ausgabenSel===k?null:k); renderAusgaben(true); }
 async function _loadAusgaben(){
   var all=[],from=0;
-  while(true){ var r=await fetch(SUPA_URL+'/rest/v1/einkauf_ausgaben?select=zeitraum,lieferant,kategorie,betrag&order=zeitraum&limit=1000&offset='+from,{headers:{apikey:SUPA_KEY,Authorization:'Bearer '+SUPA_KEY}}); if(!r.ok) break; var b=await r.json(); if(!b||!b.length) break; all=all.concat(b); if(b.length<1000) break; from+=1000; }
+  while(true){ var r=await fetch(SUPA_URL+'/rest/v1/einkauf_ausgaben?select=zeitraum,lieferant,kategorie,betrag&order=zeitraum&limit=1000&offset='+from,{headers:{apikey:SUPA_KEY,Authorization:'Bearer '+(window.SB_TOKEN||SUPA_KEY)}}); if(!r.ok) break; var b=await r.json(); if(!b||!b.length) break; all=all.concat(b); if(b.length<1000) break; from+=1000; }
   return all;
 }
 function _eur0(v){ return Number(v||0).toLocaleString('de-DE',{style:'currency',currency:'EUR',maximumFractionDigits:0}); }
@@ -2838,7 +2839,7 @@ function setEinheitenFromAusschreibung(){
       var done=0, total=targets.length;
       for(var u in groups){ var arr=groups[u];
         for(var i=0;i<arr.length;i+=100){ var chunk=arr.slice(i,i+100); var ids=chunk.map(function(a){return a.id;});
-          var res=await fetch(SUPA_URL+'/rest/v1/produktvorgaben?id=in.('+ids.join(',')+')',{method:'PATCH',headers:{apikey:SUPA_KEY,Authorization:'Bearer '+SUPA_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify({einheit_vorgabe:u, updated_at:new Date().toISOString()})});
+          var res=await fetch(SUPA_URL+'/rest/v1/produktvorgaben?id=in.('+ids.join(',')+')',{method:'PATCH',headers:{apikey:SUPA_KEY,Authorization:'Bearer '+(window.SB_TOKEN||SUPA_KEY),'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify({einheit_vorgabe:u, updated_at:new Date().toISOString()})});
           if(!res.ok) throw new Error(await res.text());
           chunk.forEach(function(a){ a.einheit_vorgabe=u; }); done+=chunk.length; setSyncStatus('saving','Einheiten: '+done+'/'+total+'...');
         }
@@ -2853,7 +2854,7 @@ window.deleteMengenMonat = function(enc){
   var zeitraum=decodeURIComponent(enc);
   if(!confirm('Alle Bestellmengen/Ausgaben für '+_fmtMonth(zeitraum)+' wirklich löschen?\nDieser Monat wird aus der Auswertung entfernt.')) return;
   setSyncStatus('saving','Lösche '+_fmtMonth(zeitraum)+'...');
-  fetch(SUPA_URL+'/rest/v1/einkauf_ausgaben?zeitraum=eq.'+encodeURIComponent(zeitraum),{method:'DELETE',headers:{apikey:SUPA_KEY,Authorization:'Bearer '+SUPA_KEY,'Prefer':'return=minimal'}})
+  fetch(SUPA_URL+'/rest/v1/einkauf_ausgaben?zeitraum=eq.'+encodeURIComponent(zeitraum),{method:'DELETE',headers:{apikey:SUPA_KEY,Authorization:'Bearer '+(window.SB_TOKEN||SUPA_KEY),'Prefer':'return=minimal'}})
    .then(function(r){ if(!r.ok) return r.text().then(function(t){ throw new Error(t||('HTTP '+r.status)); });
      window._ausgabenCache=null;
      if(typeof renderMengenImporte==='function') renderMengenImporte();
@@ -2868,7 +2869,7 @@ function renderMengenImporte(){
   el.innerHTML='<div style="color:#607080;font-size:13px">Wird geladen…</div>';
   (async function(){
     var all=[],from=0;
-    try{ while(true){ var r=await fetch(SUPA_URL+'/rest/v1/einkauf_ausgaben?select=zeitraum,dateiname,betrag,created_at&order=zeitraum.desc&limit=1000&offset='+from,{headers:{apikey:SUPA_KEY,Authorization:'Bearer '+SUPA_KEY}}); if(!r.ok) break; var b=await r.json(); if(!b||!b.length) break; all=all.concat(b); if(b.length<1000) break; from+=1000; } }
+    try{ while(true){ var r=await fetch(SUPA_URL+'/rest/v1/einkauf_ausgaben?select=zeitraum,dateiname,betrag,created_at&order=zeitraum.desc&limit=1000&offset='+from,{headers:{apikey:SUPA_KEY,Authorization:'Bearer '+(window.SB_TOKEN||SUPA_KEY)}}); if(!r.ok) break; var b=await r.json(); if(!b||!b.length) break; all=all.concat(b); if(b.length<1000) break; from+=1000; } }
     catch(e){ el.innerHTML='<div style="color:#c0392b;font-size:13px">Fehler: '+e.message+'</div>'; return; }
     if(!all.length){ el.innerHTML='<p style="font-size:13px;color:#607080">Noch keine Mengen/Ausgaben importiert. Nutze oben in der Leiste <strong>↑ Mengen/Ausgaben</strong>, um eine Monatsdatei einzulesen.</p>'; return; }
     var g={};
@@ -2908,7 +2909,7 @@ function fixEinheitenKonflikte(){
       var groups={}; cand.forEach(function(c){ (groups[c.to]=groups[c.to]||[]).push(c.a); });
       var done=0;
       for(var u in groups){ var arr=groups[u]; for(var i=0;i<arr.length;i+=100){ var chunk=arr.slice(i,i+100); var ids=chunk.map(function(a){return a.id;});
-        var res=await fetch(SUPA_URL+'/rest/v1/produktvorgaben?id=in.('+ids.join(',')+')',{method:'PATCH',headers:{apikey:SUPA_KEY,Authorization:'Bearer '+SUPA_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify({einheit_vorgabe:u, updated_at:new Date().toISOString()})});
+        var res=await fetch(SUPA_URL+'/rest/v1/produktvorgaben?id=in.('+ids.join(',')+')',{method:'PATCH',headers:{apikey:SUPA_KEY,Authorization:'Bearer '+(window.SB_TOKEN||SUPA_KEY),'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify({einheit_vorgabe:u, updated_at:new Date().toISOString()})});
         if(!res.ok) throw new Error(await res.text());
         chunk.forEach(function(a){ a.einheit_vorgabe=u; }); done+=chunk.length; setSyncStatus('saving','Korrigiere: '+done+'/'+cand.length+'...');
       } }
@@ -2923,7 +2924,7 @@ window._ausschrCache=null; window._ausschrDim='kategorie';
 function setAusschrDim(d){ window._ausschrDim=d; renderAusschr(true); }
 function _perKey(p){ p=String(p||''); var y=(p.match(/(20\d\d)/)||[])[1]; var m=(p.match(/-(\d{2})/)||[])[1]; var q=(p.match(/[qQ]([1-4])/)||[])[1]; var mo=m?+m:(q?(+q*3):1); return (y?+y:0)*100+mo; }
 function _median(arr){ if(!arr.length) return null; var a=arr.slice().sort(function(x,y){return x-y;}); var m=Math.floor(a.length/2); return a.length%2?a[m]:(a[m-1]+a[m])/2; }
-async function _loadAusschr(){ var all=[],from=0; while(true){ var r=await fetch(SUPA_URL+'/rest/v1/ausschreibung_preise?select=periode,produkt,necta_id,lieferant,preis_kg,preis_ae,warengruppe&order=periode&limit=1000&offset='+from,{headers:{apikey:SUPA_KEY,Authorization:'Bearer '+SUPA_KEY}}); if(!r.ok) break; var b=await r.json(); if(!b||!b.length) break; all=all.concat(b); if(b.length<1000) break; from+=1000; } return all; }
+async function _loadAusschr(){ var all=[],from=0; while(true){ var r=await fetch(SUPA_URL+'/rest/v1/ausschreibung_preise?select=periode,produkt,necta_id,lieferant,preis_kg,preis_ae,warengruppe&order=periode&limit=1000&offset='+from,{headers:{apikey:SUPA_KEY,Authorization:'Bearer '+(window.SB_TOKEN||SUPA_KEY)}}); if(!r.ok) break; var b=await r.json(); if(!b||!b.length) break; all=all.concat(b); if(b.length<1000) break; from+=1000; } return all; }
 async function renderAusschr(useCache){
   var box=document.getElementById('view-ausschr'); if(!box) return;
   if(!useCache || !window._ausschrCache){ box.innerHTML='<div style="padding:24px;color:#607080">Ausschreibungsdaten werden geladen…</div>'; try{ window._ausschrCache=await _loadAusschr(); }catch(e){ box.innerHTML='<div style="padding:24px;color:#c0392b">Fehler: '+e.message+'</div>'; return; } }
@@ -3144,7 +3145,7 @@ init();
   var LIEFERANTEN = [];
 
   function supFetch(path, method, body) {
-    var opts = {method: method || 'GET', headers: {'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY, 'Content-Type': 'application/json'}};
+    var opts = {method: method || 'GET', headers: {'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + (window.SB_TOKEN||SUPA_KEY), 'Content-Type': 'application/json'}};
     if (body) opts.body = JSON.stringify(body);
     return fetch(SUPA_URL + '/rest/v1/' + path, opts);
   }

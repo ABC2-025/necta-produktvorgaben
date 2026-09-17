@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
+  <script src="/necta-produktvorgaben/sbauth.js"></script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <link rel="icon" href="data:,">
@@ -642,7 +643,7 @@ function checkMissingReturns(){
   try{
     var per=(uploadedFiles[0]&&uploadedFiles[0].periode)||''; if(!per) return;
     var uploaded={}; uploadedFiles.forEach(function(f){ uploaded[_nrmAWx(f.supplierName)]=1; });
-    fetch(SUPA_URL+'/rest/v1/ausschreibungen?select=angefragte&periode=eq.'+encodeURIComponent(per),{headers:{apikey:SUPA_KEY,Authorization:'Bearer '+SUPA_KEY}}).then(function(r){return r.ok?r.json():[];}).then(function(rows){
+    fetch(SUPA_URL+'/rest/v1/ausschreibungen?select=angefragte&periode=eq.'+encodeURIComponent(per),{headers:{apikey:SUPA_KEY,Authorization:'Bearer '+(window.SB_TOKEN||SUPA_KEY)}}).then(function(r){return r.ok?r.json():[];}).then(function(rows){
       var ang=(rows[0]&&rows[0].angefragte)||[];
       var el=document.getElementById('rank-missing');
       if(!el){ el=document.createElement('div'); el.id='rank-missing'; var sc=document.getElementById('rank-scards'); if(sc&&sc.parentNode) sc.parentNode.insertBefore(el,sc); else return; }
@@ -809,7 +810,7 @@ window._inaktivSupAW = new Set();
 window._SUP_ALIAS = window._SUP_ALIAS || {};
 function _nrmAWraw(s){ return _sfx(s); }
 function _nrmAW(s){ var b=_nrmAWraw(s); return (window._SUP_ALIAS&&window._SUP_ALIAS[b])?window._SUP_ALIAS[b]:b; }
-(async function _loadInaktivAW(){ try{ var r=await fetch(SUPA_URL+'/rest/v1/lieferanten?select=name,status,aliases',{headers:{'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY}}); if(!r.ok) return; var j=await r.json(); window._SUP_ALIAS={}; (j||[]).forEach(function(l){ if(l && l.name && l.aliases){ String(l.aliases).split(/[,;]/).forEach(function(al){ al=al.trim(); if(al) window._SUP_ALIAS[_nrmAWraw(al)]=_nrmAWraw(l.name); }); } }); (j||[]).forEach(function(l){ if(l && l.status==='inaktiv' && l.name) window._inaktivSupAW.add(_nrmAWraw(l.name)); }); }catch(e){} })();
+(async function _loadInaktivAW(){ try{ var r=await fetch(SUPA_URL+'/rest/v1/lieferanten?select=name,status,aliases',{headers:{'apikey':SUPA_KEY,'Authorization':'Bearer '+(window.SB_TOKEN||SUPA_KEY)}}); if(!r.ok) return; var j=await r.json(); window._SUP_ALIAS={}; (j||[]).forEach(function(l){ if(l && l.name && l.aliases){ String(l.aliases).split(/[,;]/).forEach(function(al){ al=al.trim(); if(al) window._SUP_ALIAS[_nrmAWraw(al)]=_nrmAWraw(l.name); }); } }); (j||[]).forEach(function(l){ if(l && l.status==='inaktiv' && l.name) window._inaktivSupAW.add(_nrmAWraw(l.name)); }); }catch(e){} })();
 
 async function saveToSupabase() {
   const btn = document.getElementById('supa-save-btn');
@@ -860,7 +861,7 @@ async function saveToSupabase() {
     // Delete existing entries for this period first
     const delResp = await fetch(SUPA_URL + '/rest/v1/ausschreibung_preise?periode=eq.' + encodeURIComponent(periode), {
       method: 'DELETE',
-      headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY }
+      headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + (window.SB_TOKEN||SUPA_KEY) }
     });
     if (!delResp.ok && delResp.status !== 404) throw new Error('Delete fehlgeschlagen: ' + delResp.status);
 
@@ -874,7 +875,7 @@ async function saveToSupabase() {
         method: 'POST',
         headers: {
           'apikey': SUPA_KEY,
-          'Authorization': 'Bearer ' + SUPA_KEY,
+          'Authorization': 'Bearer ' + (window.SB_TOKEN||SUPA_KEY),
           'Content-Type': 'application/json',
           'Prefer': 'return=minimal'
         },
@@ -953,7 +954,7 @@ async function updateEinheitVorgaben(rows) {
   //    einheit_vorgabe dort noch leer ist)
   const namesParam = produktNamen.map(n => '"' + n.replace(/"/g, '\\"') + '"').join(',');
   const pvResp = await fetch(SUPA_URL + '/rest/v1/produktvorgaben?select=id,name,einheit_vorgabe&name=in.(' + encodeURIComponent(namesParam) + ')', {
-    headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY }
+    headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + (window.SB_TOKEN||SUPA_KEY) }
   });
   if (!pvResp.ok) throw new Error('Konnte Produktvorgaben nicht laden: ' + pvResp.status);
   const pvRows = await pvResp.json();
@@ -965,7 +966,7 @@ async function updateEinheitVorgaben(rows) {
   async function patchOne(pv) {
     const r = await fetch(SUPA_URL + '/rest/v1/produktvorgaben?id=eq.' + pv.id, {
       method: 'PATCH',
-      headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+      headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + (window.SB_TOKEN||SUPA_KEY), 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
       body: JSON.stringify({ einheit_vorgabe: bestUnitByProdukt[pv.name] })
     });
     return r.ok;

@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
+  <script src="/necta-produktvorgaben/sbauth.js"></script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <link rel="icon" href="data:,">
@@ -337,7 +338,7 @@ async function refreshPVFromSupabase() {
     while (true) {
       var to = from + 499;
       var resp = await fetch(SUPA_URL + '/rest/v1/produktvorgaben?select=*&order=kategorie,name', {
-        headers: {'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY, 'Range': from + '-' + to, 'Range-Unit': 'items'}
+        headers: {'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + (window.SB_TOKEN||SUPA_KEY), 'Range': from + '-' + to, 'Range-Unit': 'items'}
       });
       if (!resp.ok) throw new Error(await resp.text());
       var batch = await resp.json();
@@ -632,7 +633,7 @@ window._PRIOR = window._PRIOR || {};
 async function _loadPriorSubmissions(){
   window._PRIOR={};
   try{
-    var r=await fetch(SUPA_URL+'/rest/v1/ausschreibung_preise?select=lieferant,necta_id,produkt,artnr,artbeschr,hersteller,periode',{headers:{apikey:SUPA_KEY,Authorization:'Bearer '+SUPA_KEY}});
+    var r=await fetch(SUPA_URL+'/rest/v1/ausschreibung_preise?select=lieferant,necta_id,produkt,artnr,artbeschr,hersteller,periode',{headers:{apikey:SUPA_KEY,Authorization:'Bearer '+(window.SB_TOKEN||SUPA_KEY)}});
     if(!r.ok) return; var j=await r.json();
     (j||[]).forEach(function(row){
       if(!row.lieferant) return;
@@ -782,7 +783,7 @@ async function generateSupplierExcel(supplierName, artList, cfg) {
   tn.font=fn(14,'FFD700',true); tn.alignment={horizontal:'right',vertical:'middle'};
 
   // ── AGB Zeilen 8–13 ───────────────────────────────────────────────────────
-  [8,9,10,11,12,13].forEach(function(r){ws.getRow(r).height=16;});
+  [8,9,10,11,12,13,14].forEach(function(r){ws.getRow(r).height=16;});
   ws.mergeCells('B8:L8'); ws.getCell('B8').value='Allgemeine Vertragsbedingungen:';
   ws.getCell('B8').font=fn(10,DB,true);
   [
@@ -795,7 +796,7 @@ async function generateSupplierExcel(supplierName, artList, cfg) {
   ].forEach(function(txt,i){
     var r=9+i; ws.mergeCells('B'+r+':L'+r);
     var c=ws.getCell('B'+r); c.value=txt;
-    c.font=fn(9,i===4?RED:'555555',i===4);
+    c.font=fn(9,(i>=4)?RED:'555555',(i>=4));
   });
   ws.getCell('O8').value='Zahlungsbedingungen:'; ws.getCell('O8').font=fn(10,DB,true);
   ws.getCell('R8').value='Lieferbedingungen:';   ws.getCell('R8').font=fn(10,DB,true);
@@ -1211,7 +1212,7 @@ document.addEventListener("DOMContentLoaded", function() {
         while (true) {
           var to = from + 499;
           var resp = await fetch(SUPA_URL + '/rest/v1/produktvorgaben?select=*&order=kategorie,name', {
-            headers: {'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY, 'Range': from + '-' + to, 'Range-Unit': 'items'}
+            headers: {'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + (window.SB_TOKEN||SUPA_KEY), 'Range': from + '-' + to, 'Range-Unit': 'items'}
           });
           if (!resp.ok) throw new Error(await resp.text());
           var batch = await resp.json();
@@ -1246,7 +1247,7 @@ document.addEventListener("DOMContentLoaded", function() {
         PV = newPV;
         // Also load lieferanten from Supabase
         var liefResp = await fetch(SUPA_URL + '/rest/v1/lieferanten?select=*&order=name', {
-          headers: {'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY}
+          headers: {'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + (window.SB_TOKEN||SUPA_KEY)}
         });
         var liefData = liefResp.ok ? await liefResp.json() : [];
         // Merge: PV lieferanten + Supabase lieferanten
@@ -1299,7 +1300,7 @@ document.addEventListener("DOMContentLoaded", function() {
   window._SUP_ALIAS = window._SUP_ALIAS || {};
   async function _loadInaktivSup(){
     try{
-      var r=await fetch(SUPA_URL+'/rest/v1/lieferanten?select=name,status,aliases',{headers:{'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY}});
+      var r=await fetch(SUPA_URL+'/rest/v1/lieferanten?select=name,status,aliases',{headers:{'apikey':SUPA_KEY,'Authorization':'Bearer '+(window.SB_TOKEN||SUPA_KEY)}});
       if(!r.ok) return; var j=await r.json();
       window._SUP_ALIAS={}; (j||[]).forEach(function(l){ if(l && l.name && l.aliases){ String(l.aliases).split(/[,;]/).forEach(function(al){ al=al.trim(); if(al) window._SUP_ALIAS[_rawGen(al)]=_rawGen(l.name); }); } });
       window._inaktivSup=new Set(); (j||[]).forEach(function(l){ if(l && l.status==='inaktiv' && l.name) window._inaktivSup.add(_rawGen(l.name)); });
@@ -1311,7 +1312,7 @@ document.addEventListener("DOMContentLoaded", function() {
     (async function() {
       try {
         var resp = await fetch(SUPA_URL + '/rest/v1/lieferanten?select=*&status=eq.aktiv&order=name', {
-          headers: {'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY}
+          headers: {'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + (window.SB_TOKEN||SUPA_KEY)}
         });
         if (!resp.ok) return;
         var liefData = await resp.json();

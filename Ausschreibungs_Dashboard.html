@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
+  <script src="/necta-produktvorgaben/sbauth.js"></script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Ausschreibungs-Ergebnisse · ABC Kochwerk</title>
@@ -133,11 +134,11 @@ function sparkline(trend){
 
 async function loadAll(){
   // wa_perioden (hidden)
-  try{ var wr=await fetch(SUPA_URL+'/rest/v1/wa_perioden?select=name,sichtbar',{headers:{apikey:SUPA_KEY,Authorization:'Bearer '+SUPA_KEY}}); if(wr.ok){ (await wr.json()).forEach(function(w){ if(w&&w.sichtbar==='nein'&&w.name) HIDDEN.add(w.name); }); } }catch(e){}
+  try{ var wr=await fetch(SUPA_URL+'/rest/v1/wa_perioden?select=name,sichtbar',{headers:{apikey:SUPA_KEY,Authorization:'Bearer '+(window.SB_TOKEN||SUPA_KEY)}}); if(wr.ok){ (await wr.json()).forEach(function(w){ if(w&&w.sichtbar==='nein'&&w.name) HIDDEN.add(w.name); }); } }catch(e){}
   // ausschreibung_preise (paged)
   var from=0; ALL=[];
   while(true){ var to=from+999;
-    var r=await fetch(SUPA_URL+'/rest/v1/ausschreibung_preise?select=periode,produkt,warengruppe,necta_id,lieferant,preis_kg,preis_ae&order=periode',{headers:{apikey:SUPA_KEY,Authorization:'Bearer '+SUPA_KEY,'Range':from+'-'+to,'Range-Unit':'items'}});
+    var r=await fetch(SUPA_URL+'/rest/v1/ausschreibung_preise?select=periode,produkt,warengruppe,necta_id,lieferant,preis_kg,preis_ae&order=periode',{headers:{apikey:SUPA_KEY,Authorization:'Bearer '+(window.SB_TOKEN||SUPA_KEY),'Range':from+'-'+to,'Range-Unit':'items'}});
     if(!r.ok){ document.getElementById('sub').textContent='Fehler beim Laden (HTTP '+r.status+').'; return; }
     var b=await r.json(); if(!b||!b.length) break; ALL=ALL.concat(b); if(b.length<1000) break; from+=1000;
   }

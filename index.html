@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
+  <script src="/necta-produktvorgaben/sbauth.js"></script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <link rel="icon" href="data:,">
@@ -937,7 +938,7 @@ function loadDashboard(showLoading) {
       let rows=[], offset=0, limit=1000;
       while(true) {
         const resp = await fetch(SUPA_URL+'/rest/v1/ausschreibung_preise?select=*&order=created_at.asc&limit='+limit+'&offset='+offset,
-          {headers:{'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY}});
+          {headers:{'apikey':SUPA_KEY,'Authorization':'Bearer '+(window.SB_TOKEN||SUPA_KEY)}});
         if(!resp.ok) throw new Error('HTTP '+resp.status);
         const chunk=await resp.json();
         rows=rows.concat(chunk);
@@ -1414,7 +1415,7 @@ startAutoRefresh();
   var LIEFERANTEN = [];
 
   function supFetch(path, method, body) {
-    var opts = {method: method || 'GET', headers: {'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY, 'Content-Type': 'application/json'}};
+    var opts = {method: method || 'GET', headers: {'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + (window.SB_TOKEN||SUPA_KEY), 'Content-Type': 'application/json'}};
     if (body) opts.body = JSON.stringify(body);
     return fetch(SUPA_URL + '/rest/v1/' + path, opts);
   }
@@ -1876,7 +1877,7 @@ startAutoRefresh();
 
   function supFetch(path) {
     return fetch(SUPA_URL + '/rest/v1/' + path, {
-      headers: {'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY}
+      headers: {'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + (window.SB_TOKEN||SUPA_KEY)}
     }).then(function(r) { return r.json(); });
   }
 
