@@ -812,7 +812,7 @@ async function generateSupplierExcel(supplierName, artList, cfg) {
   var hTop=['lfd','Produkt','Warengruppe','Necta ID','Bio','Vegan','Veget.','GF',
     'Gebinde-\ngröße','Menge\nkg','p.M.','Gewicht\n(g)','',
     'Nicht\nlieferbar','Artikel-\nnummer','Artikel-\nbeschr.','Hersteller',
-    'Menge\nje VE','VE','Einheit','Preis\nje AE','Preis/kg','Preis/l','Preis/Stk',
+    'Menge\nje VE','VE','Einheit','Preis\nje VE','Preis/kg','Preis/l','Preis/Stk',
     'Anmerkungen\n(Vorgaben)','Anmerkungen\n(Lieferant)'];
   var hSub=['Nr.','','','','Pflicht','Pflicht','Pflicht','Pflicht','Vorgabe','2025','','','',
     '(X=nein)','Pflicht ✱','Pflicht ✱','optional','Pflicht ✱','Pflicht ✱','Vorgabe',
@@ -919,20 +919,20 @@ async function generateSupplierExcel(supplierName, artList, cfg) {
     else { ec.value=null; ec.font=fn(10,'AAAAAA'); ec.fill=fc('EEEEEE'); }
     ec.alignment=ca; ec.border=b4; ec.protection={locked:true};
 
-    // Preis je AE
+    // Preis je VE (Preis fuer das ganze Gebinde)
     var pc=yi(21,null,fn(11,DB,true),ra,'#,##0.00 €');
     pc.fill=fc(YB);
 
     // Formeln Preis/kg · /l · /Stk = U ÷ R
     var f;
     f=ws.getCell(row,22);
-    f.value={formula:'IF(T'+row+'="KG",U'+row+',"")'}; 
+    f.value={formula:'IF(AND(T'+row+'="KG",ISNUMBER(R'+row+'),R'+row+'>0),U'+row+'/R'+row+',"")'}; 
     f.font=fn(9,'888888');f.fill=bg;f.alignment=ra;f.border=b4;f.numFmt='#,##0.000 €';f.protection={locked:true};
     f=ws.getCell(row,23);
-    f.value={formula:'IF(T'+row+'="L",U'+row+',"")'}; 
+    f.value={formula:'IF(AND(T'+row+'="L",ISNUMBER(R'+row+'),R'+row+'>0),U'+row+'/R'+row+',"")'}; 
     f.font=fn(9,'888888');f.fill=bg;f.alignment=ra;f.border=b4;f.numFmt='#,##0.000 €';f.protection={locked:true};
     f=ws.getCell(row,24);
-    f.value={formula:'IF(T'+row+'="Stück",U'+row+',"")'}; 
+    f.value={formula:'IF(AND(T'+row+'="Stück",ISNUMBER(R'+row+'),R'+row+'>0),U'+row+'/R'+row+',"")'}; 
     f.font=fn(9,'888888');f.fill=bg;f.alignment=ra;f.border=b4;f.numFmt='#,##0.000 €';f.protection={locked:true};
 
     sc(25,pv.bem||null,fn(9,DB,false,true),la,fc('E8F0FA'));
@@ -1011,7 +1011,7 @@ async function generateSupplierExcel(supplierName, artList, cfg) {
   var anlRows=[
     ['',false,TXT,null],
     ['PFLICHTFELDER (werden rot markiert wenn leer)',true,RED,'FFEEDD'],
-    ['O Art-Nr · P Artikelbeschr. · R Menge je VE · S VE (Dropdown) · U Preis je AE (netto, ohne MwSt.)',false,'555555',null,1],
+    ['O Art-Nr · P Artikelbeschr. · R Menge je VE · S VE (Dropdown) · U Preis je VE (netto, ohne MwSt.)',false,'555555',null,1],
     ['',false,TXT,null],
     ['FILTER (Zeile 17 – hellblau)',true,DB,'DDEEFF'],
     ['Klicken Sie auf die Pfeile in Zeile 17 um nach Warengruppe, Bio, VE-Status etc. zu filtern.',false,'555555',null,1],
@@ -1080,7 +1080,7 @@ async function generateSupplierExcel(supplierName, artList, cfg) {
     dRow('P','Artikelbeschreibung','Ihre genaue Produktbezeichnung (Sorte, Groesse, Qualitaet).',YEL);
     dRow('R','Menge je VE','Wie viele Basis-Einheiten stecken in einer Verpackung? Beispiel: Eimer mit 5 kg → 5. Karton mit 12 Stueck → 12. (Basis-Einheit = Spalte T)',YEL);
     dRow('S','VE','Ihre Verpackungseinheit als Auswahl: Karton, Eimer, Kiste, Sack, Beutel, … (Klick ins Feld → Dropdown)',YEL);
-    dRow('U','Preis je AE','Ihr Preis – IMMER pro 1 Basis-Einheit aus Spalte T. Steht in T „KG“, dann der Preis fuer 1 kg. Steht „Stueck“, dann der Preis fuer 1 Stueck. NICHT der Preis pro Karton/VE!',YEL);
+    dRow('U','Preis je VE','Ihr Preis fuer das GANZE Gebinde (VE) – die Verpackung aus Spalte S mit der Menge aus Spalte R. Der Vergleichspreis je Einheit (kg/l/Stueck) wird automatisch als U ÷ R berechnet.',YEL);
     gap();
 
     section('2. Optionale Felder');
@@ -1096,12 +1096,12 @@ async function generateSupplierExcel(supplierName, artList, cfg) {
     dRow('E–H','Bio / Vegan / Veget. / Glutenfrei','Geforderte Produkteigenschaften laut unserer Vorgabe.',GRY);
     dRow('I–L','Gebindegroesse / Menge / p.M. / Gewicht','Orientierungswerte (u. a. Vorjahresmenge). Nur zur Info.',GRY);
     dRow('T','Einheit','WICHTIG: die Vergleichseinheit, auf die sich Ihr Preis (Spalte U) bezieht. Fest vorgegeben, damit ALLE Angebote vergleichbar sind. Ihre Verpackung waehlen Sie frei in Spalte S – die Einheit bleibt fix.',GRY);
-    dRow('V–X','Preis/kg · Preis/l · Preis/Stk','Automatische Kontrollspalten. Sie spiegeln nur Ihren Preis aus U in der Basis-Einheit – zur Sichtkontrolle. Nichts eintragen.',GRY);
+    dRow('V–X','Preis/kg · Preis/l · Preis/Stk','Automatische Kontrollspalten: berechnen den Preis je Einheit als U ÷ Menge je VE (R), passend zur Einheit in Spalte T. Nichts eintragen.',GRY);
     dRow('Y','Anmerkungen (Vorgaben)','Unsere Hinweise zum Artikel.',GRY);
     gap();
 
     section('4. Beispiel (so ist es richtig)');
-    var rEx=wsH.getRow(HR); wsH.mergeCells('B'+HR+':D'+HR); var cEx=rEx.getCell(2); cEx.value='Bananen, angeboten fuer 1,85 €/kg:'; cEx.font={name:'Calibri',size:10,bold:true}; cEx.alignment=_al(); rEx.height=18; HR++;
+    var rEx=wsH.getRow(HR); wsH.mergeCells('B'+HR+':D'+HR); var cEx=rEx.getCell(2); cEx.value='Bananen, Karton mit 18 kg zu 33,30 € (entspricht 1,85 €/kg):'; cEx.font={name:'Calibri',size:10,bold:true}; cEx.alignment=_al(); rEx.height=18; HR++;
     tHead('Feld','Eintrag','Erklaerung');
     function exRow(feld,val,txt){ var r=wsH.getRow(HR);
       var c1=r.getCell(2); c1.value=feld; c1.font={name:'Calibri',size:10,bold:true}; c1.alignment=_al(); c1.border=_box;
@@ -1110,12 +1110,12 @@ async function generateSupplierExcel(supplierName, artList, cfg) {
     exRow('T Einheit','KG','vorgegeben – Preis bezieht sich auf 1 kg');
     exRow('S VE','Karton','Ihre Verpackung');
     exRow('R Menge je VE','18','18 kg im Karton');
-    exRow('U Preis je AE','1,85','Preis fuer 1 kg – NICHT 1,85 ÷ 18!');
-    exRow('V Preis/kg','1,85','erscheint automatisch');
+    exRow('U Preis je VE','33,30','Preis fuer den ganzen Karton (18 kg)');
+    exRow('V Preis/kg','1,85','automatisch = 33,30 ÷ 18');
     gap();
 
     section('5. So werten wir aus');
-    bullet('• Verglichen wird je Artikel Ihr „Preis je AE“ (Spalte U) – in genau der vorgegebenen Einheit (Spalte T).');
+    bullet('• Verglichen wird je Artikel der Preis je Einheit = U ÷ Menge je VE – in der vorgegebenen Einheit (Spalte T).');
     bullet('• In die Gesamtbewertung fliessen zusaetzlich Ihre Konditionen ein: Skonto, Zahlungsziel, Lieferkosten, Ø Bestellwert (Effektivpreis).');
     bullet('• Rang 1 = guenstigstes Gesamtangebot je Artikel.');
     bullet('• Artikel mit unvollstaendigen Pflichtfeldern koennen nicht beruecksichtigt werden.');

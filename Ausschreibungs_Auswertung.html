@@ -414,11 +414,19 @@ async function processSupplierFile(file) {
       const preisL = parseFloat(r[iPreisL]) || null;
       const preisAE = parseFloat(r[iPreisAE]) || null;
       const preisStk = parseFloat(r[iPreisStk]) || null;
-      const preis = preisKG || preisL || null;
-      if (!preis && !preisAE) continue; // skip empty rows
+      const _mve = _numOnly(r[iAEjeVE]); // Menge je VE (R)
+      const _fileUnit = preisKG || preisL || preisStk || null; // V/W/X aus der Datei
+      // Vergleichspreis je Einheit = U (Preis je VE) / R. Wird IMMER selbst gerechnet (Datei-Formel wird ignoriert).
+      let _preisEinheit = (preisAE!=null && _mve>0) ? preisAE/_mve : (preisAE!=null?preisAE:_fileUnit);
+      if (preisAE==null && _fileUnit==null) continue; // skip empty rows
+      // Ruecklaeufer-Check: weicht die Formelspalte der Datei von U/R ab? -> andere Konvention
+      let _konv=false;
+      if (preisAE!=null && _mve>0 && _fileUnit!=null) {
+        const _exp=preisAE/_mve; if (_exp>0 && Math.abs(_fileUnit-_exp)/_exp>0.02) _konv=true;
+      }
       rows.push({
         produkt, preis_kg: preisKG, preis_l: preisL, preis_ae: preisAE, preis_stk: preisStk,
-        preis_norm: (preisAE!=null?preisAE:(preisKG||preisL||preisStk||null)), // Ranking-Preis: direkt eingegebener Preis je AE (vorgegebene Einheit) bevorzugt
+        preis_norm: (_preisEinheit!=null?Math.round(_preisEinheit*100000)/100000:null), konv_abw:_konv, // Ranking-Preis = U/R (Preis je VE / Menge je VE)
         warengruppe: String(r[iWG]||'').trim(),
         necta_id: String(r[iNecta]||'').trim(),
         bio_label: String(r[iBio]||'').trim(),
@@ -459,7 +467,8 @@ async function processSupplierFile(file) {
         }
     // Store
     const existing = uploadedFiles.findIndex(f=>f.supplierName===supplierName);
-    const entry = {name:file.name, supplierName, periode, rows, skonto, zahlungsziel, lieferkosten, mbw};
+    const konvCount = rows.filter(function(x){return x.konv_abw;}).length;
+    const entry = {name:file.name, supplierName, periode, rows, skonto, zahlungsziel, lieferkosten, mbw, konvCount};
     if (existing>=0) uploadedFiles[existing]=entry; else uploadedFiles.push(entry);
 
     // Init konditionen
@@ -477,6 +486,7 @@ function renderUploadList() {
     + '<div class="fname">'+f.name+'</div>'
     + '<div class="sup-name">'+f.supplierName+'</div>'
     + '<div class="art-count">'+f.rows.length+' Artikel Â· '+f.periode+'</div>'
+    + (f.konvCount ? '<div class="art-count" style="color:#c0392b">&#9888; '+f.konvCount+' Zeilen mit abweichender Preis-Konvention (Datei rechnet nicht U&divide;R) &ndash; Vergleich nutzt automatisch U&divide;R</div>' : '')
     + '<span class="remove" onclick="removeFile('+i+')">&#10005;</span>'
     + '</div>'
   ).join('');
