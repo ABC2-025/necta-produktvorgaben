@@ -478,6 +478,7 @@ async function init() {
     setSyncStatus('ok', rows.length + ' Artikel geladen');
     render();
     try { applyAccessControl(); } catch(_ac){ console.error('AccessControl',_ac); }
+    try { if(!window.__preisOnly && String(location.hash||'').toLowerCase().indexOf('preise')>=0) switchView('preise'); } catch(_h){}
     startRealtime();
   } catch(e) {
     setMsg('Fehler: ' + e.message);
