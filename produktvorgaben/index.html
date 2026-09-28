@@ -592,6 +592,7 @@ function switchView(v) {
   var _bs=document.getElementById('btn-ausschr'); if(_bs) _bs.classList.toggle('active', v === 'ausschr');
   var _bp=document.getElementById('btn-preise'); if(_bp) _bp.classList.toggle('active', v === 'preise');
   if (v === 'dashboard') renderDash(); else if (v === 'ausgaben') renderAusgaben(); else if (v === 'ausschr') renderAusschr(); else if (v === 'preise') renderPreise(); else render();
+  try { if (typeof updateToolbarVisibility==='function') updateToolbarVisibility(v); } catch(_e){}
 }
 
 function setStatus(s) {
@@ -4010,6 +4011,15 @@ function renderPreiseTable(){
 }
 function togglePreisRow(id){ var el=document.getElementById(id); if(el) el.style.display = el.style.display==='none'?'table-row':'none'; }
 
+/* Toolbar im Preise-Tab aufräumen: Export/Import, Filter, Suche und andere Ansichts-Buttons ausblenden */
+function updateToolbarVisibility(v){
+  if(window.__preisOnly) return; // fuer Preis-only Nutzer ohnehin alles ausgeblendet
+  var hide = (v==='preise');
+  ['btn-table','btn-dash','btn-ausgaben','btn-ausschr','btn-settings'].forEach(function(id){ var b=document.getElementById(id); if(b) b.style.display = hide?'none':''; });
+  document.querySelectorAll('.xls-btn, .filter-strip, .sw, .tb-sep').forEach(function(el){ el.style.display = hide?'none':''; });
+  var sb=document.getElementById('sel-bar'); if(sb && hide) sb.style.display='none';
+}
+window.updateToolbarVisibility=updateToolbarVisibility;
 window.renderPreise=renderPreise; window.renderPreiseTable=renderPreiseTable; window.togglePreisRow=togglePreisRow; window.applyAccessControl=applyAccessControl;
 
 </script>
