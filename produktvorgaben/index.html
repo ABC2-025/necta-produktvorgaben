@@ -189,6 +189,7 @@ tbody tr.row-selected td{outline:2px solid #2E75B6;outline-offset:-1px}
     <button class="vbtn" id="btn-dash" onclick="switchView('dashboard')">Dashboard</button>
     <button class="vbtn" id="btn-ausgaben" onclick="switchView('ausgaben')">Ausgaben</button>
     <button class="vbtn" id="btn-ausschr" onclick="switchView('ausschr')">Ausschreibungen</button>
+    <button class="vbtn" id="btn-preise" onclick="switchView('preise')">Preise</button>
   </div>
   <div class="tb-sep"></div>
   <div class="sw"><input id="search" placeholder="Artikel suchen..." oninput="render()"></div>
@@ -256,6 +257,7 @@ tbody tr.row-selected td{outline:2px solid #2E75B6;outline-offset:-1px}
   </div>
   <div id="view-ausgaben" style="display:none"></div>
   <div id="view-ausschr" style="display:none"></div>
+  <div id="view-preise" style="display:none"></div>
   <div id="view-table">
     <div class="scards" id="scards"></div>
     <div id="gc"></div>
@@ -475,6 +477,7 @@ async function init() {
     document.getElementById('loading').style.display = 'none';
     setSyncStatus('ok', rows.length + ' Artikel geladen');
     render();
+    try { applyAccessControl(); } catch(_ac){ console.error('AccessControl',_ac); }
     startRealtime();
   } catch(e) {
     setMsg('Fehler: ' + e.message);
@@ -571,11 +574,13 @@ function switchView(v) {
   document.getElementById('view-dashboard').style.display = v === 'dashboard' ? 'block' : 'none';
   var _va=document.getElementById('view-ausgaben'); if(_va) _va.style.display = v === 'ausgaben' ? 'block' : 'none';
   var _vs=document.getElementById('view-ausschr'); if(_vs) _vs.style.display = v === 'ausschr' ? 'block' : 'none';
+  var _vp=document.getElementById('view-preise'); if(_vp) _vp.style.display = v === 'preise' ? 'block' : 'none';
   document.getElementById('btn-table').classList.toggle('active', v === 'table');
   document.getElementById('btn-dash').classList.toggle('active', v === 'dashboard');
   var _ba=document.getElementById('btn-ausgaben'); if(_ba) _ba.classList.toggle('active', v === 'ausgaben');
   var _bs=document.getElementById('btn-ausschr'); if(_bs) _bs.classList.toggle('active', v === 'ausschr');
-  if (v === 'dashboard') renderDash(); else if (v === 'ausgaben') renderAusgaben(); else if (v === 'ausschr') renderAusschr(); else render();
+  var _bp=document.getElementById('btn-preise'); if(_bp) _bp.classList.toggle('active', v === 'preise');
+  if (v === 'dashboard') renderDash(); else if (v === 'ausgaben') renderAusgaben(); else if (v === 'ausschr') renderAusschr(); else if (v === 'preise') renderPreise(); else render();
 }
 
 function setStatus(s) {
@@ -3826,6 +3831,175 @@ init();
     window.renderLieferantenList = renderLieferantenTab;
   });
 })();
+
+</script>
+<script>
+/* ===== Preis-Übersicht-Tab + Zugangsbeschränkung ===== */
+/* PREIS-ONLY NUTZER: E-Mails hier eintragen -> diese Nutzer sehen NUR den Preise-Tab.
+   Leer lassen = niemand eingeschränkt. Kleinschreibung egal. */
+var PREIS_ONLY_USERS = [
+  // 'kiosk@abc-kochwerk.de',
+];
+
+function _loginEmail(){
+  try{ var s=JSON.parse(localStorage.getItem('abc_sb_session_v1')||'null'); return s&&s.email?String(s.email).toLowerCase():''; }
+  catch(e){ return ''; }
+}
+function applyAccessControl(){
+  var em=_loginEmail();
+  var only = em && PREIS_ONLY_USERS.map(function(x){return String(x).toLowerCase();}).indexOf(em)>=0;
+  window.__preisOnly=only;
+  if(only){
+    ['btn-table','btn-dash','btn-ausgaben','btn-ausschr'].forEach(function(id){var b=document.getElementById(id); if(b)b.style.display='none';});
+    document.querySelectorAll('.filter-strip, .sw, .xls-btn, .sel-bar, #import-file, #mengen-file, #lief-preis-file').forEach(function(el){ el.style.display='none'; });
+    switchView('preise');
+  }
+}
+
+/* ---- Preis-Daten je Grundprodukt ---- */
+function _pUnit(a){ return (a.einheit_vorgabe||'').toString().trim().toUpperCase(); }
+function _pfUnit(e,u){
+  if(u==='KG') return e.preis_kg!=null?e.preis_kg:(e.pk!=null?e.pk:null);
+  if(u==='L')  return e.preis_l!=null?e.preis_l:null;
+  if(u.indexOf('ST')===0) return e.preis_stk!=null?e.preis_stk:null;
+  return e.preis_ae!=null?e.preis_ae:(e.pe!=null?e.pe:(e.pk!=null?e.pk:null));
+}
+function _bestOfSnap(sn,u,excl){
+  var best=null;
+  (sn.s||[]).forEach(function(e){
+    var k=_normSup(_cleanSupplierName(e.f)); if(!k) return;
+    if(excl.indexOf(k)>=0) return;
+    var ss=window.SUP_SETTINGS&&window.SUP_SETTINGS[k]; if(ss&&ss.status==='inaktiv') return;
+    var p=_pfUnit(e,u); if(p==null||!isFinite(p)||p<=0) return;
+    if(!best||p<best.p) best={p:p, f:_cleanSupplierName(e.f)};
+  });
+  return best;
+}
+function priceData(a){
+  var hist=(Array.isArray(a.preishistorie)?a.preishistorie:[]).filter(function(sn){ return sn&&sn.s&&sn.s.length&&sn.periode!=='_EXCL'; });
+  if(window.WA_HIDDEN) hist=hist.filter(function(sn){ return !window.WA_HIDDEN.has(sn.periode||sn.wa); });
+  if(!hist.length) return null;
+  hist=hist.slice();
+  hist.forEach(function(x){ if(!x._dt) x._dt=x.iso?new Date(x.iso):(x.d?parseDeDate(x.d):null); });
+  hist.sort(function(x,y){ return (y._dt?y._dt.getTime():0)-(x._dt?x._dt.getTime():0); });
+  var u=_pUnit(a), excl=(typeof _artExcl==='function')?_artExcl(a):[];
+  var ul=(u==='KG')?'€/kg':((u==='L')?'€/l':((u.indexOf('ST')===0)?'€/Stk':'€'));
+  var cur=null,curSn=null,ci=-1;
+  for(var i=0;i<hist.length;i++){ var b=_bestOfSnap(hist[i],u,excl); if(b){ cur=b; curSn=hist[i]; ci=i; break; } }
+  if(!cur) return null;
+  var prev=null;
+  for(var j=ci+1;j<hist.length;j++){ var pb=_bestOfSnap(hist[j],u,excl); if(pb){ prev=pb; break; } }
+  var longp=null;
+  if(curSn._dt){
+    var target=curSn._dt.getTime()-365*864e5, bestDiff=1e15;
+    for(var k=ci+1;k<hist.length;k++){
+      if(!hist[k]._dt) continue;
+      var bb=_bestOfSnap(hist[k],u,excl); if(!bb) continue;
+      var diff=Math.abs(hist[k]._dt.getTime()-target);
+      if(diff<bestDiff && diff<200*864e5){ bestDiff=diff; longp=bb; }
+    }
+  }
+  function trend(o){ if(!o||!o.p) return null; var d=cur.p-o.p; return {pct:d/o.p*100, dir:d>0?1:(d<0?-1:0), from:o.p}; }
+  return { preis:cur.p, unit:ul, u:u, sup:cur.f, per:(curSn.wa||curSn.periode||'–'),
+           short:trend(prev), long:trend(longp), snap:curSn, excl:excl };
+}
+function _trendCell(t){
+  if(!t) return '<span style="color:#aaa">–</span>';
+  var sym = t.dir>0?'↑':(t.dir<0?'↓':'→');
+  var col = t.dir>0?'#c0392b':(t.dir<0?'#1e8e3e':'#888');
+  var pct = (t.pct>0?'+':'')+t.pct.toFixed(1)+'%';
+  return '<span style="color:'+col+';font-weight:700">'+sym+' '+pct+'</span>';
+}
+function _esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+function renderPreise(){
+  var host=document.getElementById('view-preise'); if(!host) return;
+  if(!document.getElementById('preise-ctrl')){
+    var wgs={}; Object.values(ART).forEach(function(a){ if(a.warengruppe) wgs[a.warengruppe]=1; });
+    var opts='<option value="">Alle Warengruppen</option>'+Object.keys(wgs).sort().map(function(w){return '<option value="'+_esc(w)+'">'+_esc(w)+'</option>';}).join('');
+    host.innerHTML =
+      '<div id="preise-ctrl" style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;padding:14px 4px 10px">'
+      + '<input id="preise-q" placeholder="Grundprodukt suchen..." oninput="renderPreiseTable()" style="flex:1;min-width:220px;padding:8px 12px;border:1px solid #cbd5e0;border-radius:7px;font-size:14px">'
+      + '<select id="preise-wg" onchange="renderPreiseTable()" style="padding:8px 10px;border:1px solid #cbd5e0;border-radius:7px;font-size:13px">'+opts+'</select>'
+      + '<label style="font-size:13px;display:flex;gap:6px;align-items:center"><input type="checkbox" id="preise-bio" onchange="renderPreiseTable()"> nur Bio-Pflicht</label>'
+      + '<label style="font-size:13px;display:flex;gap:6px;align-items:center"><input type="checkbox" id="preise-onlypx" checked onchange="renderPreiseTable()"> nur mit Preis</label>'
+      + '<span id="preise-count" style="font-size:12px;color:#667;margin-left:auto"></span>'
+      + '</div>'
+      + '<div id="preise-table"></div>';
+  }
+  renderPreiseTable();
+}
+
+function renderPreiseTable(){
+  var q=(document.getElementById('preise-q').value||'').toLowerCase().trim();
+  var wg=document.getElementById('preise-wg').value||'';
+  var bio=document.getElementById('preise-bio').checked;
+  var onlypx=document.getElementById('preise-onlypx').checked;
+  var arts=Object.values(ART).filter(function(a){
+    if(wg && a.warengruppe!==wg) return false;
+    if(bio && String(a.bio_pflicht||'').toLowerCase()!=='ja') return false;
+    if(q && String(a.name||'').toLowerCase().indexOf(q)<0) return false;
+    return true;
+  });
+  arts.sort(function(a,b){ return String(a.name||'').localeCompare(String(b.name||''),'de'); });
+
+  var th='<thead><tr style="background:#1F4E79;color:#fff">'
+    + ['Grundprodukt','Warengruppe','Einheit','Letzter Preis','Kurzfristig','Langfristig','Bester Lieferant','Stand']
+      .map(function(h,i){ return '<th style="text-align:'+(i>=3&&i<=5?'center':'left')+';padding:8px 10px;font-size:12px;position:sticky;top:0">'+h+'</th>'; }).join('')
+    + '<th style="width:28px"></th></tr></thead>';
+  var rows='', shown=0, withPx=0;
+  arts.forEach(function(a){
+    var pd=priceData(a);
+    if(onlypx && !pd) return;
+    shown++; if(pd) withPx++;
+    var rid='px_'+(a.id||shown);
+    if(pd){
+      rows+='<tr style="border-bottom:1px solid #eee;cursor:pointer" onclick="togglePreisRow(\''+rid+'\')">'
+        +'<td style="padding:7px 10px;font-weight:600">'+_esc(a.name)+'</td>'
+        +'<td style="padding:7px 10px;color:#667;font-size:12px">'+_esc(a.warengruppe||'')+'</td>'
+        +'<td style="padding:7px 10px;font-size:12px">'+_esc(a.einheit_vorgabe||'–')+'</td>'
+        +'<td style="padding:7px 10px;text-align:right;font-weight:700;white-space:nowrap">'+pd.preis.toFixed(pd.preis<1?4:2)+' '+pd.unit+'</td>'
+        +'<td style="padding:7px 10px;text-align:center;white-space:nowrap">'+_trendCell(pd.short)+'</td>'
+        +'<td style="padding:7px 10px;text-align:center;white-space:nowrap">'+_trendCell(pd.long)+'</td>'
+        +'<td style="padding:7px 10px;font-size:12px">'+_esc(pd.sup||'')+'</td>'
+        +'<td style="padding:7px 10px;font-size:11px;color:#888">'+_esc(pd.per||'')+'</td>'
+        +'<td style="padding:7px 10px;color:#1F4E79">▸</td></tr>';
+      // Detailzeile: Lieferanten-Artikel der letzten Ausschreibung
+      var det='<tr id="'+rid+'" style="display:none"><td colspan="9" style="padding:0 10px 10px 30px;background:#f7f9fc">';
+      det+='<table style="width:100%;border-collapse:collapse;font-size:12px;margin:6px 0">'
+        +'<tr style="color:#667;text-align:left"><th style="padding:4px 8px">Lieferant</th><th style="padding:4px 8px">Art-Nr</th><th style="padding:4px 8px">Artikelbeschreibung</th><th style="padding:4px 8px">Einheit</th><th style="padding:4px 8px;text-align:right">Preis</th></tr>';
+      var srows=(pd.snap.s||[]).map(function(e){
+        var p=_pfUnit(e,pd.u);
+        var k=_normSup(_cleanSupplierName(e.f));
+        var ss=window.SUP_SETTINGS&&window.SUP_SETTINGS[k];
+        var inaktiv=(ss&&ss.status==='inaktiv')||(pd.excl.indexOf(k)>=0);
+        return {f:_cleanSupplierName(e.f),artnr:e.artnr||'',beschr:e.artbeschr||'',einh:e.einheit||'',p:p,inaktiv:inaktiv,best:(p!=null&&Math.abs(p-pd.preis)<1e-9&&!inaktiv)};
+      }).filter(function(x){return x.p!=null;}).sort(function(x,y){return x.p-y.p;});
+      srows.forEach(function(x){
+        det+='<tr style="border-top:1px solid #e8eef5;'+(x.inaktiv?'opacity:.45':'')+'">'
+          +'<td style="padding:4px 8px;'+(x.best?'font-weight:700;color:#1e8e3e':'')+'">'+(x.best?'★ ':'')+_esc(x.f)+(x.inaktiv?' (inaktiv)':'')+'</td>'
+          +'<td style="padding:4px 8px;color:#888">'+_esc(x.artnr)+'</td>'
+          +'<td style="padding:4px 8px">'+_esc(x.beschr)+'</td>'
+          +'<td style="padding:4px 8px">'+_esc(x.einh)+'</td>'
+          +'<td style="padding:4px 8px;text-align:right;white-space:nowrap">'+x.p.toFixed(x.p<1?4:2)+' '+pd.unit+'</td></tr>';
+      });
+      det+='</table></td></tr>';
+      rows+=det;
+    } else {
+      rows+='<tr style="border-bottom:1px solid #eee;color:#aaa">'
+        +'<td style="padding:7px 10px;font-weight:600;color:#555">'+_esc(a.name)+'</td>'
+        +'<td style="padding:7px 10px;font-size:12px">'+_esc(a.warengruppe||'')+'</td>'
+        +'<td style="padding:7px 10px;font-size:12px">'+_esc(a.einheit_vorgabe||'–')+'</td>'
+        +'<td colspan="6" style="padding:7px 10px;font-size:12px">keine Preisdaten</td></tr>';
+    }
+  });
+  document.getElementById('preise-count').textContent = shown+' Produkte'+(withPx<shown?' ('+withPx+' mit Preis)':'');
+  document.getElementById('preise-table').innerHTML =
+    '<div style="overflow:auto;border:1px solid #e2e8f0;border-radius:8px"><table style="width:100%;border-collapse:collapse;background:#fff">'+th+'<tbody>'+rows+'</tbody></table></div>';
+}
+function togglePreisRow(id){ var el=document.getElementById(id); if(el) el.style.display = el.style.display==='none'?'table-row':'none'; }
+
+window.renderPreise=renderPreise; window.renderPreiseTable=renderPreiseTable; window.togglePreisRow=togglePreisRow; window.applyAccessControl=applyAccessControl;
 
 </script>
 </body>
