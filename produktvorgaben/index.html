@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <script src="/necta-produktvorgaben/sbauth.js"></script>
+  <script src="../sbauth.js"></script>
   <!-- deploy-touch 2026-07-10a: Filter-Dropdown + Gesperrt-Default-aus + TK-Fix --> [BUILD v18 · Perioden-Supabase]
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -462,11 +462,21 @@ function setSyncStatus(state, label) {
   lbl.textContent = label;
 }
 
+function _validLogin(){ try{ var s=JSON.parse(localStorage.getItem('abc_sb_session_v1')||'null'); return !!(s&&s.access_token&&s.expires_at&&s.expires_at>Date.now()+5000); }catch(e){ return false; } }
 async function init() {
+  // Ohne gueltigen Login liefert die Datenbank (RLS) nichts -> Login abwarten statt "Keine Daten"
+  if (!_validLogin()) {
+    setMsg('Bitte anmelden \u2013 das Anmeldefenster erscheint. Nach dem Login werden die Daten automatisch geladen.');
+    setSyncStatus('error', 'Nicht angemeldet');
+    if (typeof window.sbShowLogin==='function') { try{ window.sbShowLogin(''); }catch(_e){} }
+    setTimeout(function(){ if(_validLogin()) location.reload(); }, 1500); // falls Login in anderem Tab
+    return;
+  }
   setMsg('Lade Daten...');
   try {
     const rows = await dbLoadAll();
     if (!rows || rows.length === 0) {
+      if (!_validLogin()) { setMsg('Bitte anmelden, dann neu laden.'); setSyncStatus('error','Nicht angemeldet'); return; }
       setMsg('Keine Daten. Bitte SQL-Import durchf\u00fchren.');
       setSyncStatus('error', 'Keine Daten');
       return;
