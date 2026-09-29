@@ -175,8 +175,7 @@ body{font-family:Arial,sans-serif;background:#f0f4f8;color:#1a2332;min-height:10
   </div>
   <div class="tab-bar">
     <button class="tab active" id="tab-tools" onclick="switchTab('tools')">&#128736; Tools</button>
-    
-    
+    <button class="tab" id="tab-analyse" onclick="openAnalyse()">&#128202; Dashboard</button>
   </div>
 </div>
 
@@ -241,6 +240,15 @@ body{font-family:Arial,sans-serif;background:#f0f4f8;color:#1a2332;min-height:10
   <!-- /inline-dash -->
 
 </div><!-- /view-tools -->
+
+<!-- ═══ ANALYSE-DASHBOARD TAB ═══ -->
+<div id="view-analyse" class="container" style="display:none">
+  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin:4px 0 16px">
+    <div class="section-title" style="margin:0">&#128202; Beschaffungs-Dashboard</div>
+    <span onclick="renderAnalyse(true)" style="cursor:pointer;color:#1F4E79;font-size:12px;text-decoration:underline">&#8635; Aktualisieren</span>
+  </div>
+  <div id="analyse-body"><div style="padding:40px;text-align:center;color:#90a0b0">Lade Auswertungen&hellip;</div></div>
+</div>
 
 <!-- ═══ DASHBOARD TAB (leer – wird nicht mehr genutzt) ═══ -->
 <div id="view-dash" style="display:none"><div id="inline-dash" style="margin-top:28px">
@@ -522,6 +530,9 @@ function isWAsichtbar(name) {
 
 // ─── Tab switching ────────────────────────────────────────────────────────────
 function switchTab(tab) {
+  // Analyse-Dashboard immer ausblenden, wenn ein anderer Tab gewählt wird
+  var _van=document.getElementById('view-analyse'); if(_van) _van.style.display='none';
+  var _tan=document.getElementById('tab-analyse'); if(_tan) _tan.classList.remove('active');
   // 'dash' ist inline in Tools → Tools anzeigen + zu Dashboard scrollen
   if (tab === 'dash') {
     // Tools-View anzeigen
@@ -2069,6 +2080,164 @@ startAutoRefresh();
     }
   });
 })();
+
+</script>
+<script>
+/* ===== Beschaffungs-Dashboard (Startseite) ===== */
+var _DASH_URL='https://ywmimuctohdmxkmexops.supabase.co';
+var __dashCache=null;
+
+function openAnalyse(){
+  try{ ['tools','settings','dash'].forEach(function(t){var v=document.getElementById('view-'+t); if(v)v.style.display='none'; var b=document.getElementById('tab-'+t); if(b)b.classList.remove('active');}); }catch(e){}
+  var v=document.getElementById('view-analyse'); if(v)v.style.display='block';
+  var b=document.getElementById('tab-analyse'); if(b)b.classList.add('active');
+  renderAnalyse(false);
+}
+function _dTok(){ try{var s=JSON.parse(localStorage.getItem('abc_sb_session_v1')||'null'); return (s&&s.access_token)||window.SB_TOKEN||window.SB_ANON; }catch(e){ return window.SB_ANON; } }
+async function _dGet(path){
+  var all=[],from=0;
+  while(true){
+    var r=await fetch(_DASH_URL+'/rest/v1/'+path,{headers:{apikey:window.SB_ANON,Authorization:'Bearer '+_dTok(),Range:from+'-'+(from+999),'Range-Unit':'items'}});
+    if(!r.ok) throw new Error(r.status+' '+await r.text());
+    var b=await r.json(); if(!b||!b.length) break; all=all.concat(b); if(b.length<1000) break; from+=1000;
+  }
+  return all;
+}
+function _eur(n){ return (n==null||!isFinite(n))?'–':(Math.round(n*100)/100).toLocaleString('de-DE',{minimumFractionDigits:2,maximumFractionDigits:2})+' €'; }
+function _eur0(n){ return (n==null||!isFinite(n))?'–':Math.round(n).toLocaleString('de-DE')+' €'; }
+function _num(n){ return (n==null||!isFinite(n))?'–':(Math.round(n*100)/100).toLocaleString('de-DE'); }
+function _esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function _yr(m){ return String(m||'').slice(0,4); }
+function _trendBadge(t){ if(!t)return '<span style="color:#aaa">–</span>'; var s=t.dir>0?'↑':(t.dir<0?'↓':'→'); var c=t.dir>0?'#c0392b':(t.dir<0?'#1e8e3e':'#888'); return '<span style="color:'+c+';font-weight:700">'+s+' '+(t.pct>0?'+':'')+t.pct.toFixed(1)+'%</span>'; }
+
+/* Preis-Logik aus preishistorie (vereinfachte, self-contained Variante) */
+function _dPU(a){ return (a.einheit_vorgabe||'').toString().trim().toUpperCase(); }
+function _dPf(e,u){ if(u==='KG')return e.preis_kg!=null?e.preis_kg:(e.pk!=null?e.pk:null); if(u==='L')return e.preis_l!=null?e.preis_l:null; if(u.indexOf('ST')===0)return e.preis_stk!=null?e.preis_stk:null; return e.preis_ae!=null?e.preis_ae:(e.pe!=null?e.pe:(e.pk!=null?e.pk:null)); }
+function _dBest(sn,u){ var b=null,sup={}; (sn.s||[]).forEach(function(e){ var p=_dPf(e,u); if(p==null||!isFinite(p)||p<=0)return; var f=(e.f||'').trim(); if(f)sup[f]=1; if(b==null||p<b.p)b={p:p,f:f}; }); return b?{p:b.p,f:b.f,nSup:Object.keys(sup).length}:null; }
+function _dParseDate(s){ if(!s)return null; var m=String(s).match(/(\d{1,2})\.(\d{1,2})\.(\d{4})/); if(m)return new Date(+m[3],+m[2]-1,+m[1]); var d=new Date(s); return isFinite(d)?d:null; }
+function _dPrice(a){
+  var hist=(Array.isArray(a.preishistorie)?a.preishistorie:[]).filter(function(sn){return sn&&sn.s&&sn.s.length&&sn.periode!=='_EXCL';});
+  if(!hist.length) return null;
+  hist=hist.slice(); hist.forEach(function(x){ if(!x._dt) x._dt=x.iso?new Date(x.iso):_dParseDate(x.d); });
+  hist.sort(function(x,y){return (y._dt?y._dt.getTime():0)-(x._dt?x._dt.getTime():0);});
+  var u=_dPU(a); var cur=null,curSn=null,ci=-1;
+  for(var i=0;i<hist.length;i++){var b=_dBest(hist[i],u); if(b){cur=b;curSn=hist[i];ci=i;break;}}
+  if(!cur) return null;
+  var prev=null; for(var j=ci+1;j<hist.length;j++){var pb=_dBest(hist[j],u); if(pb){prev=pb;break;}}
+  var longp=null; if(curSn._dt){var tg=curSn._dt.getTime()-365*864e5,bd=1e15; for(var k=ci+1;k<hist.length;k++){ if(!hist[k]._dt)continue; var bb=_dBest(hist[k],u); if(!bb)continue; var df=Math.abs(hist[k]._dt.getTime()-tg); if(df<bd&&df<200*864e5){bd=df;longp=bb;} }}
+  function tr(o){ if(!o||!o.p)return null; var d=cur.p-o.p; return {pct:d/o.p*100,dir:d>0?1:(d<0?-1:0)}; }
+  var ul=(u==='KG')?'€/kg':((u==='L')?'€/l':((u.indexOf('ST')===0)?'€/Stk':'€'));
+  return {preis:cur.p,unit:ul,sup:cur.f,nSup:cur.nSup,short:tr(prev),long:tr(longp)};
+}
+
+async function renderAnalyse(force){
+  var body=document.getElementById('analyse-body'); if(!body) return;
+  if(!__dashCache || force){
+    body.innerHTML='<div style="padding:40px;text-align:center;color:#90a0b0"><div class="spinner" style="margin:0 auto 12px"></div>Lade Auswertungen&hellip;</div>';
+    try{
+      var ausgaben=await _dGet('einkauf_ausgaben?select=kategorie,lieferant,zeitraum,betrag');
+      var artikel=await _dGet('einkauf_artikel?select=produkt,necta_id,kategorie,monat,menge,einheit,betrag');
+      var vorgaben=await _dGet('produktvorgaben?select=id,name,warengruppe,kategorie,einheit_vorgabe,status,lieferanten,preishistorie&order=name');
+      __dashCache={ausgaben:ausgaben,artikel:artikel,vorgaben:vorgaben};
+    }catch(e){ body.innerHTML='<div style="padding:32px;text-align:center;color:#c0392b">Fehler beim Laden: '+_esc(e.message)+'<br><span style="color:#90a0b0;font-size:12px">Bist du angemeldet?</span></div>'; return; }
+  }
+  try{ body.innerHTML=_buildDashboard(__dashCache); }
+  catch(e){ body.innerHTML='<div style="padding:32px;color:#c0392b">Fehler beim Aufbau: '+_esc(e.message)+'</div>'; }
+}
+
+function _buildDashboard(D){
+  var ausgaben=D.ausgaben||[], artikel=D.artikel||[], vorgaben=D.vorgaben||[];
+  // Jahre bestimmen (letzte zwei)
+  var years={}; ausgaben.forEach(function(x){var y=_yr(x.zeitraum); if(y)years[y]=1;}); artikel.forEach(function(x){var y=_yr(x.monat); if(y)years[y]=1;});
+  var yl=Object.keys(years).sort(); var yB=yl[yl.length-1]||'', yA=yl[yl.length-2]||'';
+
+  // ---- Preis-Infos je Vorgabe ----
+  var pdById={}, trendByNecta={}, trendByName={}, noPrice=[], single=[], increases=[], decreases=[];
+  vorgaben.forEach(function(a){
+    var pd=_dPrice(a); pdById[a.id]=pd;
+    var nid=String(a.necta_id||'').split('.')[0];
+    if(pd){
+      if(nid) trendByNecta[nid]=pd; if(a.name) trendByName[String(a.name).toLowerCase()]=pd;
+      if(pd.nSup===1) single.push({name:a.name,wg:a.warengruppe,preis:pd.preis,unit:pd.unit,sup:pd.sup});
+      var mv=(pd.short&&pd.short.dir!==0)?pd.short:(pd.long||null);
+      if(pd.short&&pd.short.dir>0) increases.push({name:a.name,wg:a.warengruppe,pct:pd.short.pct,preis:pd.preis,unit:pd.unit,sup:pd.sup});
+      if(pd.short&&pd.short.dir<0) decreases.push({name:a.name,wg:a.warengruppe,pct:pd.short.pct,preis:pd.preis,unit:pd.unit,sup:pd.sup});
+    } else {
+      if(String(a.status||'').toLowerCase()!=='gesperrt') noPrice.push({name:a.name,wg:a.warengruppe,status:a.status||''});
+    }
+  });
+  increases.sort(function(x,y){return y.pct-x.pct;});
+  decreases.sort(function(x,y){return x.pct-y.pct;});
+  single.sort(function(x,y){return String(x.name).localeCompare(String(y.name),'de');});
+
+  // ---- Spend je Jahr / Lieferant / Kategorie ----
+  function sy(rows,betragKey,yearKey,y){ return rows.filter(function(r){return _yr(r[yearKey])===y;}).reduce(function(s,r){return s+(Number(r[betragKey])||0);},0); }
+  var spendA=sy(ausgaben,'betrag','zeitraum',yA), spendB=sy(ausgaben,'betrag','zeitraum',yB);
+  var lief={};
+  ausgaben.forEach(function(r){ var l=r.lieferant||'?'; if(!lief[l])lief[l]={a:0,b:0,kat:{}}; var y=_yr(r.zeitraum); if(y===yA)lief[l].a+=Number(r.betrag)||0; if(y===yB)lief[l].b+=Number(r.betrag)||0; if(r.kategorie)lief[l].kat[r.kategorie]=1; });
+  var liefRows=Object.keys(lief).map(function(l){var o=lief[l]; return {lief:l,a:o.a,b:o.b,kat:Object.keys(o.kat).length,share:spendB>0?o.b/spendB*100:0,delta:(o.a>0?(o.b-o.a)/o.a*100:null)};}).sort(function(x,y){return y.b-x.b;});
+  var nLief=liefRows.filter(function(r){return r.b>0||r.a>0;}).length;
+
+  // ---- Artikel-Spend (Top) ----
+  var art={};
+  artikel.forEach(function(r){ var key=(r.necta_id||'')+'#'+r.produkt; if(!art[key])art[key]={produkt:r.produkt,necta_id:r.necta_id,kat:r.kategorie,einheit:r.einheit,a:0,b:0,ma:0,mb:0}; var y=_yr(r.monat); if(y===yA){art[key].a+=Number(r.betrag)||0;art[key].ma+=Number(r.menge)||0;} if(y===yB){art[key].b+=Number(r.betrag)||0;art[key].mb+=Number(r.menge)||0;} });
+  var artRows=Object.values(art);
+  var topArt=artRows.slice().sort(function(x,y){return (y.b+y.a)-(x.b+x.a);}).slice(0,15);
+
+  // ---- Teuer & steigend: Spend hoch + Preis steigend ----
+  var teuerSteigend=artRows.map(function(r){
+    var nid=String(r.necta_id||'').split('.')[0];
+    var pd=(nid&&trendByNecta[nid])||trendByName[String(r.produkt||'').toLowerCase()];
+    var tr=pd&&pd.short&&pd.short.dir>0?pd.short:null;
+    return {produkt:r.produkt, spend:(r.b||r.a||0), pct:tr?tr.pct:null};
+  }).filter(function(r){return r.pct!=null && r.spend>0;}).sort(function(x,y){return y.spend-x.spend;}).slice(0,10);
+
+  // ============ HTML ============
+  function kpi(val,lbl,sub){ return '<div class="dash-card" style="text-align:center;padding:16px"><div style="font-size:24px;font-weight:800;color:#1F4E79">'+val+'</div><div style="font-size:12px;color:#607080;margin-top:2px">'+lbl+'</div>'+(sub?'<div style="font-size:11px;color:#90a0b0;margin-top:2px">'+sub+'</div>':'')+'</div>'; }
+  var avgInc = increases.length? (increases.reduce(function(s,x){return s+x.pct;},0)/increases.length):0;
+  var html='';
+  html+='<div class="kpi-row" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:18px">'
+    + kpi(_eur0(spendB), 'Spend '+yB, 'Vorjahr '+yA+': '+_eur0(spendA))
+    + kpi(String(nLief), 'Lieferanten', 'mit Ausgaben')
+    + kpi(String(artRows.length), 'Artikel mit Bestellung', yA+'/'+yB)
+    + kpi(String(noPrice.length), 'ohne aktuellen Preis', 'offene/definierte')
+    + kpi(String(single.length), 'nur 1 Lieferant', 'Klumpenrisiko')
+    + kpi((avgInc>0?'+':'')+avgInc.toFixed(1)+'%', 'Ø Preisanstieg', 'kurzfristig')
+    + '</div>';
+
+  // Lieferantenanalyse
+  html+='<div class="dash-card" style="margin-bottom:16px"><div class="dash-card-title"><span>🏢</span> Lieferantenanalyse</div>';
+  html+='<div style="overflow:auto"><table style="width:100%;border-collapse:collapse;font-size:13px">';
+  html+='<tr style="background:#1F4E79;color:#fff;text-align:left"><th style="padding:6px 10px">Lieferant</th><th style="padding:6px 10px;text-align:right">Spend '+yA+'</th><th style="padding:6px 10px;text-align:right">Spend '+yB+'</th><th style="padding:6px 10px;text-align:right">Anteil '+yB+'</th><th style="padding:6px 10px;text-align:center">Trend</th><th style="padding:6px 10px;text-align:right">Kategorien</th></tr>';
+  liefRows.slice(0,20).forEach(function(r){ html+='<tr style="border-bottom:1px solid #eef2f6"><td style="padding:6px 10px;font-weight:600">'+_esc(r.lief)+'</td><td style="padding:6px 10px;text-align:right">'+_eur0(r.a)+'</td><td style="padding:6px 10px;text-align:right;font-weight:700">'+_eur0(r.b)+'</td><td style="padding:6px 10px;text-align:right">'+r.share.toFixed(1)+'%</td><td style="padding:6px 10px;text-align:center">'+(r.delta==null?'–':_trendBadge({pct:r.delta,dir:r.delta>0?1:(r.delta<0?-1:0)}))+'</td><td style="padding:6px 10px;text-align:right">'+r.kat+'</td></tr>'; });
+  html+='</table></div><div style="font-size:11px;color:#90a0b0;margin-top:6px">Trend = Spend '+yB+' vs. '+yA+' (Achtung: '+yB+' ggf. Teiljahr).</div></div>';
+
+  // Top-Artikel
+  html+='<div class="dash-card" style="margin-bottom:16px"><div class="dash-card-title"><span>📈</span> Top-Artikel nach Spend</div>';
+  html+='<div style="overflow:auto"><table style="width:100%;border-collapse:collapse;font-size:13px">';
+  html+='<tr style="background:#1F4E79;color:#fff;text-align:left"><th style="padding:6px 10px">Artikel</th><th style="padding:6px 10px">Kategorie</th><th style="padding:6px 10px;text-align:right">Menge '+yB+'</th><th style="padding:6px 10px;text-align:right">Spend '+yA+'</th><th style="padding:6px 10px;text-align:right">Spend '+yB+'</th></tr>';
+  topArt.forEach(function(r){ html+='<tr style="border-bottom:1px solid #eef2f6"><td style="padding:6px 10px;font-weight:600">'+_esc(r.produkt)+'</td><td style="padding:6px 10px;color:#667;font-size:12px">'+_esc(r.kat||'')+'</td><td style="padding:6px 10px;text-align:right">'+_num(r.mb)+' '+_esc(r.einheit||'')+'</td><td style="padding:6px 10px;text-align:right">'+_eur0(r.a)+'</td><td style="padding:6px 10px;text-align:right;font-weight:700">'+_eur0(r.b)+'</td></tr>'; });
+  html+='</table></div></div>';
+
+  // Negativ-Artikel (4 Listen)
+  function listCard(icon,title,rows,fmt,hintEmpty){ var h='<div class="dash-card"><div class="dash-card-title"><span>'+icon+'</span> '+title+'</div>'; if(!rows.length){h+='<div style="color:#90a0b0;font-size:12px;padding:6px 0">'+(hintEmpty||'Keine.')+'</div>';} else { h+='<table style="width:100%;border-collapse:collapse;font-size:12px">'; rows.forEach(function(r){h+='<tr style="border-bottom:1px solid #f0f3f7">'+fmt(r)+'</tr>';}); h+='</table>'; } return h+'</div>'; }
+  html+='<div class="dash-card-title" style="margin:18px 0 8px"><span>⚠️</span> Negativ-Artikel</div>';
+  html+='<div class="dash-row" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:12px">';
+  html+=listCard('📈','Stärkste Preissteigerungen',increases.slice(0,10),function(r){return '<td style="padding:5px 8px;font-weight:600">'+_esc(r.name)+'</td><td style="padding:5px 8px;text-align:right;color:#c0392b;font-weight:700">+'+r.pct.toFixed(1)+'%</td><td style="padding:5px 8px;text-align:right;white-space:nowrap">'+_num(r.preis)+' '+r.unit+'</td>';});
+  html+=listCard('🔗','Nur 1 Lieferant (Klumpenrisiko)',single.slice(0,12),function(r){return '<td style="padding:5px 8px;font-weight:600">'+_esc(r.name)+'</td><td style="padding:5px 8px;color:#667">'+_esc(r.sup||'')+'</td><td style="padding:5px 8px;text-align:right;white-space:nowrap">'+_num(r.preis)+' '+r.unit+'</td>';},'Kein Klumpenrisiko.');
+  html+=listCard('❓','Kein aktueller Preis',noPrice.slice(0,12),function(r){return '<td style="padding:5px 8px;font-weight:600">'+_esc(r.name)+'</td><td style="padding:5px 8px;color:#667;font-size:11px">'+_esc(r.wg||'')+'</td><td style="padding:5px 8px;text-align:right;font-size:11px;color:#90a0b0">'+_esc(r.status)+'</td>';},'Alle mit Preis.');
+  html+=listCard('🔥','Teuer & steigend',teuerSteigend,function(r){return '<td style="padding:5px 8px;font-weight:600">'+_esc(r.produkt)+'</td><td style="padding:5px 8px;text-align:right">'+_eur0(r.spend)+'</td><td style="padding:5px 8px;text-align:right;color:#c0392b;font-weight:700">+'+r.pct.toFixed(1)+'%</td>';},'Keine.');
+  html+='</div>';
+
+  // Preisbewegungen (Gewinner/Verlierer)
+  html+='<div class="dash-row" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:12px;margin-top:12px">';
+  html+=listCard('🟢','Größte Preisrückgänge',decreases.slice(0,10),function(r){return '<td style="padding:5px 8px;font-weight:600">'+_esc(r.name)+'</td><td style="padding:5px 8px;text-align:right;color:#1e8e3e;font-weight:700">'+r.pct.toFixed(1)+'%</td><td style="padding:5px 8px;text-align:right;white-space:nowrap">'+_num(r.preis)+' '+r.unit+'</td>';},'Keine.');
+  html+=listCard('🔴','Größte Preissteigerungen',increases.slice(0,10),function(r){return '<td style="padding:5px 8px;font-weight:600">'+_esc(r.name)+'</td><td style="padding:5px 8px;text-align:right;color:#c0392b;font-weight:700">+'+r.pct.toFixed(1)+'%</td><td style="padding:5px 8px;text-align:right;white-space:nowrap">'+_num(r.preis)+' '+r.unit+'</td>';},'Keine.');
+  html+='</div>';
+
+  return html;
+}
+window.openAnalyse=openAnalyse; window.renderAnalyse=renderAnalyse;
 
 </script>
 </body>
