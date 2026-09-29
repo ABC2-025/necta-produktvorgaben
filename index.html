@@ -231,6 +231,19 @@ body{font-family:Arial,sans-serif;background:#f0f4f8;color:#1a2332;min-height:10
       </div>
       <div class="arrow">&#8594;</div>
     </a>
+    <a class="tool-card" id="card-dashboard" href="#dashboard" onclick="openAnalyse();return false;">
+      <div class="tool-header">
+        <div class="tool-icon" style="background:#f3eefb">&#128202;</div>
+        <div class="tool-name">Dashboard</div>
+      </div>
+      <div class="tool-desc">Beschaffungs-Dashboard: Kennzahlen, Preisentwicklung und Lieferanten-Auswertung auf einen Blick &ndash; live aus Supabase.</div>
+      <div class="tool-tags">
+        <span class="tag tag-purple">Kennzahlen</span>
+        <span class="tag tag-blue">Preisentwicklung</span>
+        <span class="tag tag-green">Lieferanten</span>
+      </div>
+      <div class="arrow">&#8594;</div>
+    </a>
   </div>
 
   
@@ -1418,6 +1431,7 @@ loadSettings();
 renderToolsWarning();
 // Dashboard automatisch beim Start laden
 setTimeout(function(){ loadDashboard(true); }, 400);
+window.addEventListener('load',function(){ if(location.hash==='#dashboard'){ try{openAnalyse();}catch(e){} } });
 // Auto-Refresh starten
 startAutoRefresh();
 </script>
