@@ -186,10 +186,7 @@ tbody tr.row-selected td{outline:2px solid #2E75B6;outline-offset:-1px}
   <div class="tb-sep"></div>
   <div class="view-btns">
     <button class="vbtn active" id="btn-table" onclick="switchView('table')">Tabelle</button>
-    <button class="vbtn" id="btn-dash" onclick="switchView('dashboard')">Dashboard</button>
-    <button class="vbtn" id="btn-ausgaben" onclick="switchView('ausgaben')">Ausgaben</button>
     <button class="vbtn" id="btn-ausschr" onclick="switchView('ausschr')">Ausschreibungen</button>
-    <button class="vbtn" id="btn-preise" onclick="switchView('preise')">Preise</button>
     <button class="vbtn" id="btn-vergleich" onclick="switchView('vergleich')">Angebotsvergleich</button>
   </div>
   <div class="tb-sep"></div>
@@ -3951,10 +3948,11 @@ function renderPreiseTable(){
   var wg=document.getElementById('preise-wg').value||'';
   var bio=document.getElementById('preise-bio').checked;
   var onlypx=document.getElementById('preise-onlypx').checked;
+  var qterms=q.split(/\s+/).filter(Boolean);
   var arts=Object.values(ART).filter(function(a){
     if(wg && a.warengruppe!==wg) return false;
     if(bio && String(a.bio_pflicht||'').toLowerCase()!=='ja') return false;
-    if(q && String(a.name||'').toLowerCase().indexOf(q)<0) return false;
+    if(qterms.length){ var n=String(a.name||'').toLowerCase(); if(!qterms.every(function(t){return n.indexOf(t)>=0;})) return false; }
     return true;
   });
   arts.sort(function(a,b){ return String(a.name||'').localeCompare(String(b.name||''),'de'); });
@@ -4034,11 +4032,16 @@ function _angebotsTableHTML(rid, idx){
   var bestPer=null; list.forEach(function(x){ if(!x.inaktiv && (bestPer==null||x.per<bestPer)) bestPer=x.per; });
   function f2(n){ return (n==null||!isFinite(n))?'–':(n<1?Number(n).toFixed(4):Number(n).toFixed(2)); }
   var h='<div style="overflow:auto"><table style="width:100%;border-collapse:collapse;font-size:12px;background:#fff;border:1px solid #e6edf4;border-radius:6px">';
-  h+='<tr style="background:#eef3f9;text-align:left"><th style="padding:5px 8px">#</th><th style="padding:5px 8px">Lieferant</th><th style="padding:5px 8px">Art-Nr</th><th style="padding:5px 8px">Artikelbeschreibung</th><th style="padding:5px 8px">VE</th><th style="padding:5px 8px;text-align:right">Menge je VE</th><th style="padding:5px 8px;text-align:right">Preis je VE</th><th style="padding:5px 8px;text-align:right">Preis je Einheit</th></tr>';
+  h+='<tr style="background:#eef3f9;text-align:left"><th style="padding:5px 8px">#</th><th style="padding:5px 8px">Lieferant</th><th style="padding:5px 8px">Art-Nr</th><th style="padding:5px 8px">Artikelbeschreibung</th><th style="padding:5px 8px">VE</th><th style="padding:5px 8px;text-align:right">Menge je VE</th><th style="padding:5px 8px;text-align:right">Preis je VE</th><th style="padding:5px 8px;text-align:right">Preis je Einheit</th><th style="padding:5px 8px;text-align:right">Abw. v. günstigsten</th></tr>';
   var rank=0;
   list.forEach(function(x){
     rank++;
     var isBest=(!x.inaktiv && bestPer!=null && Math.abs(x.per-bestPer)<1e-9);
+    var dev=(bestPer!=null && bestPer>0)?((x.per/bestPer-1)*100):null;
+    var devCell;
+    if(isBest){ devCell='<span style="color:#1e8e3e;font-weight:700">günstigster</span>'; }
+    else if(dev==null){ devCell='–'; }
+    else { devCell='<span style="color:'+(dev>0?'#c0392b':'#1e8e3e')+';font-weight:700">+'+dev.toFixed(1)+'%</span>'; }
     h+='<tr style="border-top:1px solid #eef2f6;'+(x.inaktiv?'opacity:.45;':'')+(isBest?'background:#f0fdf4;':'')+'">'
       +'<td style="padding:5px 8px;color:#888">'+(x.inaktiv?'–':rank)+'</td>'
       +'<td style="padding:5px 8px;'+(isBest?'font-weight:700;color:#1e8e3e':'')+'">'+(isBest?'★ ':'')+_esc(x.f)+(x.inaktiv?' (inaktiv)':'')+'</td>'
@@ -4047,7 +4050,8 @@ function _angebotsTableHTML(rid, idx){
       +'<td style="padding:5px 8px">'+_esc(x.ve)+'</td>'
       +'<td style="padding:5px 8px;text-align:right">'+_esc(x.mve)+'</td>'
       +'<td style="padding:5px 8px;text-align:right;white-space:nowrap">'+f2(x.raw)+' €</td>'
-      +'<td style="padding:5px 8px;text-align:right;white-space:nowrap;font-weight:600">'+f2(x.per)+' '+unit+'</td></tr>';
+      +'<td style="padding:5px 8px;text-align:right;white-space:nowrap;font-weight:600">'+f2(x.per)+' '+unit+'</td>'
+      +'<td style="padding:5px 8px;text-align:right;white-space:nowrap">'+devCell+'</td></tr>';
   });
   h+='</table></div>';
   return h;
@@ -4072,7 +4076,8 @@ function renderVergleichList(){
   var q=(document.getElementById('verg-q').value||'').toLowerCase().trim();
   var box=document.getElementById('verg-list'); if(!box) return;
   if(q.length<2){ box.innerHTML='<div style="color:#90a0b0;font-size:12px">Mindestens 2 Zeichen eingeben…</div>'; return; }
-  var arts=Object.values(ART).filter(function(a){ return String(a.name||'').toLowerCase().indexOf(q)>=0 && priceData(a); });
+  var terms=q.split(/\s+/).filter(Boolean);
+  var arts=Object.values(ART).filter(function(a){ var n=String(a.name||'').toLowerCase(); return terms.every(function(t){return n.indexOf(t)>=0;}) && priceData(a); });
   arts.sort(function(a,b){ return String(a.name||'').localeCompare(String(b.name||''),'de'); });
   if(!arts.length){ box.innerHTML='<div style="color:#90a0b0;font-size:12px">Keine Grundprodukte mit Angeboten gefunden.</div>'; return; }
   box.innerHTML=arts.slice(0,40).map(function(a){
