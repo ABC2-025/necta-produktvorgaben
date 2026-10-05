@@ -190,6 +190,7 @@ tbody tr.row-selected td{outline:2px solid #2E75B6;outline-offset:-1px}
     <button class="vbtn" id="btn-ausgaben" onclick="switchView('ausgaben')">Ausgaben</button>
     <button class="vbtn" id="btn-ausschr" onclick="switchView('ausschr')">Ausschreibungen</button>
     <button class="vbtn" id="btn-preise" onclick="switchView('preise')">Preise</button>
+    <button class="vbtn" id="btn-vergleich" onclick="switchView('vergleich')">Angebotsvergleich</button>
   </div>
   <div class="tb-sep"></div>
   <div class="sw"><input id="search" placeholder="Artikel suchen..." oninput="render()"></div>
@@ -258,6 +259,7 @@ tbody tr.row-selected td{outline:2px solid #2E75B6;outline-offset:-1px}
   <div id="view-ausgaben" style="display:none"></div>
   <div id="view-ausschr" style="display:none"></div>
   <div id="view-preise" style="display:none"></div>
+  <div id="view-vergleich" style="display:none"></div>
   <div id="view-table">
     <div class="scards" id="scards"></div>
     <div id="gc"></div>
@@ -586,12 +588,14 @@ function switchView(v) {
   var _va=document.getElementById('view-ausgaben'); if(_va) _va.style.display = v === 'ausgaben' ? 'block' : 'none';
   var _vs=document.getElementById('view-ausschr'); if(_vs) _vs.style.display = v === 'ausschr' ? 'block' : 'none';
   var _vp=document.getElementById('view-preise'); if(_vp) _vp.style.display = v === 'preise' ? 'block' : 'none';
+  var _vv=document.getElementById('view-vergleich'); if(_vv) _vv.style.display = v === 'vergleich' ? 'block' : 'none';
   document.getElementById('btn-table').classList.toggle('active', v === 'table');
   document.getElementById('btn-dash').classList.toggle('active', v === 'dashboard');
   var _ba=document.getElementById('btn-ausgaben'); if(_ba) _ba.classList.toggle('active', v === 'ausgaben');
   var _bs=document.getElementById('btn-ausschr'); if(_bs) _bs.classList.toggle('active', v === 'ausschr');
   var _bp=document.getElementById('btn-preise'); if(_bp) _bp.classList.toggle('active', v === 'preise');
-  if (v === 'dashboard') renderDash(); else if (v === 'ausgaben') renderAusgaben(); else if (v === 'ausschr') renderAusschr(); else if (v === 'preise') renderPreise(); else render();
+  var _bv=document.getElementById('btn-vergleich'); if(_bv) _bv.classList.toggle('active', v === 'vergleich');
+  if (v === 'dashboard') renderDash(); else if (v === 'ausgaben') renderAusgaben(); else if (v === 'ausschr') renderAusschr(); else if (v === 'preise') renderPreise(); else if (v === 'vergleich') renderVergleich(); else render();
   try { if (typeof updateToolbarVisibility==='function') updateToolbarVisibility(v); } catch(_e){}
 }
 
@@ -3862,7 +3866,7 @@ function applyAccessControl(){
   var only = em && PREIS_ONLY_USERS.map(function(x){return String(x).toLowerCase();}).indexOf(em)>=0;
   window.__preisOnly=only;
   if(only){
-    ['btn-table','btn-dash','btn-ausgaben','btn-ausschr'].forEach(function(id){var b=document.getElementById(id); if(b)b.style.display='none';});
+    ['btn-table','btn-dash','btn-ausgaben','btn-ausschr','btn-vergleich','btn-settings'].forEach(function(id){var b=document.getElementById(id); if(b)b.style.display='none';});
     document.querySelectorAll('.filter-strip, .sw, .xls-btn, .sel-bar, #import-file, #mengen-file, #lief-preis-file').forEach(function(el){ el.style.display='none'; });
     switchView('preise');
   }
@@ -3913,7 +3917,7 @@ function priceData(a){
   }
   function trend(o){ if(!o||!o.p) return null; var d=cur.p-o.p; return {pct:d/o.p*100, dir:d>0?1:(d<0?-1:0), from:o.p}; }
   return { preis:cur.p, unit:ul, u:u, sup:cur.f, per:(curSn.wa||curSn.periode||'–'),
-           short:trend(prev), long:trend(longp), snap:curSn, excl:excl };
+           short:trend(prev), long:trend(longp), snap:curSn, hist:hist, ci:ci, excl:excl };
 }
 function _trendCell(t){
   if(!t) return '<span style="color:#aaa">–</span>';
@@ -4011,16 +4015,99 @@ function renderPreiseTable(){
 }
 function togglePreisRow(id){ var el=document.getElementById(id); if(el) el.style.display = el.style.display==='none'?'table-row':'none'; }
 
+/* Angebotsvergleich-Tabelle für eine gewählte Ausschreibungsperiode */
+function _angebotsTableHTML(rid, idx){
+  var d=window._preisDet&&window._preisDet[rid]; if(!d) return '';
+  var sn=d.hist[idx]; if(!sn) return '<div style="color:#90a0b0;font-size:12px">Keine Daten.</div>';
+  var u=d.u, unit=d.unit, excl=d.excl||[];
+  function raw(e){ return e.preis_ae!=null?e.preis_ae:(e.pe!=null?e.pe:null); } // Preis je VE (eingegeben)
+  var list=(sn.s||[]).map(function(e){
+    var per=_pfUnit(e,u); // Preis je Einheit (Vergleich)
+    var k=_normSup(_cleanSupplierName(e.f));
+    var ss=window.SUP_SETTINGS&&window.SUP_SETTINGS[k];
+    var inaktiv=(ss&&ss.status==='inaktiv')||(excl.indexOf(k)>=0);
+    return {f:_cleanSupplierName(e.f),artnr:e.artnr||'',beschr:e.artbeschr||'',einh:e.einheit||'',
+      ve:e.ve||'', mve:(e.menge_je_ve!=null?e.menge_je_ve:''), raw:raw(e), per:per, inaktiv:inaktiv};
+  }).filter(function(x){ return x.per!=null && isFinite(x.per); });
+  if(!list.length) return '<div style="color:#90a0b0;font-size:12px">Keine Angebote in dieser Periode.</div>';
+  list.sort(function(x,y){ return x.per-y.per; });
+  var bestPer=null; list.forEach(function(x){ if(!x.inaktiv && (bestPer==null||x.per<bestPer)) bestPer=x.per; });
+  function f2(n){ return (n==null||!isFinite(n))?'–':(n<1?Number(n).toFixed(4):Number(n).toFixed(2)); }
+  var h='<div style="overflow:auto"><table style="width:100%;border-collapse:collapse;font-size:12px;background:#fff;border:1px solid #e6edf4;border-radius:6px">';
+  h+='<tr style="background:#eef3f9;text-align:left"><th style="padding:5px 8px">#</th><th style="padding:5px 8px">Lieferant</th><th style="padding:5px 8px">Art-Nr</th><th style="padding:5px 8px">Artikelbeschreibung</th><th style="padding:5px 8px">VE</th><th style="padding:5px 8px;text-align:right">Menge je VE</th><th style="padding:5px 8px;text-align:right">Preis je VE</th><th style="padding:5px 8px;text-align:right">Preis je Einheit</th></tr>';
+  var rank=0;
+  list.forEach(function(x){
+    rank++;
+    var isBest=(!x.inaktiv && bestPer!=null && Math.abs(x.per-bestPer)<1e-9);
+    h+='<tr style="border-top:1px solid #eef2f6;'+(x.inaktiv?'opacity:.45;':'')+(isBest?'background:#f0fdf4;':'')+'">'
+      +'<td style="padding:5px 8px;color:#888">'+(x.inaktiv?'–':rank)+'</td>'
+      +'<td style="padding:5px 8px;'+(isBest?'font-weight:700;color:#1e8e3e':'')+'">'+(isBest?'★ ':'')+_esc(x.f)+(x.inaktiv?' (inaktiv)':'')+'</td>'
+      +'<td style="padding:5px 8px;color:#888">'+_esc(x.artnr)+'</td>'
+      +'<td style="padding:5px 8px">'+_esc(x.beschr)+'</td>'
+      +'<td style="padding:5px 8px">'+_esc(x.ve)+'</td>'
+      +'<td style="padding:5px 8px;text-align:right">'+_esc(x.mve)+'</td>'
+      +'<td style="padding:5px 8px;text-align:right;white-space:nowrap">'+f2(x.raw)+' €</td>'
+      +'<td style="padding:5px 8px;text-align:right;white-space:nowrap;font-weight:600">'+f2(x.per)+' '+unit+'</td></tr>';
+  });
+  h+='</table></div>';
+  return h;
+}
+function renderAngebotsDetail(rid, idx){ var el=document.getElementById(rid+'_body'); if(el) el.innerHTML=_angebotsTableHTML(rid, parseInt(idx,10)||0); }
+
+/* ===== Separater Tab: Angebotsvergleich ===== */
+function renderVergleich(){
+  var host=document.getElementById('view-vergleich'); if(!host) return;
+  if(!document.getElementById('verg-ctrl')){
+    host.innerHTML=
+      '<div id="verg-ctrl" style="padding:14px 4px 8px">'
+      +'<div style="font-size:13px;color:#607080;margin-bottom:8px">Grundprodukt suchen, dann die Lieferanten-Angebote je Ausschreibung vergleichen – ideal bei Rückfragen von Lieferanten zum Preisunterschied.</div>'
+      +'<input id="verg-q" placeholder="Grundprodukt suchen (mind. 2 Zeichen)..." oninput="renderVergleichList()" style="width:100%;max-width:480px;padding:9px 12px;border:1px solid #cbd5e0;border-radius:7px;font-size:14px">'
+      +'<div id="verg-list" style="margin-top:10px"></div>'
+      +'<div id="verg-detail" style="margin-top:14px"></div>'
+      +'</div>';
+  }
+  renderVergleichList();
+}
+function renderVergleichList(){
+  var q=(document.getElementById('verg-q').value||'').toLowerCase().trim();
+  var box=document.getElementById('verg-list'); if(!box) return;
+  if(q.length<2){ box.innerHTML='<div style="color:#90a0b0;font-size:12px">Mindestens 2 Zeichen eingeben…</div>'; return; }
+  var arts=Object.values(ART).filter(function(a){ return String(a.name||'').toLowerCase().indexOf(q)>=0 && priceData(a); });
+  arts.sort(function(a,b){ return String(a.name||'').localeCompare(String(b.name||''),'de'); });
+  if(!arts.length){ box.innerHTML='<div style="color:#90a0b0;font-size:12px">Keine Grundprodukte mit Angeboten gefunden.</div>'; return; }
+  box.innerHTML=arts.slice(0,40).map(function(a){
+    return '<button onclick="showVergleich(\''+a.id+'\')" style="display:block;width:100%;text-align:left;padding:7px 10px;border:1px solid #e2e8f0;border-radius:6px;background:#fff;margin-bottom:5px;cursor:pointer;font-size:13px"><strong>'+_esc(a.name)+'</strong> <span style="color:#90a0b0;font-size:11px">'+_esc(a.warengruppe||'')+'</span></button>';
+  }).join('')+(arts.length>40?'<div style="color:#90a0b0;font-size:11px">… '+(arts.length-40)+' weitere – bitte Suche verfeinern.</div>':'');
+}
+function showVergleich(id){
+  var a=ART[id]; var box=document.getElementById('verg-detail'); if(!a||!box) return;
+  var pd=priceData(a); if(!pd){ box.innerHTML='<div style="color:#90a0b0">Keine Angebote für dieses Produkt.</div>'; return; }
+  window._preisDet=window._preisDet||{}; window._preisDet['verg']={hist:pd.hist,ci:pd.ci,u:pd.u,unit:pd.unit,excl:pd.excl};
+  var perOpts=pd.hist.map(function(sn,ix){ return '<option value="'+ix+'"'+(ix===pd.ci?' selected':'')+'>'+_esc(sn.wa||sn.periode||('Periode '+(ix+1)))+'</option>'; }).join('');
+  box.innerHTML=
+    '<div style="border:1px solid #e2e8f0;border-radius:8px;padding:14px;background:#fff">'
+    +'<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:10px">'
+      +'<div style="font-size:16px;font-weight:700;color:#1F4E79">'+_esc(a.name)+'</div>'
+      +'<span style="font-size:12px;color:#667">Einheit: '+_esc(a.einheit_vorgabe||'–')+'</span>'
+      +'<label style="font-size:12px;color:#607080;margin-left:auto">Ausschreibung: <select onchange="renderAngebotsDetail(\'verg\',this.value)" style="font-size:12px;padding:3px 8px;border:1px solid #cbd5e0;border-radius:5px">'+perOpts+'</select></label>'
+    +'</div>'
+    +'<div style="font-size:11px;color:#90a0b0;margin-bottom:8px">Preis je Einheit = Preis je VE ÷ Menge je VE – so entsteht der Vergleichspreis, auf dem das Ranking beruht.</div>'
+    +'<div id="verg_body">'+_angebotsTableHTML('verg',pd.ci)+'</div>'
+    +'</div>';
+}
+window.renderVergleich=renderVergleich; window.renderVergleichList=renderVergleichList; window.showVergleich=showVergleich;
+
 /* Toolbar im Preise-Tab aufräumen: Export/Import, Filter, Suche und andere Ansichts-Buttons ausblenden */
 function updateToolbarVisibility(v){
   if(window.__preisOnly) return; // fuer Preis-only Nutzer ohnehin alles ausgeblendet
   var hide = (v==='preise');
-  ['btn-table','btn-dash','btn-ausgaben','btn-ausschr','btn-settings'].forEach(function(id){ var b=document.getElementById(id); if(b) b.style.display = hide?'none':''; });
+  ['btn-table','btn-dash','btn-ausgaben','btn-ausschr','btn-settings','btn-vergleich'].forEach(function(id){ var b=document.getElementById(id); if(b) b.style.display = hide?'none':''; });
   document.querySelectorAll('.xls-btn, .filter-strip, .sw, .tb-sep').forEach(function(el){ el.style.display = hide?'none':''; });
   var sb=document.getElementById('sel-bar'); if(sb && hide) sb.style.display='none';
 }
 window.updateToolbarVisibility=updateToolbarVisibility;
 window.renderPreise=renderPreise; window.renderPreiseTable=renderPreiseTable; window.togglePreisRow=togglePreisRow; window.applyAccessControl=applyAccessControl;
+window.renderAngebotsDetail=renderAngebotsDetail; window._angebotsTableHTML=_angebotsTableHTML;
 
 </script>
 </body>
