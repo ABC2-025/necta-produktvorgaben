@@ -3014,6 +3014,15 @@ function _veFromText(t){
   t=String(t||'');
   var pk=[['eimer','Eimer'],['karton','Karton'],['\\bkiste','Kiste'],['\\bsack\\b','Sack'],['beutel','Beutel'],['\\bdose\\b','Dose'],['\\bglas\\b','Glas'],['flasche','Flasche'],['kanister','Kanister'],['\\btray\\b','Tray'],['palette','Palette'],['\\bbund\\b','Bund'],['\\bkanne\\b','Kanne'],['packung','Packung']];
   for(var i=0;i<pk.length;i++){ if(new RegExp(pk[i][0],'i').test(t)) return pk[i][1]; }
+  // Kein Behälter-Wort -> aus Gebindegröße ableiten (z.B. "10KG", "5 KG", "240x7,5G", "10L")
+  var mkg=t.match(/(\d+(?:[.,]\d+)?)\s*kg\b/i); var kg=mkg?parseFloat(mkg[1].replace(',','.')):0;
+  var ml=t.match(/(\d+(?:[.,]\d+)?)\s*l\b/i);   var li=ml?parseFloat(ml[1].replace(',','.')):0;
+  var isMulti=/\d+\s*[xX×]/.test(t);
+  var molkerei=/joghurt|jogh\b|quark|skyr|sahne|schmand|fra[iî]che|frischk|käse|kaese|pudding|dessert|butter|margarine|senf|mayo|remoulade|dressing|creme|crème/i.test(t);
+  if(isMulti) return 'Karton';
+  if(molkerei && kg>=2) return 'Eimer';
+  if(li>=2) return 'Kanister';
+  if(kg>=2) return 'Karton';
   return null;
 }
 function _stkveFromText(t){
