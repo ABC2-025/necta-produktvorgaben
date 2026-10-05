@@ -586,8 +586,8 @@ function switchView(v) {
   var _vs=document.getElementById('view-ausschr'); if(_vs) _vs.style.display = v === 'ausschr' ? 'block' : 'none';
   var _vp=document.getElementById('view-preise'); if(_vp) _vp.style.display = v === 'preise' ? 'block' : 'none';
   var _vv=document.getElementById('view-vergleich'); if(_vv) _vv.style.display = v === 'vergleich' ? 'block' : 'none';
-  document.getElementById('btn-table').classList.toggle('active', v === 'table');
-  document.getElementById('btn-dash').classList.toggle('active', v === 'dashboard');
+  var _bt=document.getElementById('btn-table'); if(_bt) _bt.classList.toggle('active', v === 'table');
+  var _bd=document.getElementById('btn-dash'); if(_bd) _bd.classList.toggle('active', v === 'dashboard');
   var _ba=document.getElementById('btn-ausgaben'); if(_ba) _ba.classList.toggle('active', v === 'ausgaben');
   var _bs=document.getElementById('btn-ausschr'); if(_bs) _bs.classList.toggle('active', v === 'ausschr');
   var _bp=document.getElementById('btn-preise'); if(_bp) _bp.classList.toggle('active', v === 'preise');
