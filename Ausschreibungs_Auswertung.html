@@ -414,7 +414,9 @@ async function processSupplierFile(file) {
       const preisL = parseFloat(r[iPreisL]) || null;
       const preisAE = parseFloat(r[iPreisAE]) || null;
       const preisStk = parseFloat(r[iPreisStk]) || null;
-      const _mve = _numOnly(r[iAEjeVE]); // Menge je VE (R)
+      const _mveRaw = r[iAEjeVE];
+      const _mve = _numOnly(_mveRaw); // Menge je VE (R)
+      const _mveBad = (_mveRaw!=null && String(_mveRaw).trim()!=='' && _mve==null); // z.B. "KG" statt Zahl eingetragen
       const _fileUnit = preisKG || preisL || preisStk || null; // V/W/X aus der Datei
       // Vergleichspreis je Einheit = U (Preis je VE) / R. Wird IMMER selbst gerechnet (Datei-Formel wird ignoriert).
       let _preisEinheit = (preisAE!=null && _mve>0) ? preisAE/_mve : (preisAE!=null?preisAE:_fileUnit);
@@ -426,7 +428,7 @@ async function processSupplierFile(file) {
       }
       rows.push({
         produkt, preis_kg: preisKG, preis_l: preisL, preis_ae: preisAE, preis_stk: preisStk,
-        preis_norm: (_preisEinheit!=null?Math.round(_preisEinheit*100000)/100000:null), konv_abw:_konv, // Ranking-Preis = U/R (Preis je VE / Menge je VE)
+        preis_norm: (_preisEinheit!=null?Math.round(_preisEinheit*100000)/100000:null), konv_abw:_konv, mve_bad:_mveBad, mve_raw:(_mveRaw!=null?String(_mveRaw).trim():''), // Ranking-Preis = U/R (Preis je VE / Menge je VE)
         warengruppe: String(r[iWG]||'').trim(),
         necta_id: String(r[iNecta]||'').trim(),
         bio_label: String(r[iBio]||'').trim(),
@@ -468,7 +470,8 @@ async function processSupplierFile(file) {
     // Store
     const existing = uploadedFiles.findIndex(f=>f.supplierName===supplierName);
     const konvCount = rows.filter(function(x){return x.konv_abw;}).length;
-    const entry = {name:file.name, supplierName, periode, rows, skonto, zahlungsziel, lieferkosten, mbw, konvCount};
+    const mveBadRows = rows.filter(function(x){return x.mve_bad;});
+    const entry = {name:file.name, supplierName, periode, rows, skonto, zahlungsziel, lieferkosten, mbw, konvCount, mveBadCount:mveBadRows.length, mveBadList:mveBadRows.slice(0,8).map(function(x){return (x.produkt||x.artbeschr||'?')+' ("'+x.mve_raw+'")';})};
     if (existing>=0) uploadedFiles[existing]=entry; else uploadedFiles.push(entry);
 
     // Init konditionen
@@ -487,6 +490,7 @@ function renderUploadList() {
     + '<div class="sup-name">'+f.supplierName+'</div>'
     + '<div class="art-count">'+f.rows.length+' Artikel Â· '+f.periode+'</div>'
     + (f.konvCount ? '<div class="art-count" style="color:#c0392b">&#9888; '+f.konvCount+' Zeilen mit abweichender Preis-Konvention (Datei rechnet nicht U&divide;R) &ndash; Vergleich nutzt automatisch U&divide;R</div>' : '')
+    + (f.mveBadCount ? '<div class="art-count" style="color:#c0392b;font-weight:600" title="'+(f.mveBadList||[]).join(' | ').replace(/"/g,"&quot;")+'">&#9888; '+f.mveBadCount+' Zeilen: &bdquo;Menge je VE&ldquo; ist keine Zahl &ndash; Preis je Einheit falsch! Bitte korrigieren. ('+((f.mveBadList||[]).slice(0,3).join(', '))+(f.mveBadCount>3?' &hellip;':'')+')</div>' : '')
     + '<span class="remove" onclick="removeFile('+i+')">&#10005;</span>'
     + '</div>'
   ).join('');
@@ -1487,6 +1491,14 @@ window.exportPlausExcel=async function(supFilter){
     }
     if(r.preis_norm>0&&r.preis_norm===Math.round(r.preis_norm)&&r.preis_norm>=10&&abw>20)
       h.push("Runder Preis - m\u00f6gl. Platzhalter");
+    // Unplausibel niedrig -> Preis evtl. durch (zu hohe) Menge je VE geteilt
+    if(med>0 && r.preis_norm>0){
+      var _divs=[5,6,8,10,12,15,20,24,25,40,50,100,156,250];
+      for(var _d=0;_d<_divs.length;_d++){
+        if(Math.abs(r.preis_norm/med - 1/_divs[_d]) < (1/_divs[_d])*0.15){ h.push("M\u00f6gl. Preis durch Menge je VE geteilt (~1/"+_divs[_d]+" des Medians)"); break; }
+      }
+      if(r.preis_norm/med < 0.3) h.push("\u26a0 Unplausibel niedrig (<30% Median) - Menge je VE pr\u00fcfen");
+    }
     return h.join(" | ");
   }
   var sups=supFilter?[supFilter]:[...new Set(offers.map(function(r){return r.supplierName;}))];
