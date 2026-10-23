@@ -2218,7 +2218,7 @@ async function mergeAusschreibungPreise(){
     var all=[], from=0;
     while(true){
       var to=from+999;
-      var resp=await fetch(SUPA_URL+'/rest/v1/ausschreibung_preise?select=periode,produkt,necta_id,lieferant,preis_kg,preis_ae,einheit,artnr,artbeschr,hersteller,warengruppe,ve,menge_je_ve&order=periode',{headers:{apikey:SUPA_KEY,Authorization:'Bearer '+(window.SB_TOKEN||SUPA_KEY),'Range':from+'-'+to,'Range-Unit':'items'}});
+      var resp=await fetch(SUPA_URL+'/rest/v1/ausschreibung_preise?select=periode,produkt,necta_id,lieferant,preis_kg,preis_ae,einheit,artnr,artbeschr,hersteller,warengruppe,ve,menge_je_ve,anbruch&order=periode',{headers:{apikey:SUPA_KEY,Authorization:'Bearer '+(window.SB_TOKEN||SUPA_KEY),'Range':from+'-'+to,'Range-Unit':'items'}});
       if(!resp.ok) return;
       var b=await resp.json(); if(!b||!b.length) break; all=all.concat(b); if(b.length<1000) break; from+=1000;
     }
@@ -2242,7 +2242,7 @@ async function mergeAusschreibungPreise(){
       if(!perArt[art.id][per]) perArt[art.id][per]={};
       if(!perArt[art.id][per][k]){
         var pk=(r.preis_kg!=null?Number(r.preis_kg):null), pae=(r.preis_ae!=null?Number(r.preis_ae):null);
-        perArt[art.id][per][k]={ f:lief, artnr:r.artnr||'', artbeschr:r.artbeschr||'', hersteller:r.hersteller||'', ve:(r.ve||''), menge_je_ve:(r.menge_je_ve!=null?r.menge_je_ve:''), einheit:r.einheit||'', preis_ae:pae, preis_kg:pk, pk:pk, pe:pae, e:r.einheit||'', warengruppe:r.warengruppe||'', _src:'ausschreibung' };
+        perArt[art.id][per][k]={ f:lief, artnr:r.artnr||'', artbeschr:r.artbeschr||'', hersteller:r.hersteller||'', ve:(r.ve||''), menge_je_ve:(r.menge_je_ve!=null?r.menge_je_ve:''), einheit:r.einheit||'', preis_ae:pae, preis_kg:pk, pk:pk, pe:pae, e:r.einheit||'', warengruppe:r.warengruppe||'', anbruch:(r.anbruch||''), _src:'ausschreibung' };
       }
     });
     Object.keys(perArt).forEach(function(aid){
@@ -3104,7 +3104,7 @@ function exportPreisProLieferant(){
       row[2]  = veVal;   // VE = Verpackung
       row[3]  = stkve;   // Stkve = Menge pro VE
       row[4]  = base;    // AE = Basis-Einheit
-      row[5]  = 0;       // Stkae
+      row[5]  = (e.anbruch ? (/^j/i.test(e.anbruch)?0:1) : 0);  // Stkae: Anbruch Ja->0, Nein->1 (Default 0)
       row[6]  = 1;       // MG/AE
       row[7]  = base;    // Einh = Basis-Einheit
       row[8]  = e.preis_ae;
