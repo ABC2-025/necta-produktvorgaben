@@ -682,7 +682,7 @@ function buildRanking() {
       artbeschr: r.artbeschr,
       artnr: r.artnr,
       hersteller: r.hersteller,
-      preisbindung: r.preisbindung, ve: r.ve, menge_je_ve: r.ae_je_ve, necta_id: r.necta_id,
+      preisbindung: r.preisbindung, ve: r.ve, menge_je_ve: r.ae_je_ve, necta_id: r.necta_id, anbruch: r.anbruch,
       effpreis: calcEffPreis(r.preis_norm, r.supplierName),
     });
   });
@@ -845,7 +845,7 @@ async function saveToSupabase() {
         periode,
         produkt: art.produkt,
         warengruppe: (art.pv && art.pv.k) || art.wg || '',
-        necta_id: a.necta_id || null, ve: a.ve || '', menge_je_ve: _numOnly(a.menge_je_ve),
+        necta_id: a.necta_id || null, ve: a.ve || '', menge_je_ve: _numOnly(a.menge_je_ve), anbruch: a.anbruch || '',
         lieferant: a.supplier,
         preis_kg: a.preis_kg || null,
         preis_ae: a.preis_ae || null,
