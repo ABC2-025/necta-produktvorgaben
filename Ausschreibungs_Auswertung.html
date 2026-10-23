@@ -322,7 +322,7 @@ async function processSupplierFile(file) {
     const iProdukt=colExact('Produkt'), iWG=colExact('Warengruppe'), iNecta=colExact('Necta ID')||col('necta');
     const iBio=col('Bio'), iArtnr=colN('Artikelnummer','Artnr','ArtNr','Artikel Nr','Ihr Artikel','Ihre Artikelnummer','Lieferantenartikelnummer','Liefartnr'), iArtbeschr=colN('Artikelbeschreibung','Artikelbezeichnung','Warenbezeichnung','Produktbezeichnung','Ihre Bezeichnung','Bezeichnung','beschr','bezeich','Artikeltext','Artikelname');
     const iHersteller=colN('Hersteller','Marke'), iVE=colExact('VE'), iAEjeVE=(colExact('Menge je VE')>=0?colExact('Menge je VE'):col('AE je VE'));
-    const iAE=col(' AE'), iMengeAE=col('Menge je AE'), iEinheit=colExact('Einheit');
+    const iAE=col('Anbruchseinheit'), iMengeAE=col('Menge je AE'), iEinheit=colExact('Einheit'), iAnbruch=col('Anbruch mög');
     const iPreisAE=colAny('Preis je AE','Preis\nje AE','Preis/AE','Preis je ae'), iPreisKG=colAny('Preis je kg','Preis/kg');
     const iPreisL=colAny('Preis je l','Preis/l'), iPreisStk=colAny('Preis je StÃ¼ck','Preis/Stk','Preis/StÃ¼ck');
     const iPreisbindung=col('Nichtzuschlag'), iAnmerkung=col('Anmerkung');
@@ -439,6 +439,7 @@ async function processSupplierFile(file) {
         ae_je_ve: r[iAEjeVE],
         ae: String(r[iAE]||'').trim(),
         menge_ae: r[iMengeAE],
+        anbruch: String(r[iAnbruch]||'').trim(),
         einheit: String(r[iEinheit]||'').trim(),
         preisbindung: String(r[iPreisbindung]||'').trim(),
         anmerkung: String(r[iAnmerkung]||'').trim(),
@@ -1140,7 +1141,7 @@ function exportWaWiFormat(sup) {
     row[2] = art.ve || '';
     row[3] = art.ae_je_ve || '';
     row[4] = art.ae || art.einheit || '';
-    row[5] = '';
+    row[5] = art.anbruch ? (/^j/i.test(art.anbruch) ? '0' : '1') : '';
     row[6] = art.menge_ae || '1';
     row[7] = art.einheit || '';
     row[8] = art.preis_ae || '';

@@ -724,7 +724,7 @@ async function generateSupplierExcel(supplierName, artList, cfg) {
   ws.columns=[{width:5},{width:32},{width:18},{width:12},{width:7},{width:7},
     {width:7},{width:7},{width:15},{width:12},{width:8},{width:12},{width:2.5},
     {width:12},{width:15},{width:32},{width:18},{width:11},{width:8},{width:10},
-    {width:13},{width:11},{width:9},{width:11},{width:30},{width:30}];
+    {width:13},{width:11},{width:9},{width:11},{width:30},{width:30},{width:16},{width:13},{width:12}];
 
   // ── Hilfsfunktionen Statusblock ──────────────────────────────────────────
   var f_vollst   = 'SUMPRODUCT((UPPER(N'+DS+':N'+LR+')<>"X")*(O'+DS+':O'+LR+'<>"")'
@@ -739,9 +739,9 @@ async function generateSupplierExcel(supplierName, artList, cfg) {
   // ── Statusblock Zeilen 1–4 ────────────────────────────────────────────────
   for(var r=1;r<=4;r++){
     ws.getRow(r).height = r===3?20:28;
-    for(var ci=1;ci<=26;ci++) ws.getCell(r,ci).fill=fc(HEADER_SUMM);
+    for(var ci=1;ci<=29;ci++) ws.getCell(r,ci).fill=fc(HEADER_SUMM);
   }
-  ws.mergeCells('A1:Z1');
+  ws.mergeCells('A1:AC1');
   var t=ws.getCell('A1');
   t.value='  STATUS DER AUSSCHREIBUNG  ·  Bitte alle gelben Pflichtfelder ausfüllen, bevor Sie die Datei zurücksenden';
   t.font=fn(10,'B0BEC5',true); t.alignment={vertical:'middle',horizontal:'left'};
@@ -751,7 +751,7 @@ async function generateSupplierExcel(supplierName, artList, cfg) {
     ['A2','F2','"✓ Vollständig angeboten:  "&'+f_vollst,'1B5E20','E8F5E9'],
     ['G2','L2','"⚠ Unvollständige Felder:  "&'+f_lueck,'E65100','FFF8E1'],
     ['M2','R2','"✗ Nicht lieferbar:  "&'+f_nichtlief,'455A64','ECEFF1'],
-    ['S2','Z2','"ⓘ VE nicht ausgefüllt:  "&'+f_ve_leer,'1565C0','E3F2FD'],
+    ['S2','AC2','"ⓘ VE nicht ausgefüllt:  "&'+f_ve_leer,'1565C0','E3F2FD'],
   ];
   boxes.forEach(function(b){
     ws.mergeCells(b[0]+':'+b[1]);
@@ -762,13 +762,13 @@ async function generateSupplierExcel(supplierName, artList, cfg) {
     c.protection={locked:true};
   });
 
-  ws.mergeCells('A3:Z3');
+  ws.mergeCells('A3:AC3');
   var c3=ws.getCell('A3');
   c3.value={formula:'IF('+f_lueck+'>0,"⚠  Bitte rot markierte Pflichtfelder ausfüllen – O Art-Nr · P Beschreibung · R Menge je VE · S VE · U Preis","✓  Alle angebotenen Artikel vollständig ausgefüllt.")'};
   c3.font=fn(9,TXT); c3.fill=fc('ECEFF1');
   c3.alignment={vertical:'middle',horizontal:'left'};
 
-  ws.mergeCells('A4:Z4');
+  ws.mergeCells('A4:AC4');
   var c4=ws.getCell('A4');
   c4.value='  Pflichtfelder: O Art-Nr  ·  P Artikelbeschreibung  ·  R Menge je VE  ·  S VE  ·  U Preis   |   Optional: Q Hersteller, Z Anmerkung';
   c4.font=fn(8,'90A4AE'); c4.fill=fc(HEADER_SUMM);
@@ -776,7 +776,7 @@ async function generateSupplierExcel(supplierName, artList, cfg) {
 
   // ── Titelblock Zeilen 5–6 ─────────────────────────────────────────────────
   ws.getRow(5).height=36; ws.getRow(6).height=22;
-  for(var ci=1;ci<=26;ci++){ws.getCell(5,ci).fill=fc(DB);ws.getCell(6,ci).fill=fc(MB);}
+  for(var ci=1;ci<=29;ci++){ws.getCell(5,ci).fill=fc(DB);ws.getCell(6,ci).fill=fc(MB);}
   ws.mergeCells('A5:L5');
   var t5=ws.getCell('A5'); t5.value='ABC Kochwerk Gruppe';
   t5.font=fn(16,WH,true); t5.alignment={vertical:'middle'};
@@ -786,14 +786,14 @@ async function generateSupplierExcel(supplierName, artList, cfg) {
   var kk={};artList.forEach(function(a){if(a.item.pv.k)kk[a.item.pv.k]=1;});
   t6.value='Ausschreibung · '+Object.keys(kk).join(', ')+' · '+wt;
   t6.font=fn(10,'C0D0E0'); t6.alignment={vertical:'middle'};
-  ws.mergeCells('N5:Z5');
+  ws.mergeCells('N5:AC5');
   var tn=ws.getCell('N5'); tn.value=supplierName;
   tn.font=fn(14,'FFD700',true); tn.alignment={horizontal:'right',vertical:'middle'};
 
   // ── Hinweis Necta-Import (nur Nicht-Systemlieferanten, export_relevant=false) ──
   var _isSystem = !!(window._SUP_EXPREL && window._SUP_EXPREL[_nrmGen(supplierName)]===true);
   ws.getRow(7).height = _isSystem ? 6 : 34;
-  ws.mergeCells('A7:Z7');
+  ws.mergeCells('A7:AC7');
   var c7=ws.getCell('A7');
   if(!_isSystem){
     c7.value='  \u26A0  WICHTIG: Aus diesen Daten \u00fcbernehmen wir den Datenimport in unser Warenwirtschaftssystem (Necta). Bitte unbedingt die korrekte VE / Verpackung (Spalte S) und Menge je VE (Spalte R) angeben \u2013 sonst k\u00f6nnen die Artikel nicht korrekt importiert werden.';
@@ -832,10 +832,10 @@ async function generateSupplierExcel(supplierName, artList, cfg) {
     'Gebinde-\ngröße','Menge\nkg','p.M.','Gewicht\n(g)','',
     'Nicht\nlieferbar','Artikel-\nnummer','Artikel-\nbeschr.','Hersteller',
     'Menge\nje VE','VE','Einheit','Preis\nje VE','Preis/kg','Preis/l','Preis/Stk',
-    'Anmerkungen\n(Vorgaben)','Anmerkungen\n(Lieferant)'];
+    'Anmerkungen\n(Vorgaben)','Anmerkungen\n(Lieferant)','Anbruchseinheit\n(AE)','Anbruch\nmöglich?','Menge je AE'];
   var hSub=['Nr.','','','','Pflicht','Pflicht','Pflicht','Pflicht','Vorgabe','2025','','','',
     '(X=nein)','Pflicht ✱','Pflicht ✱','optional','Pflicht ✱','Pflicht ✱','Vorgabe',
-    'Pflicht ✱ €','Formel','Formel','Formel','ABC KW','optional'];
+    'Pflicht ✱ €','Formel','Formel','Formel','ABC KW','optional','Necta','Ja/Nein','Necta (Std.1)'];
   hTop.forEach(function(h,ci){
     var col=ci+1;
     if(col===13){ws.getCell(HROW,col).fill=fc(SEP);ws.getCell(SROW,col).fill=fc(SEP);
@@ -852,7 +852,7 @@ async function generateSupplierExcel(supplierName, artList, cfg) {
 
   // ── FILTER-ZEILE 17 (nicht gesperrt) ──────────────────────────────────────
   ws.getRow(FROW).height=20;
-  for(var ci=1;ci<=26;ci++){
+  for(var ci=1;ci<=29;ci++){
     var cf=ws.getCell(FROW,ci);
     cf.value=ws.getCell(HROW,ci).value||' ';
     cf.font=fn(8,TXT);
@@ -864,7 +864,7 @@ async function generateSupplierExcel(supplierName, artList, cfg) {
                right:{style:'thin',color:{argb:'FF9FA8DA'}}};
     cf.protection={locked:false};  // ← NICHT gesperrt
   }
-  ws.autoFilter={from:{row:FROW,column:1},to:{row:LR,column:26}};
+  ws.autoFilter={from:{row:FROW,column:1},to:{row:LR,column:29}};
 
   // Trennzeile 18
   ws.getRow(TROW).height=4;
@@ -933,6 +933,11 @@ async function generateSupplierExcel(supplierName, artList, cfg) {
     yi(17,_prHerst,fn(10,TXT));
     yi(18,(_prMVE!=null&&!isNaN(_prMVE))?_prMVE:null,fn(10,TXT),ra);
     yi(19,_prVE,fn(10,TXT),ca);
+    // Necta-Importfelder (AE / Anbruch / Menge je AE) – Default AE = Vergleichseinheit, Menge je AE = 1
+    var _aeDef = pv.einh||null;
+    yi(27,_aeDef,fn(10,TXT),ca);
+    yi(28,null,fn(10,TXT),ca);
+    yi(29,1,fn(10,TXT),ra);
 
     // Einheit – fest = Einheitsvorgabe (Vergleichseinheit), vom Lieferanten nicht änderbar
     var ec=ws.getCell(row,20);
@@ -966,6 +971,8 @@ async function generateSupplierExcel(supplierName, artList, cfg) {
   ws.dataValidations.add('S'+DS+':S'+LR,{type:'list',
     formulae:['"Kiste,Beutel,Eimer,Karton,Sack,Packung,Flasche,Dose,Kanister,Tray,Palette,Bund,KG,Stück,L"'],
     showDropDown:false,showErrorMessage:false});
+  ws.dataValidations.add('AA'+DS+':AA'+LR,{type:'list',formulae:['"Stück,KG,L,Karton,Kiste,Eimer,Beutel,Dose,Kanister,Sack,Packung,Flasche,Tray,Palette,Bund"'],showDropDown:false,showErrorMessage:false});
+  ws.dataValidations.add('AB'+DS+':AB'+LR,{type:'list',formulae:['"Ja,Nein"'],showDropDown:false,showErrorMessage:true,error:'Bitte Ja oder Nein',errorTitle:'Ungültige Eingabe'});
 
   // ── Conditional Formatting ────────────────────────────────────────────────
   // Pflichtfelder rot wenn leer
