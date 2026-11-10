@@ -3054,7 +3054,7 @@ function exportPreisProLieferant(){
   arts.forEach(function(a){
     (Array.isArray(a.preishistorie)?a.preishistorie:[]).forEach(function(sn){
       (sn && sn.s ? sn.s : []).forEach(function(e){
-        if (e && e.preis_ae!=null){ var disp=_cleanSupplierName(e.f); var k=_normSup(disp); var _ss=window.SUP_SETTINGS&&window.SUP_SETTINGS[k]; if(_ss && (_ss.status==='inaktiv'||_ss.export_relevant===false)) return; if (k && !supMap[k]) supMap[k]=disp; }
+        if (e && (e.preis_ae!=null || e.preis_kg!=null)){ var disp=_cleanSupplierName(e.f); var k=_normSup(disp); var _ss=window.SUP_SETTINGS&&window.SUP_SETTINGS[k]; if(_ss && (_ss.status==='inaktiv'||_ss.export_relevant===false)) return; if (k && !supMap[k]) supMap[k]=disp; }
       });
     });
   });
@@ -3079,7 +3079,7 @@ function exportPreisProLieferant(){
     arts.forEach(function(a){
       var le = latestEntry(a, supKey);
       var e = le ? le.e : null;
-      if (!e || e.preis_ae == null) return;   // nur Artikel mit Preis dieses Lieferanten
+      if (!e || (e.preis_ae == null && e.preis_kg == null)) return;   // nur Artikel mit Preis dieses Lieferanten (Preis je Einheit ODER Preis je VE)
       var lf = parseLieferantenField(a.lieferanten).filter(function(l){ return _normSup(l.name)===supKey; })[0];
       var artnr = String(e.artnr || (lf && lf.artnrs[0]) || '').trim();
       if (!artnr){ noArtnrCount++; return; }                 // ohne Art-Nr kein Necta-Import moeglich
@@ -3107,7 +3107,7 @@ function exportPreisProLieferant(){
       row[5]  = (e.anbruch ? (/^j/i.test(e.anbruch)?0:1) : 0);  // Stkae: Anbruch Ja->0, Nein->1 (Default 0)
       row[6]  = 1;       // MG/AE
       row[7]  = base;    // Einh = Basis-Einheit
-      row[8]  = e.preis_ae;
+      row[8]  = (e.preis_kg != null ? e.preis_kg : e.preis_ae);  // Necta Normalpreis = Preis je Einheit
       row[16] = le.snap.gueltigVon||'';
       row[17] = le.snap.gueltigBis||'';
       row[113]= e.warengruppe || a.warengruppe || '';
