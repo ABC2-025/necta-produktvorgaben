@@ -3944,6 +3944,10 @@ function renderPreise(){
       + '<input id="preise-q" placeholder="Grundprodukt suchen..." oninput="renderPreiseTable()" style="flex:1;min-width:220px;padding:8px 12px;border:1px solid #cbd5e0;border-radius:7px;font-size:14px">'
       + '<select id="preise-wg" onchange="renderPreiseTable()" style="padding:8px 10px;border:1px solid #cbd5e0;border-radius:7px;font-size:13px">'+opts+'</select>'
       + '<label style="font-size:13px;display:flex;gap:6px;align-items:center"><input type="checkbox" id="preise-bio" onchange="renderPreiseTable()"> nur Bio-Pflicht</label>'
+      + '<label style="font-size:13px;display:flex;gap:6px;align-items:center"><input type="checkbox" id="preise-tk" onchange="renderPreiseTable()"> TK</label>'
+      + '<label style="font-size:13px;display:flex;gap:6px;align-items:center"><input type="checkbox" id="preise-vegan" onchange="renderPreiseTable()"> Vegan</label>'
+      + '<label style="font-size:13px;display:flex;gap:6px;align-items:center"><input type="checkbox" id="preise-veg" onchange="renderPreiseTable()"> Vegetarisch</label>'
+      + '<label style="font-size:13px;display:flex;gap:6px;align-items:center"><input type="checkbox" id="preise-gluten" onchange="renderPreiseTable()"> Glutenfrei</label>'
       + '<label style="font-size:13px;display:flex;gap:6px;align-items:center"><input type="checkbox" id="preise-onlypx" checked onchange="renderPreiseTable()"> nur mit Preis</label>'
       + '<span id="preise-count" style="font-size:12px;color:#667;margin-left:auto"></span>'
       + '</div>'
@@ -3957,10 +3961,19 @@ function renderPreiseTable(){
   var wg=document.getElementById('preise-wg').value||'';
   var bio=document.getElementById('preise-bio').checked;
   var onlypx=document.getElementById('preise-onlypx').checked;
+  var fTk=document.getElementById('preise-tk')&&document.getElementById('preise-tk').checked;
+  var fVegan=document.getElementById('preise-vegan')&&document.getElementById('preise-vegan').checked;
+  var fVeg=document.getElementById('preise-veg')&&document.getElementById('preise-veg').checked;
+  var fGluten=document.getElementById('preise-gluten')&&document.getElementById('preise-gluten').checked;
   var qterms=q.split(/\s+/).filter(Boolean);
   var arts=Object.values(ART).filter(function(a){
     if(wg && a.warengruppe!==wg) return false;
     if(bio && String(a.bio_pflicht||'').toLowerCase()!=='ja') return false;
+    var _st=(a.status||'offen'); if(_st!=='offen' && _st!=='definiert') return false; // nur offene/definierte Produkte
+    if(fTk){ var _tk=String(a.tk||'').toLowerCase()==='ja' || /\btk\b/i.test(String(a.warengruppe||'')+' '+String(a.kategorie||'')); if(!_tk) return false; }
+    if(fVegan && String(a.vegan_pflicht||'').toLowerCase()!=='ja') return false;
+    if(fVeg && String(a.veg_pflicht||'').toLowerCase()!=='ja') return false;
+    if(fGluten && String(a.glutenfrei_pflicht||'').toLowerCase()!=='ja') return false;
     if(qterms.length){ var n=String(a.name||'').toLowerCase(); if(!qterms.every(function(t){return n.indexOf(t)>=0;})) return false; }
     return true;
   });
@@ -3997,7 +4010,7 @@ function renderPreiseTable(){
         var ss=window.SUP_SETTINGS&&window.SUP_SETTINGS[k];
         var inaktiv=(ss&&ss.status==='inaktiv')||(pd.excl.indexOf(k)>=0);
         return {f:_cleanSupplierName(e.f),artnr:e.artnr||'',beschr:e.artbeschr||'',einh:e.einheit||'',p:p,inaktiv:inaktiv,best:(p!=null&&Math.abs(p-pd.preis)<1e-9&&!inaktiv)};
-      }).filter(function(x){return x.p!=null;}).sort(function(x,y){return x.p-y.p;});
+      }).filter(function(x){return x.p!=null && !x.inaktiv;}).sort(function(x,y){return x.p-y.p;});
       srows.forEach(function(x){
         det+='<tr style="border-top:1px solid #e8eef5;'+(x.inaktiv?'opacity:.45':'')+'">'
           +'<td style="padding:4px 8px;'+(x.best?'font-weight:700;color:#1e8e3e':'')+'">'+(x.best?'★ ':'')+_esc(x.f)+(x.inaktiv?' (inaktiv)':'')+'</td>'
