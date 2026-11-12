@@ -483,6 +483,7 @@ async function init() {
     buildFromRows(rows);
     try { await loadWAPerioden(); } catch(_e) {}
     try { await mergeAusschreibungPreise(); } catch(_e) { console.error('merge', _e); }
+    try { await _loadMonthStats(); } catch(_e) { console.error('monthstats', _e); }
     document.getElementById('loading').style.display = 'none';
     setSyncStatus('ok', rows.length + ' Artikel geladen');
     render();
@@ -817,6 +818,12 @@ document.addEventListener('click', function(e) {
     if (id) openEdit(id);
     return;
   }
+  // Klick auf Zeile oeffnet Bearbeiten (ausser Checkbox/Button/Link)
+  const _rowEl = e.target.closest('tr[data-rowid]');
+  if (_rowEl && !e.target.closest('input') && !e.target.closest('button') && !e.target.closest('a') && !e.target.closest('select')) {
+    const _rid = _rowEl.getAttribute('data-rowid');
+    if (_rid && typeof openEdit==='function') { openEdit(_rid); return; }
+  }
   // Row checkbox
   const chk = e.target.closest('.art-chk');
   if (chk) {
@@ -923,8 +930,8 @@ function buildTable(gname, articles) {
     const pctH = pct != null ? '<span class="pct '+(pct>0?'pos':'neg')+'">'+(pct>0?'+':'')+pct+'%</span>' : '\u2013';
     const comment = a.bemerkungen ? ' <span title="'+String(a.bemerkungen).replace(/"/g,'&quot;')+'" style="cursor:help">&#x1F4AC;</span>' : '';
     const isSelected = selectedIds.has(a.id);
-    return '<tr class="'+rowCls+(isSelected?' row-selected':'')+'">' + '<td class="chk-cell"><input type="checkbox" class="row-chk art-chk" data-id="'+a.id+'" '+(isSelected?'checked':'')+' ></td>'
-      + '<td style="width:25%"><span class="art-name">'+a.name+'</span>'+comment+'</td>'
+    return '<tr class="'+rowCls+(isSelected?' row-selected':'')+'" data-rowid="'+a.id+'" style="cursor:pointer">' + '<td class="chk-cell"><input type="checkbox" class="row-chk art-chk" data-id="'+a.id+'" '+(isSelected?'checked':'')+' ></td>'
+      + '<td style="width:25%"><span class="art-name">'+a.name+'</span>'+comment+_artMarker(a)+'</td>'
       + '<td style="width:7%" class="c"><span class="pill '+st+'">'+st+'</span>'
       + (a.separate_ausschreibung?' <span title="Separate Ausschreibung" style="font-size:10px">&#x1F4CB;</span>':'')
       + (a.festvergeben?' <span title="Festvergeben'+(a.festvergeben_kommentar?': '+String(a.festvergeben_kommentar).replace(/"/g,'&quot;'):'')+'" style="font-size:10px">&#x1F512;</span>':'')
@@ -934,8 +941,8 @@ function buildTable(gname, articles) {
       + '<td style="width:4%" class="c">'+bpill(a.vegan_pflicht)+'</td>'
       + '<td style="width:4%" class="c">'+bpill(a.veg_pflicht)+'</td>'
       + '<td style="width:4%" class="c">'+bpill(a.glutenfrei_pflicht)+'</td>'
-      + '<td style="width:7%" class="r csep">'+(a.kg_2025!=null?fmt(a.kg_2025,0)+'\u00a0kg':'\u2013')+'</td>'
-      + '<td style="width:8%" class="r">'+fmtE(a.spend_2025)+'</td>'
+      + '<td style="width:7%" class="r csep">'+_statCellYear(a)+'</td>'
+      + '<td style="width:8%" class="r">'+_statCellMonth(a)+'</td>'
       + '<td style="width:7%" class="r csep">'
       + (a.conv_pp ? fmtE(a.conv_pp,3)+'/kg' : '\u2013')
       + (function(){
@@ -963,8 +970,8 @@ function buildTable(gname, articles) {
     + th('status','Status','c')
     + '<th class="r csep">EK aktuell</th>'
     + '<th class="c">Bio</th><th class="c">Vegan</th><th class="c">Veg.</th><th class="c">GF</th>'
-    + '<th class="r csep">Menge 2025</th>'
-    + th('spend_2025','Ausgaben','r')
+    + '<th class="r csep" title="Durchschnittlicher Jahresverbrauch (Ø/Monat × 12) · mit Tendenz &amp; Saison-/Status-Marker">Ø Jahr</th>'
+    + '<th class="r" title="Durchschnittlicher Verbrauch pro Monat über alle erfassten Monate">Ø/Monat</th>'
     + '<th class="r csep">\u00d8 Konv./kg</th>'
     + '<th class="r">\u00d8 Bio/kg</th>'
     + '<th class="r">100% Konv.</th>'
@@ -2102,6 +2109,7 @@ function buildVariantenTable(a){
       +'<td style="padding:4px 6px">'+r.einheit+'</td>'
       +'<td style="padding:4px 6px;text-align:right">'+(r.menge!==''?r.menge:'')+'</td>'
       +'<td style="padding:4px 6px;text-align:right;font-weight:700">'+(r.preis!=null?Number(r.preis).toLocaleString('de-DE',{minimumFractionDigits:2,maximumFractionDigits:3})+' '+_unitLabel:'–')+'</td>'
+      +'<td style="padding:4px 6px;text-align:right;white-space:nowrap">'+( r._chg==null?'<span style="color:#c9d3df">–</span>':'<span style="color:'+(r._chg>0.05?'#c0392b':(r._chg<-0.05?'#1a6b1a':'#8a9ab0'))+'" title="gegenüber Vorperiode">'+(r._chg>0.05?'▲ +':(r._chg<-0.05?'▼ ':'→ '))+r._chg.toLocaleString('de-DE',{maximumFractionDigits:1})+'%</span>' )+'</td>'+'<td style="padding:4px 6px;text-align:center">'+( r.rang===1 && r._p1>0 ? '<span style="background:#edfbf1;color:#1a6b1a;border:1px solid #bfe6c9;border-radius:4px;padding:1px 6px;font-size:10px" title="Seit so vielen aufeinanderfolgenden Ausschreibungs-Perioden Platz 1">'+r._p1+' Per.</span>' : '<span style="color:#c9d3df">–</span>' )+'</td>'
       +'<td style="padding:4px 6px;color:#8a9ab0;font-size:10px">'+r.stand+'</td>'
       +'<td style="padding:4px 6px;white-space:nowrap;text-align:right">'
         +'<button onclick="startVarEdit(\''+a.id+'\',\''+encodeURIComponent(r.f)+'\')" title="Bearbeiten / ersetzen" style="cursor:pointer;border:1px solid #ccc;background:#fff;border-radius:4px;padding:1px 7px;font-size:12px;margin-right:4px">✎</button>'
@@ -2113,7 +2121,7 @@ function buildVariantenTable(a){
     +'<div style="font-size:10px;font-weight:700;color:#1F4E79;margin-bottom:4px">LIEFERANTEN-VARIANTEN ('+rows.length+')</div>'
     +'<div style="width:100%;max-width:100%;overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:11px;background:#fff;border:1px solid #dbe4ee;border-radius:7px">'
     +'<thead><tr style="background:#f0f4f8;color:#607080;text-align:left">'
-    +'<th style="padding:5px 6px;text-align:center">#</th><th style="padding:5px 6px">Lieferant</th><th style="padding:5px 6px">Art-Nr</th><th style="padding:5px 6px">Hersteller</th><th style="padding:5px 6px">VE</th><th style="padding:5px 6px">Einheit</th><th style="padding:5px 6px;text-align:right">Menge/VE</th><th style="padding:5px 6px;text-align:right">Preis</th><th style="padding:5px 6px">Stand</th><th style="padding:5px 6px;text-align:right">Aktion</th>'
+    +'<th style="padding:5px 6px;text-align:center">#</th><th style="padding:5px 6px">Lieferant</th><th style="padding:5px 6px">Art-Nr</th><th style="padding:5px 6px">Hersteller</th><th style="padding:5px 6px">VE</th><th style="padding:5px 6px">Einheit</th><th style="padding:5px 6px;text-align:right">Menge/VE</th><th style="padding:5px 6px;text-align:right">Preis</th><th style="padding:5px 6px;text-align:right">Preisentwickl.</th><th style="padding:5px 6px;text-align:center">Platz 1 seit</th><th style="padding:5px 6px">Stand</th><th style="padding:5px 6px;text-align:right">Aktion</th>'
     +'</tr></thead><tbody>'+body+'</tbody></table></div></div>';
 }
 
@@ -2179,6 +2187,7 @@ function _varEditRowHtml(r, aid){
     +'<td style="padding:2px 4px">'+_unitSelect('id="var-einheit"',_BASE_OPTS,r.einheit,iSt)+'</td>'
     +'<td style="padding:2px 4px"><input id="var-menge" value="'+esc(r.menge!==''?r.menge:'')+'" style="'+iSt+';text-align:right"></td>'
     +'<td style="padding:2px 4px"><input id="var-preis" value="'+esc(r.preis!=null?r.preis:'')+'" style="'+iSt+';text-align:right"></td>'
+    +'<td></td><td></td>'
     +'<td style="padding:4px 6px;color:#8a9ab0;font-size:10px">'+r.stand+'</td>'
     +'<td style="padding:4px 6px;white-space:nowrap;text-align:right">'
       +'<button onclick="saveVarEdit(\''+aid+'\')" title="Speichern" style="cursor:pointer;border:1px solid #28a745;background:#28a745;color:#fff;border-radius:4px;padding:1px 8px;font-size:12px;margin-right:4px">✓</button>'
@@ -4137,5 +4146,62 @@ window.renderPreise=renderPreise; window.renderPreiseTable=renderPreiseTable; wi
 window.renderAngebotsDetail=renderAngebotsDetail; window._angebotsTableHTML=_angebotsTableHTML;
 
 </script>
+
+<script>
+/* ===== Monats-Statistik (Verbrauch/Trend/Saison) ===== */
+window._MSTATS={}; window._MSTATS_LATEST=null;
+function _mnum(m){ var x=String(m||'').match(/(\d{4})[-_]?(\d{2})/); return x?(parseInt(x[1],10)*12+parseInt(x[2],10)-1):null; }
+async function _loadMonthStats(){
+  var U=SUPA_URL,K=SUPA_KEY,T=(window.SB_TOKEN||SUPA_KEY);
+  var byNid={}, latest=null, from=0;
+  while(true){
+    var to=from+999;
+    var r=await fetch(U+'/rest/v1/einkauf_artikel?select=necta_id,monat,menge,betrag,einheit&order=monat',{headers:{apikey:K,Authorization:'Bearer '+T,'Range':from+'-'+to,'Range-Unit':'items'}});
+    if(!r.ok) break; var b=await r.json(); if(!b||!b.length) break;
+    b.forEach(function(x){
+      var nid=String(x.necta_id||'').trim(); if(nid.indexOf('.')>=0) nid=nid.split('.')[0]; if(!nid) return;
+      var mi=_mnum(x.monat); if(mi==null) return;
+      if(latest==null||mi>latest) latest=mi;
+      var o=byNid[nid]||(byNid[nid]={m:{},einh:{}});
+      var cur=o.m[mi]||(o.m[mi]={menge:0,betrag:0});
+      cur.menge+=(+x.menge||0); cur.betrag+=(+x.betrag||0);
+      var e=String(x.einheit||'').trim(); if(e) o.einh[e]=(o.einh[e]||0)+1;
+    });
+    if(b.length<1000) break; from+=1000;
+  }
+  window._MSTATS_LATEST=latest; var MS={};
+  Object.keys(byNid).forEach(function(nid){
+    var o=byNid[nid]; var mis=Object.keys(o.m).map(Number).sort(function(a,b){return a-b;}); var n=mis.length; if(!n) return;
+    var totM=0,totB=0; mis.forEach(function(mi){ totM+=o.m[mi].menge; totB+=o.m[mi].betrag; });
+    var avgMonth=totM/n, avgYear=avgMonth*12;
+    var sx=0,sy=0,sxx=0,sxy=0; mis.forEach(function(mi,ix){ var y=o.m[mi].menge; sx+=ix; sy+=y; sxx+=ix*ix; sxy+=ix*y; });
+    var den=(n*sxx-sx*sx), slope=den!==0?(n*sxy-sx*sy)/den:0;
+    var rel=avgMonth>0?slope/avgMonth:0; var dir=rel>0.01?1:(rel<-0.01?-1:0);
+    var cal={}; mis.forEach(function(mi){ var mm=((mi%12)+12)%12; cal[mm]=(cal[mm]||0)+o.m[mi].menge; });
+    var vals=Object.keys(cal).map(function(k){return cal[k];}).sort(function(a,b){return b-a;});
+    var need=0,cum=0; for(var i=0;i<vals.length;i++){ cum+=vals[i]; need++; if(totM>0&&cum>=0.8*totM) break; }
+    var seasonal=(totM>0&&n>=6&&need<=4);
+    var lastMi=mis[n-1]; var monthsSince=(latest!=null)?(latest-lastMi):0;
+    var einh='',best=-1; Object.keys(o.einh).forEach(function(e){ if(o.einh[e]>best){best=o.einh[e];einh=e;} });
+    MS[nid]={avgMonth:avgMonth,avgYear:avgYear,slope:slope,dir:dir,seasonal:seasonal,lastMi:lastMi,monthsSince:monthsSince,einh:einh,nMonths:n,total:totM,totBetrag:totB};
+  });
+  window._MSTATS=MS;
+  try{ if(typeof render==='function' && (typeof currentView==='undefined'||currentView==='table')) render(); }catch(_e){}
+}
+function _mst(a){ if(!a) return null; var nid=String(a.necta_id||'').trim(); if(nid.indexOf('.')>=0) nid=nid.split('.')[0]; return nid?(window._MSTATS&&window._MSTATS[nid])||null:null; }
+function _ehShort(e){ e=String(e||'').toLowerCase(); if(e.indexOf('kilo')>=0||e==='kg') return 'kg'; if(e.indexOf('lit')>=0||e==='l') return 'l'; if(e.indexOf('st')===0) return 'Stk'; return e||''; }
+function _fmtQ(v){ return v>=100?Math.round(v).toLocaleString('de-DE'):(+v).toLocaleString('de-DE',{maximumFractionDigits:1}); }
+function _statCellYear(a){ var s=_mst(a); if(!s||!s.total) return '<span style="color:#c9d3df">–</span>';
+  var arrow=s.dir>0?'<span style="color:#1a6b1a" title="steigend">▲</span>':(s.dir<0?'<span style="color:#c0392b" title="fallend">▼</span>':'<span style="color:#9aa7b4" title="stabil">→</span>');
+  return '<span style="font-weight:600">'+_fmtQ(s.avgYear)+'</span> <span style="font-size:10px;color:#889">'+_ehShort(s.einh)+'</span> '+arrow; }
+function _statCellMonth(a){ var s=_mst(a); if(!s||!s.total) return '<span style="color:#c9d3df">–</span>'; return _fmtQ(s.avgMonth)+' <span style="font-size:10px;color:#889">'+_ehShort(s.einh)+'</span>'; }
+function _artMarker(a){ var s=_mst(a); if(!s||!s.total) return '';
+  if(s.seasonal && s.monthsSince>12) return ' <span style="font-size:9px;background:#fdecea;color:#c0392b;border:1px solid #f5c6cb;border-radius:4px;padding:1px 5px" title="Saisonartikel, in den letzten 12 Monaten nicht mehr gekauft">Saison ausgelaufen</span>';
+  if(!s.seasonal && s.monthsSince>2) return ' <span style="font-size:9px;background:#eceff1;color:#607080;border:1px solid #cfd8dc;border-radius:4px;padding:1px 5px" title="Nicht saisonal und seit >60 Tagen nicht gekauft">inaktiv</span>';
+  if(s.seasonal) return ' <span style="font-size:9px;background:#e3f2fd;color:#1565c0;border:1px solid #bbdefb;border-radius:4px;padding:1px 5px" title="Saisonartikel (Kauf auf wenige Monate konzentriert)">Saison</span>';
+  return ''; }
+window._loadMonthStats=_loadMonthStats;
+</script>
+
 </body>
 </html>
