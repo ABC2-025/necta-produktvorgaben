@@ -3438,8 +3438,8 @@ init();
           return '<label style="display:flex;align-items:center;gap:6px;font-size:12px;padding:3px 8px;border:1px solid #e2e8f0;border-radius:6px;background:'+(on?'#f0f9f2':'#fff')+(isAdmin?'':';opacity:.65')+'">'
             +'<input type="checkbox" '+(on?'checked':'')+' '+(isAdmin?'':'disabled')+' onchange="_togglePreiseSichtbar(\''+l.id+'\',this.checked)"> '+_esc(l.name)+'</label>'; }).join('');
         return '<div style="border:1px solid #cdd8e3;border-radius:8px;padding:12px;margin:4px 0 14px;background:#fafcff">'
-          +'<div style="font-weight:700;color:#1F4E79;margin-bottom:2px">Im Preise-Tab anzeigen'+(isAdmin?'':' <span style="font-size:11px;color:#c0392b;font-weight:400">(nur Admin änderbar)</span>')+'</div>'
-          +'<div style="font-size:11px;color:#667;margin-bottom:8px">Nur angehakte Lieferanten erscheinen im Preise-Tab (Bester Lieferant, Varianten, Preisverlauf).</div>'
+          +'<div style="font-weight:700;color:#1F4E79;margin-bottom:2px">ABC-relevante Lieferanten (Basis für ABC-Preis)'+(isAdmin?'':' <span style="font-size:11px;color:#c0392b;font-weight:400">(nur Admin änderbar)</span>')+'</div>'
+          +'<div style="font-size:11px;color:#667;margin-bottom:8px">Nur angehakte Lieferanten zählen für den ABC-Preis (bestes Angebot der freigegebenen Lieferanten).</div>'
           +'<div style="display:flex;flex-wrap:wrap;gap:6px">'+items+'</div></div>';
       }
       window._togglePreiseSichtbar=function(id,checked){
@@ -3937,7 +3937,7 @@ function priceData(a){
   hist=hist.slice();
   hist.forEach(function(x){ if(!x._dt) x._dt=x.iso?new Date(x.iso):(x.d?parseDeDate(x.d):null); });
   hist.sort(function(x,y){ return (y._dt?y._dt.getTime():0)-(x._dt?x._dt.getTime():0); });
-  var u=_pUnit(a), excl=(typeof _artExcl==='function')?_artExcl(a):[]; excl=excl.concat(window._PREISE_HIDDEN||[]);
+  var u=_pUnit(a), excl=(typeof _artExcl==='function')?_artExcl(a):[];
   var ul=(u==='KG')?'€/kg':((u==='L')?'€/l':((u.indexOf('ST')===0)?'€/Stk':'€'));
   var cur=null,curSn=null,ci=-1;
   for(var i=0;i<hist.length;i++){ var b=_bestOfSnap(hist[i],u,excl); if(b){ cur=b; curSn=hist[i]; ci=i; break; } }
@@ -3957,8 +3957,11 @@ function priceData(a){
   function trend(o){ if(!o||!o.p) return null; var d=cur.p-o.p; return {pct:d/o.p*100, dir:d>0?1:(d<0?-1:0), from:o.p}; }
   var _ap=[]; hist.forEach(function(sn){ var b=_bestOfSnap(sn,u,excl); if(b&&b.p!=null) _ap.push(b.p); });
   var avg=_ap.length?(_ap.reduce(function(s,x){return s+x;},0)/_ap.length):null;
+  var _exA=excl.concat(window._PREISE_HIDDEN||[]); var abc=null,abcSup='',abcPer='',abcDir=0,_abcIdx=-1;
+  for(var _ai=0;_ai<hist.length;_ai++){ var _b=_bestOfSnap(hist[_ai],u,_exA); if(_b){ abc=_b.p; abcSup=_b.f; abcPer=(hist[_ai].wa||hist[_ai].periode||'–'); _abcIdx=_ai; break; } }
+  if(_abcIdx>=0){ for(var _bi=_abcIdx+1;_bi<hist.length;_bi++){ var _pb=_bestOfSnap(hist[_bi],u,_exA); if(_pb){ abcDir=abc>_pb.p?1:(abc<_pb.p?-1:0); break; } } }
   return { preis:cur.p, unit:ul, u:u, sup:cur.f, per:(curSn.wa||curSn.periode||'–'),
-           short:trend(prev), long:trend(longp), avg:avg, nper:_ap.length, snap:curSn, hist:hist, ci:ci, excl:excl };
+           short:trend(prev), long:trend(longp), avg:avg, abc:abc, abcSup:abcSup, abcPer:abcPer, abcDir:abcDir, nper:_ap.length, snap:curSn, hist:hist, ci:ci, excl:excl };
 }
 function _trendCell(t){
   if(!t) return '<span style="color:#aaa">–</span>';
@@ -4015,8 +4018,8 @@ function renderPreiseTable(){
   arts.sort(function(a,b){ return String(a.name||'').localeCompare(String(b.name||''),'de'); });
 
   var th='<thead><tr style="background:#1F4E79;color:#fff">'
-    + ['Grundprodukt','Warengruppe','Einheit','Letzter Preis','Ø Preis','Bester Lieferant','Stand']
-      .map(function(h,i){ return '<th style="text-align:'+(i>=3&&i<=4?'right':'left')+';padding:8px 10px;font-size:12px;position:sticky;top:0">'+h+'</th>'; }).join('')
+    + ['Grundprodukt','Warengruppe','Einheit','Letzter Preis','Ø Preis','ABC Preis','Bester Lieferant','Stand']
+      .map(function(h,i){ return '<th style="text-align:'+(i>=3&&i<=5?'right':'left')+';padding:8px 10px;font-size:12px;position:sticky;top:0">'+h+'</th>'; }).join('')
     + '<th style="width:28px"></th></tr></thead>';
   var rows='', shown=0, withPx=0;
   arts.forEach(function(a){
@@ -4029,10 +4032,11 @@ function renderPreiseTable(){
         +'<td style="padding:7px 10px;font-weight:600">'+_esc(a.name)+'</td>'
         +'<td style="padding:7px 10px;color:#667;font-size:12px">'+_esc(a.warengruppe||'')+'</td>'
         +'<td style="padding:7px 10px;font-size:12px">'+_esc(a.einheit_vorgabe||'–')+'</td>'
-        +'<td style="padding:7px 10px;text-align:right;font-weight:700;white-space:nowrap">'+pd.preis.toFixed(pd.preis<1?4:2)+' '+pd.unit+'</td>'
-        +'<td style="padding:7px 10px;text-align:right;white-space:nowrap" title="Durchschnitt des günstigsten Preises über alle Ausschreibungsperioden">'+(pd.avg!=null?pd.avg.toFixed(pd.avg<1?4:2)+' '+pd.unit:'–')+'</td>'
-        +'<td style="padding:7px 10px;font-size:12px">'+_esc(pd.sup||'')+'</td>'
-        +'<td style="padding:7px 10px;font-size:11px;color:#888">'+_esc(pd.per||'')+'</td>'
+        +'<td style="padding:7px 10px;text-align:right;font-weight:700;white-space:nowrap">'+_einkaufPreis(a,'last')+' '+_priceArrow((_mst(a)||{}).preisDir)+'</td>'
+        +'<td style="padding:7px 10px;text-align:right;white-space:nowrap" title="Durchschnittlicher tatsächlicher Einkaufspreis">'+_einkaufPreis(a,'avg')+'</td>'
+        +'<td style="padding:7px 10px;text-align:right;white-space:nowrap;font-weight:700;color:#1F4E79" title="Bestpreis der ABC-relevanten Lieferanten aus der Ausschreibung'+(pd.abcSup?' · '+_esc(pd.abcSup):'')+'">'+(pd.abc!=null?pd.abc.toFixed(pd.abc<1?4:2)+' '+pd.unit+' '+_priceArrow(pd.abcDir):'–')+'</td>'
+        +'<td style="padding:7px 10px;font-size:12px">'+_esc(pd.abcSup||pd.sup||'')+'</td>'
+        +'<td style="padding:7px 10px;font-size:11px;color:#888">'+_esc(pd.abcPer||pd.per||'')+'</td>'
         +'<td style="padding:7px 10px;color:#1F4E79">▸</td></tr>';
       // Detailzeile: Lieferanten-Artikel der letzten Ausschreibung
       var det='<tr id="'+rid+'" style="display:none"><td colspan="9" style="padding:0 10px 10px 30px;background:#f7f9fc">';
@@ -4227,7 +4231,7 @@ async function _loadMonthStats(){
     var lastMi=mis[n-1]; var monthsSince=(latest!=null)?(latest-lastMi):0;
     var einh='',best=-1; Object.keys(o.einh).forEach(function(e){ if(o.einh[e]>best){best=o.einh[e];einh=e;} });
     var py={}; mis.forEach(function(mi){ var yr=Math.floor(mi/12); var pe=py[yr]||(py[yr]={menge:0,betrag:0}); pe.menge+=o.m[mi].menge; pe.betrag+=o.m[mi].betrag; });
-    MS[nid]={avgMonth:avgMonth,avgYear:avgYear,slope:slope,dir:dir,seasonal:seasonal,lastMi:lastMi,monthsSince:monthsSince,einh:einh,nMonths:n,total:totM,totBetrag:totB,perYear:py};
+    MS[nid]={avgMonth:avgMonth,avgYear:avgYear,slope:slope,dir:dir,seasonal:seasonal,lastMi:lastMi,monthsSince:monthsSince,einh:einh,nMonths:n,total:totM,totBetrag:totB,perYear:py,avgPreis:(totM>0?totB/totM:null),lastPreis:((o.m[lastMi]&&o.m[lastMi].menge>0)?o.m[lastMi].betrag/o.m[lastMi].menge:null),preisDir:(function(){var pp=[];mis.forEach(function(mi){var mm=o.m[mi];if(mm.menge>0)pp.push(mm.betrag/mm.menge);});var pn=pp.length;if(pn<2)return 0;var sx=0,sy=0,sxx=0,sxy=0;pp.forEach(function(y,ix){sx+=ix;sy+=y;sxx+=ix*ix;sxy+=ix*y;});var den=pn*sxx-sx*sx,sl=den?(pn*sxy-sx*sy)/den:0;var ap=sy/pn,rel=ap>0?sl/ap:0;return rel>0.01?1:(rel<-0.01?-1:0);})()};
   });
   window._MSTATS=MS;
   try{ if(typeof render==='function' && (typeof currentView==='undefined'||currentView==='table')) render(); }catch(_e){}
@@ -4244,6 +4248,10 @@ function _artMarker(a){ var s=_mst(a); if(!s||!s.total) return '';
   if(!s.seasonal && s.monthsSince>2) return ' <span style="font-size:9px;background:#eceff1;color:#607080;border:1px solid #cfd8dc;border-radius:4px;padding:1px 5px" title="Nicht saisonal und seit >60 Tagen nicht gekauft">inaktiv</span>';
   if(s.seasonal) return ' <span style="font-size:9px;background:#e3f2fd;color:#1565c0;border:1px solid #bbdefb;border-radius:4px;padding:1px 5px" title="Saisonartikel (Kauf auf wenige Monate konzentriert)">Saison</span>';
   return ''; }
+function _priceArrow(dir){ if(dir==null||dir===0) return (dir===0?'<span style="color:#9aa7b4" title="stabil">→</span>':''); return dir>0?'<span style="color:#c0392b" title="steigend (teurer)">▲</span>':'<span style="color:#1a6b1a" title="fallend (günstiger)">▼</span>'; }
+window._priceArrow=_priceArrow;
+function _einkaufPreis(a,which){ var s=_mst(a); if(!s) return '<span style="color:#c9d3df">–</span>'; var v=(which==='last'?s.lastPreis:s.avgPreis); if(v==null) return '<span style="color:#c9d3df">–</span>'; var u=_ehShort(s.einh); return v.toFixed(v<1?4:2)+' €'+(u?'/'+u:''); }
+window._einkaufPreis=_einkaufPreis;
 window._loadMonthStats=_loadMonthStats;
 </script>
 
