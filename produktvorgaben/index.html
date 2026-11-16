@@ -3442,6 +3442,7 @@ init();
           +'<div style="font-size:11px;color:#667;margin-bottom:8px">Nur angehakte Lieferanten zählen für den ABC-Preis (bestes Angebot der freigegebenen Lieferanten).</div>'
           +'<div style="display:flex;flex-wrap:wrap;gap:6px">'+items+'</div></div>';
       }
+      window._buildPreiseSichtbarPanel=_buildPreiseSichtbarPanel;
       window._togglePreiseSichtbar=function(id,checked){
         var l=LIEFERANTEN.filter(function(x){return String(x.id)===String(id);})[0]; if(!l) return;
         l.preise_sichtbar=checked;
@@ -3988,7 +3989,9 @@ function renderPreise(){
       + '<label style="font-size:13px;display:flex;gap:6px;align-items:center"><input type="checkbox" id="preise-gluten" onchange="renderPreiseTable()"> Glutenfrei</label>'
       + '<label style="font-size:13px;display:flex;gap:6px;align-items:center"><input type="checkbox" id="preise-onlypx" checked onchange="renderPreiseTable()"> nur mit Preis</label>'
       + '<span id="preise-count" style="font-size:12px;color:#667;margin-left:auto"></span>'
+      + (typeof _isPreiseAdmin==='function'&&_isPreiseAdmin() ? '<button onclick="_togglePreiseAdminPanel()" title="Festlegen, welche Lieferanten in den ABC-Preis einfließen" style="cursor:pointer;border:1px solid #1F4E79;background:#1F4E79;color:#fff;border-radius:7px;padding:8px 12px;font-size:13px">⚙ ABC-Lieferanten</button>' : '')
       + '</div>'
+      + '<div id="preise-abc-panel" style="display:none;margin:0 4px 10px"></div>'
       + '<div id="preise-table"></div>';
   }
   renderPreiseTable();
@@ -4250,6 +4253,9 @@ function _artMarker(a){ var s=_mst(a); if(!s||!s.total) return '';
   return ''; }
 function _priceArrow(dir){ if(dir==null||dir===0) return (dir===0?'<span style="color:#9aa7b4" title="stabil">→</span>':''); return dir>0?'<span style="color:#c0392b" title="steigend (teurer)">▲</span>':'<span style="color:#1a6b1a" title="fallend (günstiger)">▼</span>'; }
 window._priceArrow=_priceArrow;
+function _isPreiseAdmin(){ return String((typeof _loginEmail==='function'?_loginEmail():'')||'').toLowerCase()==='robin@abc-kochwerk.de'; }
+window._isPreiseAdmin=_isPreiseAdmin;
+window._togglePreiseAdminPanel=function(){ var p=document.getElementById('preise-abc-panel'); if(!p) return; if(p.style.display==='none'||!p.style.display){ p.innerHTML=(window._buildPreiseSichtbarPanel?window._buildPreiseSichtbarPanel(_isPreiseAdmin()):'<div style="color:#888;font-size:12px">Nicht verfügbar</div>'); p.style.display='block'; } else { p.style.display='none'; } };
 function _einkaufPreis(a,which){ var s=_mst(a); if(!s) return '<span style="color:#c9d3df">–</span>'; var v=(which==='last'?s.lastPreis:s.avgPreis); if(v==null) return '<span style="color:#c9d3df">–</span>'; var u=_ehShort(s.einh); return v.toFixed(v<1?4:2)+' €'+(u?'/'+u:''); }
 window._einkaufPreis=_einkaufPreis;
 window._loadMonthStats=_loadMonthStats;
