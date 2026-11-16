@@ -1212,7 +1212,10 @@ function buildEKVergleich(a){
   function eur3(v){ return v==null?'–':Number(v).toLocaleString('de-DE',{minimumFractionDigits:2,maximumFractionDigits:3})+' €'; }
   function kgf(v){ return v==null?'–':Number(v).toLocaleString('de-DE',{maximumFractionDigits:0})+' kg'; }
   function sc(lbl,val,sub,hl){ return '<div class="sc"'+(hl?' style="border-top:3px solid #2E75B6"':'')+'><div class="lbl">'+lbl+'</div><div class="val">'+val+'</div>'+(sub?'<div class="sub">'+sub+'</div>':'')+'</div>'; }
-  var kg=(a.kg_2025!=null?Number(a.kg_2025):null), sp=(a.spend_2025!=null?Number(a.spend_2025):null);
+  var _ms=(typeof _mst==='function')?_mst(a):null; var _ly=null;
+  if(_ms&&_ms.perYear){ var _yk=Object.keys(_ms.perYear).map(Number).sort(function(x,y){return y-x;}); if(_yk.length)_ly=_yk[0]; }
+  var _yr=(_ly!=null?_ly:2025);
+  var kg=(_ly!=null?_ms.perYear[_ly].menge:(a.kg_2025!=null?Number(a.kg_2025):null)), sp=(_ly!=null?_ms.perYear[_ly].betrag:(a.spend_2025!=null?Number(a.spend_2025):null));
   var avg=(kg&&sp)?sp/kg:null;
   var ek=(typeof _currentEK==='function')?_currentEK(a):null;
   var ekP=ek?ek.preis:null, ekU=ek?ek.unit:'';
@@ -1221,11 +1224,11 @@ function buildEKVergleich(a){
   var volDelta=(sp!=null && volAkt!=null && sp)?(volAkt-sp)/sp*100:null;
   var pct=a.pct_bio_vs_conv;
   var h='<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px">';
-  h+=sc('Menge 2025',kgf(kg));
-  h+=sc('Ausgaben 2025',eur(sp));
-  h+=sc('Ø Preis 2025',avg!=null?eur3(avg)+'/kg':'–');
+  h+=sc('Menge '+_yr,kgf(kg));
+  h+=sc('Ausgaben '+_yr,eur(sp));
+  h+=sc('Ø Preis '+_yr,avg!=null?eur3(avg)+'/kg':'–');
   h+=sc('Aktueller EK',ekP!=null?(Number(ekP).toLocaleString('de-DE',{minimumFractionDigits:2,maximumFractionDigits:3})+' '+ekU):'–',ekSub,true);
-  if(volAkt!=null) h+=sc('EK-Volumen zu akt. Preis',eur(volAkt),(volDelta!=null?('<span style="color:'+(volDelta>0?'#c0392b':'#1a6b1a')+'">'+(volDelta>0?'+':'')+volDelta.toLocaleString('de-DE',{maximumFractionDigits:1})+'% vs. 2025</span>'):'Menge 2025 × akt. EK'),true);
+  if(volAkt!=null) h+=sc('EK-Volumen zu akt. Preis',eur(volAkt),(volDelta!=null?('<span style="color:'+(volDelta>0?'#c0392b':'#1a6b1a')+'">'+(volDelta>0?'+':'')+volDelta.toLocaleString('de-DE',{maximumFractionDigits:1})+'% vs. '+_yr+'</span>'):('Menge '+_yr+' × akt. EK')),true);
   h+='</div>';
   h+='<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px">';
   h+=sc('Ø Konv./kg',a.conv_pp!=null?eur3(a.conv_pp)+'/kg':'–');
@@ -4028,7 +4031,23 @@ function renderPreiseTable(){
           +'<td style="padding:4px 8px">'+_esc(x.einh)+'</td>'
           +'<td style="padding:4px 8px;text-align:right;white-space:nowrap">'+x.p.toFixed(x.p<1?4:2)+' '+pd.unit+'</td></tr>';
       });
-      det+='</table></td></tr>';
+      det+='</table>';
+      // Preisverlauf (günstigster aktiver Anbieter je Periode)
+      var _hh=(Array.isArray(a.preishistorie)?a.preishistorie:[]).filter(function(sn){return sn&&sn.s&&sn.s.length&&sn.periode!=='_EXCL';});
+      if(window.WA_HIDDEN) _hh=_hh.filter(function(sn){return !window.WA_HIDDEN.has(sn.periode||sn.wa);});
+      _hh.forEach(function(x){ if(!x._dt) x._dt=x.iso?new Date(x.iso):(x.d?parseDeDate(x.d):null); });
+      _hh.sort(function(x,y){ return (x._dt?x._dt.getTime():0)-(y._dt?y._dt.getTime():0); });
+      var _hist=_hh.map(function(sn){ var b=_bestOfSnap(sn,pd.u,pd.excl); return b?{per:(sn.wa||sn.periode||'–'),p:b.p,f:b.f}:null; }).filter(Boolean);
+      if(_hist.length>=2){
+        det+='<div style="font-weight:700;color:#1F4E79;margin:12px 0 4px;font-size:12px">Preisverlauf \u2013 g\u00fcnstigster Anbieter je Periode</div>';
+        det+='<table style="width:100%;border-collapse:collapse;font-size:12px"><tr style="color:#667;text-align:left"><th style="padding:4px 8px">Periode</th><th style="padding:4px 8px">G\u00fcnstigster Anbieter</th><th style="padding:4px 8px;text-align:right">Preis</th><th style="padding:4px 8px;text-align:right">\u0394 Vorperiode</th></tr>';
+        var _prev=null;
+        _hist.forEach(function(h){ var d=(_prev!=null&&_prev>0)?((h.p-_prev)/_prev*100):null;
+          det+='<tr style="border-top:1px solid #e8eef5"><td style="padding:4px 8px;color:#8a9ab0">'+_esc(h.per)+'</td><td style="padding:4px 8px">'+_esc(h.f)+'</td><td style="padding:4px 8px;text-align:right;white-space:nowrap;font-weight:600">'+h.p.toFixed(h.p<1?4:2)+' '+pd.unit+'</td><td style="padding:4px 8px;text-align:right">'+(d==null?'\u2013':'<span style="color:'+(d>0.05?'#c0392b':(d<-0.05?'#1a6b1a':'#8a9ab0'))+'">'+(d>0.05?'\u25b2 +':(d<-0.05?'\u25bc ':'\u2192 '))+d.toLocaleString('de-DE',{maximumFractionDigits:1})+'%</span>')+'</td></tr>';
+          _prev=h.p; });
+        det+='</table>';
+      }
+      det+='</td></tr>';
       rows+=det;
     } else {
       rows+='<tr style="border-bottom:1px solid #eee;color:#aaa">'
@@ -4139,6 +4158,8 @@ function updateToolbarVisibility(v){
   var hide = (v==='preise');
   ['btn-table','btn-dash','btn-ausgaben','btn-ausschr','btn-settings','btn-vergleich'].forEach(function(id){ var b=document.getElementById(id); if(b) b.style.display = hide?'none':''; });
   document.querySelectorAll('.xls-btn, .filter-strip, .sw, .tb-sep').forEach(function(el){ el.style.display = hide?'none':''; });
+  // Status-Chips, Export (gefiltert), Filter-Button, Suche im Preise-Tab gezielt ausblenden (unabh. vom Container)
+  ['#fs-all','#fs-offen','#fs-definiert','#fs-gesperrt','#search','#filter-dropdown-btn','[id^="filter-dropdown"]','button[onclick*="exportFiltered"]'].forEach(function(sel){ try{ document.querySelectorAll(sel).forEach(function(el){ el.style.display = hide?'none':''; }); }catch(_e){} });
   var sb=document.getElementById('sel-bar'); if(sb && hide) sb.style.display='none';
 }
 window.updateToolbarVisibility=updateToolbarVisibility;
@@ -4183,7 +4204,8 @@ async function _loadMonthStats(){
     var seasonal=(totM>0&&n>=6&&need<=4);
     var lastMi=mis[n-1]; var monthsSince=(latest!=null)?(latest-lastMi):0;
     var einh='',best=-1; Object.keys(o.einh).forEach(function(e){ if(o.einh[e]>best){best=o.einh[e];einh=e;} });
-    MS[nid]={avgMonth:avgMonth,avgYear:avgYear,slope:slope,dir:dir,seasonal:seasonal,lastMi:lastMi,monthsSince:monthsSince,einh:einh,nMonths:n,total:totM,totBetrag:totB};
+    var py={}; mis.forEach(function(mi){ var yr=Math.floor(mi/12); var pe=py[yr]||(py[yr]={menge:0,betrag:0}); pe.menge+=o.m[mi].menge; pe.betrag+=o.m[mi].betrag; });
+    MS[nid]={avgMonth:avgMonth,avgYear:avgYear,slope:slope,dir:dir,seasonal:seasonal,lastMi:lastMi,monthsSince:monthsSince,einh:einh,nMonths:n,total:totM,totBetrag:totB,perYear:py};
   });
   window._MSTATS=MS;
   try{ if(typeof render==='function' && (typeof currentView==='undefined'||currentView==='table')) render(); }catch(_e){}
