@@ -3195,7 +3195,8 @@ init();
       window._SUP_ALIAS = {};
       LIEFERANTEN.forEach(function(l){ if(l && l.name && l.aliases){ String(l.aliases).split(/[,;]/).forEach(function(al){ al=al.trim(); if(al) window._SUP_ALIAS[_normSup(al)]=l.name; }); } });
       window.SUP_SETTINGS = {};
-      LIEFERANTEN.forEach(function(l){ if(l && l.name) window.SUP_SETTINGS[_normSup(_cleanSupplierName(l.name))] = {status:(l.status||'aktiv'), export_relevant:(l.export_relevant!==false)}; });
+      LIEFERANTEN.forEach(function(l){ if(l && l.name) window.SUP_SETTINGS[_normSup(_cleanSupplierName(l.name))] = {status:(l.status||'aktiv'), export_relevant:(l.export_relevant!==false), preise_sichtbar:(l.preise_sichtbar!==false)}; });
+      window._PREISE_HIDDEN=Object.keys(window.SUP_SETTINGS).filter(function(k){return window.SUP_SETTINGS[k].preise_sichtbar===false;});
       return LIEFERANTEN;
     });
   }
@@ -3431,7 +3432,26 @@ init();
     };
 
     // === 7. LIEFERANTEN TAB ===
-    window.renderLieferantenTab = function() {
+    function _buildPreiseSichtbarPanel(isAdmin){
+        var _sorted=LIEFERANTEN.slice().filter(function(l){return l&&l.name;}).sort(function(a,b){return String(a.name).localeCompare(String(b.name),'de');});
+        var items=_sorted.map(function(l){ var on=(l.preise_sichtbar!==false);
+          return '<label style="display:flex;align-items:center;gap:6px;font-size:12px;padding:3px 8px;border:1px solid #e2e8f0;border-radius:6px;background:'+(on?'#f0f9f2':'#fff')+(isAdmin?'':';opacity:.65')+'">'
+            +'<input type="checkbox" '+(on?'checked':'')+' '+(isAdmin?'':'disabled')+' onchange="_togglePreiseSichtbar(\''+l.id+'\',this.checked)"> '+_esc(l.name)+'</label>'; }).join('');
+        return '<div style="border:1px solid #cdd8e3;border-radius:8px;padding:12px;margin:4px 0 14px;background:#fafcff">'
+          +'<div style="font-weight:700;color:#1F4E79;margin-bottom:2px">Im Preise-Tab anzeigen'+(isAdmin?'':' <span style="font-size:11px;color:#c0392b;font-weight:400">(nur Admin änderbar)</span>')+'</div>'
+          +'<div style="font-size:11px;color:#667;margin-bottom:8px">Nur angehakte Lieferanten erscheinen im Preise-Tab (Bester Lieferant, Varianten, Preisverlauf).</div>'
+          +'<div style="display:flex;flex-wrap:wrap;gap:6px">'+items+'</div></div>';
+      }
+      window._togglePreiseSichtbar=function(id,checked){
+        var l=LIEFERANTEN.filter(function(x){return String(x.id)===String(id);})[0]; if(!l) return;
+        l.preise_sichtbar=checked;
+        var k=_normSup(_cleanSupplierName(l.name)); if(window.SUP_SETTINGS&&window.SUP_SETTINGS[k]) window.SUP_SETTINGS[k].preise_sichtbar=checked;
+        window._PREISE_HIDDEN=Object.keys(window.SUP_SETTINGS||{}).filter(function(kk){return window.SUP_SETTINGS[kk].preise_sichtbar===false;});
+        supFetch('lieferanten?id=eq.'+encodeURIComponent(id),'PATCH',{preise_sichtbar:checked}).then(function(r){ if(!r.ok) r.text().then(function(tx){ alert('Speichern fehlgeschlagen: '+tx.slice(0,200)); }); });
+        try{ if(typeof renderLieferantenTab==='function') renderLieferantenTab(); }catch(_e){}
+        try{ if(typeof currentView!=='undefined' && currentView==='preise' && typeof renderPreiseTable==='function') renderPreiseTable(); }catch(_e){}
+      };
+      window.renderLieferantenTab = function() {
       var formArea = document.getElementById('lief-form-area');
       var listArea = document.getElementById('lief-list-area');
       if (!formArea || !listArea) return;
@@ -3448,7 +3468,8 @@ init();
         '<button onclick="saveLieferant()" style="background:#1F4E79;color:#fff;border:none;padding:8px 20px;border-radius:6px;cursor:pointer;font-size:13px;margin-top:8px">+ Lieferant speichern</button>' +
         '</div>';
 
-      listArea.innerHTML = '<h3 style="margin-top:20px">Lieferanten (' + LIEFERANTEN.length + ')</h3>' +
+      var _isAdminPS=String((typeof _loginEmail==='function'?_loginEmail():'')||'').toLowerCase()==='robin@abc-kochwerk.de';
+      listArea.innerHTML = _buildPreiseSichtbarPanel(_isAdminPS) + '<h3 style="margin-top:20px">Lieferanten (' + LIEFERANTEN.length + ')</h3>' +
         '<button onclick="importSuppliersFromData()" style="background:#0a7d5a;color:#fff;border:none;padding:7px 14px;border-radius:6px;cursor:pointer;font-size:12px;margin-bottom:12px">&#8635; Lieferanten aus Daten &uuml;bernehmen</button>' +
         '<button onclick="findAehnlicheLieferanten()" style="background:#8a5a00;color:#fff;border:none;padding:7px 14px;border-radius:6px;cursor:pointer;font-size:12px;margin:0 0 12px 8px">&#128269; Ähnliche Lieferantennamen finden</button>' +
         '<div id="lief-dupes"></div>' +
@@ -3916,7 +3937,7 @@ function priceData(a){
   hist=hist.slice();
   hist.forEach(function(x){ if(!x._dt) x._dt=x.iso?new Date(x.iso):(x.d?parseDeDate(x.d):null); });
   hist.sort(function(x,y){ return (y._dt?y._dt.getTime():0)-(x._dt?x._dt.getTime():0); });
-  var u=_pUnit(a), excl=(typeof _artExcl==='function')?_artExcl(a):[];
+  var u=_pUnit(a), excl=(typeof _artExcl==='function')?_artExcl(a):[]; excl=excl.concat(window._PREISE_HIDDEN||[]);
   var ul=(u==='KG')?'€/kg':((u==='L')?'€/l':((u.indexOf('ST')===0)?'€/Stk':'€'));
   var cur=null,curSn=null,ci=-1;
   for(var i=0;i<hist.length;i++){ var b=_bestOfSnap(hist[i],u,excl); if(b){ cur=b; curSn=hist[i]; ci=i; break; } }
@@ -3934,8 +3955,10 @@ function priceData(a){
     }
   }
   function trend(o){ if(!o||!o.p) return null; var d=cur.p-o.p; return {pct:d/o.p*100, dir:d>0?1:(d<0?-1:0), from:o.p}; }
+  var _ap=[]; hist.forEach(function(sn){ var b=_bestOfSnap(sn,u,excl); if(b&&b.p!=null) _ap.push(b.p); });
+  var avg=_ap.length?(_ap.reduce(function(s,x){return s+x;},0)/_ap.length):null;
   return { preis:cur.p, unit:ul, u:u, sup:cur.f, per:(curSn.wa||curSn.periode||'–'),
-           short:trend(prev), long:trend(longp), snap:curSn, hist:hist, ci:ci, excl:excl };
+           short:trend(prev), long:trend(longp), avg:avg, nper:_ap.length, snap:curSn, hist:hist, ci:ci, excl:excl };
 }
 function _trendCell(t){
   if(!t) return '<span style="color:#aaa">–</span>';
@@ -3992,8 +4015,8 @@ function renderPreiseTable(){
   arts.sort(function(a,b){ return String(a.name||'').localeCompare(String(b.name||''),'de'); });
 
   var th='<thead><tr style="background:#1F4E79;color:#fff">'
-    + ['Grundprodukt','Warengruppe','Einheit','Letzter Preis','Kurzfristig','Langfristig','Bester Lieferant','Stand']
-      .map(function(h,i){ return '<th style="text-align:'+(i>=3&&i<=5?'center':'left')+';padding:8px 10px;font-size:12px;position:sticky;top:0">'+h+'</th>'; }).join('')
+    + ['Grundprodukt','Warengruppe','Einheit','Letzter Preis','Ø Preis','Bester Lieferant','Stand']
+      .map(function(h,i){ return '<th style="text-align:'+(i>=3&&i<=4?'right':'left')+';padding:8px 10px;font-size:12px;position:sticky;top:0">'+h+'</th>'; }).join('')
     + '<th style="width:28px"></th></tr></thead>';
   var rows='', shown=0, withPx=0;
   arts.forEach(function(a){
@@ -4007,8 +4030,7 @@ function renderPreiseTable(){
         +'<td style="padding:7px 10px;color:#667;font-size:12px">'+_esc(a.warengruppe||'')+'</td>'
         +'<td style="padding:7px 10px;font-size:12px">'+_esc(a.einheit_vorgabe||'–')+'</td>'
         +'<td style="padding:7px 10px;text-align:right;font-weight:700;white-space:nowrap">'+pd.preis.toFixed(pd.preis<1?4:2)+' '+pd.unit+'</td>'
-        +'<td style="padding:7px 10px;text-align:center;white-space:nowrap">'+_trendCell(pd.short)+'</td>'
-        +'<td style="padding:7px 10px;text-align:center;white-space:nowrap">'+_trendCell(pd.long)+'</td>'
+        +'<td style="padding:7px 10px;text-align:right;white-space:nowrap" title="Durchschnitt des günstigsten Preises über alle Ausschreibungsperioden">'+(pd.avg!=null?pd.avg.toFixed(pd.avg<1?4:2)+' '+pd.unit:'–')+'</td>'
         +'<td style="padding:7px 10px;font-size:12px">'+_esc(pd.sup||'')+'</td>'
         +'<td style="padding:7px 10px;font-size:11px;color:#888">'+_esc(pd.per||'')+'</td>'
         +'<td style="padding:7px 10px;color:#1F4E79">▸</td></tr>';
