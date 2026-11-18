@@ -4091,10 +4091,10 @@ function renderPreiseTable(){
       if(_vs && _vs.series){ var _vrows=_vs.series.filter(function(x){return x.preis!=null;});
         if(_vrows.length>=1){ var _eu=_ehShort(_vs.einh);
           det+='<div style="font-weight:700;color:#1F4E79;margin:12px 0 4px;font-size:12px">Vollmund – Preisverlauf (tatsächliche Einkaufspreise je Monat) · Ø Jahr '+_fmtQ(_vs.avgYear)+' '+_eu+'</div>';
-          det+='<table style="width:100%;border-collapse:collapse;font-size:12px"><tr style="color:#667;text-align:left"><th style="padding:4px 8px">Monat</th><th style="padding:4px 8px;text-align:right">Menge</th><th style="padding:4px 8px;text-align:right">Preis</th><th style="padding:4px 8px;text-align:right">Δ Vormonat</th></tr>';
+          det+='<table style="width:100%;border-collapse:collapse;font-size:12px"><tr style="color:#667;text-align:left"><th style="padding:4px 8px">Monat</th><th style="padding:4px 8px">Artikel</th><th style="padding:4px 8px;text-align:right">Menge</th><th style="padding:4px 8px;text-align:right">Preis</th><th style="padding:4px 8px;text-align:right">Δ Vormonat</th></tr>';
           var _vp=null; _vrows.forEach(function(h){ h._d=(_vp!=null&&_vp>0)?((h.preis-_vp)/_vp*100):null; _vp=h.preis; });
           _vrows.slice().reverse().forEach(function(h){ var d=h._d;
-            det+='<tr style="border-top:1px solid #e8eef5"><td style="padding:4px 8px;color:#8a9ab0">'+h.ym+'</td><td style="padding:4px 8px;text-align:right">'+_fmtQ(h.menge)+' '+_eu+'</td><td style="padding:4px 8px;text-align:right;font-weight:600">'+h.preis.toFixed(h.preis<1?4:2)+' €'+(_eu?'/'+_eu:'')+'</td><td style="padding:4px 8px;text-align:right">'+(d==null?'–':'<span style="color:'+(d>0.05?'#c0392b':(d<-0.05?'#1a6b1a':'#8a9ab0'))+'">'+(d>0.05?'▲ +':(d<-0.05?'▼ ':'→ '))+d.toLocaleString('de-DE',{maximumFractionDigits:1})+'%</span>')+'</td></tr>';
+            det+='<tr style="border-top:1px solid #e8eef5"><td style="padding:4px 8px;color:#8a9ab0;white-space:nowrap">'+h.ym+'</td><td style="padding:4px 8px;color:#445">'+_esc(h.prod||'')+'</td><td style="padding:4px 8px;text-align:right">'+_fmtQ(h.menge)+' '+_eu+'</td><td style="padding:4px 8px;text-align:right;font-weight:600">'+h.preis.toFixed(h.preis<1?4:2)+' €'+(_eu?'/'+_eu:'')+'</td><td style="padding:4px 8px;text-align:right">'+(d==null?'–':'<span style="color:'+(d>0.05?'#c0392b':(d<-0.05?'#1a6b1a':'#8a9ab0'))+'">'+(d>0.05?'▲ +':(d<-0.05?'▼ ':'→ '))+d.toLocaleString('de-DE',{maximumFractionDigits:1})+'%</span>')+'</td></tr>';
             });
           det+='</table>';
         }
@@ -4229,15 +4229,16 @@ async function _loadMonthStats(){
   var byNid={}, latest=null, from=0;
   while(true){
     var to=from+999;
-    var r=await fetch(U+'/rest/v1/einkauf_artikel?select=necta_id,monat,menge,betrag,einheit&order=monat',{headers:{apikey:K,Authorization:'Bearer '+T,'Range':from+'-'+to,'Range-Unit':'items'}});
+    var r=await fetch(U+'/rest/v1/einkauf_artikel?select=necta_id,monat,menge,betrag,einheit,produkt&order=monat',{headers:{apikey:K,Authorization:'Bearer '+T,'Range':from+'-'+to,'Range-Unit':'items'}});
     if(!r.ok) break; var b=await r.json(); if(!b||!b.length) break;
     b.forEach(function(x){
       var nid=String(x.necta_id||'').trim(); if(nid.indexOf('.')>=0) nid=nid.split('.')[0]; if(!nid) return;
       var mi=_mnum(x.monat); if(mi==null) return;
       if(latest==null||mi>latest) latest=mi;
       var o=byNid[nid]||(byNid[nid]={m:{},einh:{}});
-      var cur=o.m[mi]||(o.m[mi]={menge:0,betrag:0});
+      var cur=o.m[mi]||(o.m[mi]={menge:0,betrag:0,prodBy:{}});
       cur.menge+=(+x.menge||0); cur.betrag+=(+x.betrag||0);
+      var pnm=String(x.produkt||'').trim(); if(pnm) cur.prodBy[pnm]=(cur.prodBy[pnm]||0)+(+x.menge||0);
       var e=String(x.einheit||'').trim(); if(e) o.einh[e]=(o.einh[e]||0)+1;
     });
     if(b.length<1000) break; from+=1000;
@@ -4257,7 +4258,7 @@ async function _loadMonthStats(){
     var lastMi=mis[n-1]; var monthsSince=(latest!=null)?(latest-lastMi):0;
     var einh='',best=-1; Object.keys(o.einh).forEach(function(e){ if(o.einh[e]>best){best=o.einh[e];einh=e;} });
     var py={}; mis.forEach(function(mi){ var yr=Math.floor(mi/12); var pe=py[yr]||(py[yr]={menge:0,betrag:0}); pe.menge+=o.m[mi].menge; pe.betrag+=o.m[mi].betrag; });
-    var _series=mis.map(function(mi){var mm=o.m[mi];var yr=Math.floor(mi/12),mo=(mi%12)+1;return {ym:yr+'-'+(mo<10?'0'+mo:mo),menge:mm.menge,betrag:mm.betrag,preis:(mm.menge>0?mm.betrag/mm.menge:null)};});
+    var _series=mis.map(function(mi){var mm=o.m[mi];var yr=Math.floor(mi/12),mo=(mi%12)+1;var _pb=mm.prodBy||{},_pn='',_pm=-1;Object.keys(_pb).forEach(function(k){if(_pb[k]>_pm){_pm=_pb[k];_pn=k;}});return {ym:yr+'-'+(mo<10?'0'+mo:mo),menge:mm.menge,betrag:mm.betrag,preis:(mm.menge>0?mm.betrag/mm.menge:null),prod:_pn};});
     MS[nid]={avgMonth:avgMonth,avgYear:avgYear,slope:slope,dir:dir,seasonal:seasonal,lastMi:lastMi,monthsSince:monthsSince,einh:einh,nMonths:n,total:totM,totBetrag:totB,perYear:py,series:_series,avgPreis:(totM>0?totB/totM:null),lastPreis:((o.m[lastMi]&&o.m[lastMi].menge>0)?o.m[lastMi].betrag/o.m[lastMi].menge:null),preisDir:(function(){var pp=[];mis.forEach(function(mi){var mm=o.m[mi];if(mm.menge>0)pp.push(mm.betrag/mm.menge);});var pn=pp.length;if(pn<2)return 0;var sx=0,sy=0,sxx=0,sxy=0;pp.forEach(function(y,ix){sx+=ix;sy+=y;sxx+=ix*ix;sxy+=ix*y;});var den=pn*sxx-sx*sx,sl=den?(pn*sxy-sx*sy)/den:0;var ap=sy/pn,rel=ap>0?sl/ap:0;return rel>0.01?1:(rel<-0.01?-1:0);})()};
   });
   window._MSTATS=MS;
