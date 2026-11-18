@@ -4046,12 +4046,23 @@ function renderPreiseTable(){
       // Preis-Chart (Vollmund + ABC + Trend)
       (function(){
         var _vsC=(typeof _mst==='function')?_mst(a):null;
+        var vUnit=(_vsC&&_vsC.einh)?_ehShort(_vsC.einh):'';
+        var aUnit=pd.unit||'';
         var vp=[]; if(_vsC&&_vsC.series){ _vsC.series.forEach(function(s){ if(s.preis!=null){ var tt=Date.parse(s.ym+'-01'); if(!isNaN(tt)) vp.push({t:tt,p:s.preis}); } }); }
         var _hhC=(Array.isArray(a.preishistorie)?a.preishistorie:[]).filter(function(sn){return sn&&sn.s&&sn.s.length&&sn.periode!=='_EXCL';});
         if(window.WA_HIDDEN) _hhC=_hhC.filter(function(sn){return !window.WA_HIDDEN.has(sn.periode||sn.wa);});
         var ap=[]; _hhC.forEach(function(sn){ var dt=sn.iso?new Date(sn.iso):(sn.d?parseDeDate(sn.d):null); var b=_bestOfSnap(sn,pd.u,pd.excl); if(dt&&b&&b.p!=null) ap.push({t:dt.getTime(),p:b.p}); });
-        var svg=window._preisChartSVG?window._preisChartSVG(vp,ap):'';
-        if(svg) det+='<div style="font-weight:700;color:#1F4E79;margin:4px 0 2px;font-size:12px">Preisverlauf \u2013 Vollmund vs. ABC</div>'+svg;
+        var CH=window._preisChartSVG;
+        function hd(txt){return '<div style="font-weight:700;color:#1F4E79;margin:6px 0 2px;font-size:12px">'+txt+'</div>';}
+        var diff = vUnit && aUnit && vUnit.toLowerCase()!==aUnit.toLowerCase();
+        if(diff){
+          det+='<div style="background:#fff7e6;border:1px solid #f0c36d;color:#8a6d1b;font-size:11px;padding:5px 8px;border-radius:5px;margin:4px 0">Unterschiedliche Einheiten: Vollmund '+(vUnit?'\u20ac/'+vUnit:'Stk')+' vs. ABC '+(aUnit?'\u20ac/'+aUnit:'')+' \u2013 kein direkter Preisvergleich m\u00f6glich. Verl\u00e4ufe getrennt dargestellt.</div>';
+          var cv=CH?CH(vp,[],{vName:'Vollmund'}):''; if(cv) det+=hd('Preisverlauf Vollmund'+(vUnit?' (\u20ac/'+vUnit+')':''))+cv;
+          var ca=CH?CH([],ap,{aName:'ABC'}):''; if(ca) det+=hd('Preisverlauf ABC'+(aUnit?' (\u20ac/'+aUnit+')':''))+ca;
+        } else {
+          var svg=CH?CH(vp,ap,{}):'';
+          if(svg) det+=hd('Preisverlauf \u2013 Vollmund vs. ABC'+((aUnit||vUnit)?' (\u20ac/'+(aUnit||vUnit)+')':''))+svg;
+        }
       })();
       det+='<table style="width:100%;border-collapse:collapse;font-size:12px;margin:6px 0">'
         +'<tr style="color:#667;text-align:left"><th style="padding:4px 8px">Lieferant</th><th style="padding:4px 8px">Art-Nr</th><th style="padding:4px 8px">Artikelbeschreibung</th><th style="padding:4px 8px">Einheit</th><th style="padding:4px 8px;text-align:right">Preis</th></tr>';
@@ -4289,8 +4300,9 @@ function _jmVoll(a){ var s=_mst(a); if(s&&s.perYear){ var yk=Object.keys(s.perYe
 window._jmVoll=_jmVoll;
 function _jmAbc(a){ if(a&&a.kg_2025!=null&&a.kg_2025!=='') return _fmtQ(Number(a.kg_2025))+' '+_ehShort(a.einheit_vorgabe||''); return '<span style="color:#c9d3df">\u2013</span>'; }
 window._jmAbc=_jmAbc;
-function _preisChartSVG(vp,ap){
-  var all=(vp||[]).concat(ap||[]); if(all.length<2) return '';
+function _preisChartSVG(vp,ap,cfg){
+  cfg=cfg||{}; vp=vp||[]; ap=ap||[];
+  var all=vp.concat(ap); if(all.length<2) return '';
   var W=600,H=220,L=48,R=14,T=24,B=28, pw=W-L-R, ph=H-T-B;
   var ts=all.map(function(d){return d.t;}), ps=all.map(function(d){return d.p;});
   var tmin=Math.min.apply(null,ts), tmax=Math.max.apply(null,ts);
@@ -4300,14 +4312,17 @@ function _preisChartSVG(vp,ap){
   function X(t){return L+(t-tmin)/(tmax-tmin)*pw;}
   function Y(p){return T+ph-(p-pmin)/(pmax-pmin)*ph;}
   function poly(arr,color){ if(!arr||!arr.length) return ''; var pts=arr.slice().sort(function(a,b){return a.t-b.t;}); var d=pts.map(function(o,i){return (i?'L':'M')+X(o.t).toFixed(1)+' '+Y(o.p).toFixed(1);}).join(' '); var dots=pts.map(function(o){return '<circle cx="'+X(o.t).toFixed(1)+'" cy="'+Y(o.p).toFixed(1)+'" r="2.6" fill="'+color+'"/>';}).join(''); return '<path d="'+d+'" fill="none" stroke="'+color+'" stroke-width="2"/>'+dots; }
-  var tr=(vp&&vp.length>=2?vp:all).slice();
+  var tr=(vp.length>=2?vp:all).slice();
   var n=tr.length,sx=0,sy=0,sxx=0,sxy=0; tr.forEach(function(o){var x=(o.t-tmin)/(tmax-tmin); sx+=x;sy+=o.p;sxx+=x*x;sxy+=x*o.p;});
   var den=n*sxx-sx*sx, sl=den?(n*sxy-sx*sy)/den:0, ic=(sy-sl*sx)/n;
   var trend='<line x1="'+X(tmin).toFixed(1)+'" y1="'+Y(ic).toFixed(1)+'" x2="'+X(tmax).toFixed(1)+'" y2="'+Y(ic+sl).toFixed(1)+'" stroke="#e67e22" stroke-width="1.5" stroke-dasharray="5 4"/>';
   function dlab(t){var d=new Date(t);return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2);}
   var yg=''; for(var i=0;i<=2;i++){var pv=pmin+(pmax-pmin)*i/2; var yy=Y(pv); yg+='<line x1="'+L+'" y1="'+yy.toFixed(1)+'" x2="'+(W-R)+'" y2="'+yy.toFixed(1)+'" stroke="#eef2f7"/><text x="'+(L-6)+'" y="'+(yy+3).toFixed(1)+'" font-size="10" fill="#8a9ab0" text-anchor="end">'+pv.toFixed(pv<1?3:2)+'</text>';}
   var xl='<text x="'+L+'" y="'+(H-8)+'" font-size="10" fill="#8a9ab0">'+dlab(tmin)+'</text><text x="'+(W-R)+'" y="'+(H-8)+'" font-size="10" fill="#8a9ab0" text-anchor="end">'+dlab(tmax)+'</text>';
-  var leg='<g font-size="10"><rect x="'+L+'" y="6" width="12" height="3" fill="#1F4E79"/><text x="'+(L+16)+'" y="11" fill="#667">Vollmund</text><rect x="'+(L+78)+'" y="6" width="12" height="3" fill="#1e8e3e"/><text x="'+(L+94)+'" y="11" fill="#667">ABC</text><line x1="'+(L+134)+'" y1="7.5" x2="'+(L+148)+'" y2="7.5" stroke="#e67e22" stroke-width="1.5" stroke-dasharray="4 3"/><text x="'+(L+152)+'" y="11" fill="#667">Trend</text></g>';
+  var lx=L, leg='<g font-size="10">';
+  if(vp.length){ leg+='<rect x="'+lx+'" y="6" width="12" height="3" fill="#1F4E79"/><text x="'+(lx+16)+'" y="11" fill="#667">'+(cfg.vName||'Vollmund')+'</text>'; lx+=80; }
+  if(ap.length){ leg+='<rect x="'+lx+'" y="6" width="12" height="3" fill="#1e8e3e"/><text x="'+(lx+16)+'" y="11" fill="#667">'+(cfg.aName||'ABC')+'</text>'; lx+=58; }
+  leg+='<line x1="'+lx+'" y1="7.5" x2="'+(lx+14)+'" y2="7.5" stroke="#e67e22" stroke-width="1.5" stroke-dasharray="4 3"/><text x="'+(lx+18)+'" y="11" fill="#667">Trend</text></g>';
   return '<svg viewBox="0 0 '+W+' '+H+'" style="width:100%;max-width:640px;height:auto;background:#fff;border:1px solid #e8eef5;border-radius:6px;margin:4px 0 10px">'+yg+trend+poly(ap,'#1e8e3e')+poly(vp,'#1F4E79')+leg+xl+'</svg>';
 }
 window._preisChartSVG=_preisChartSVG;
