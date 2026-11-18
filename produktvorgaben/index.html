@@ -4068,13 +4068,26 @@ function renderPreiseTable(){
       _hh.sort(function(x,y){ return (x._dt?x._dt.getTime():0)-(y._dt?y._dt.getTime():0); });
       var _hist=_hh.map(function(sn){ var b=_bestOfSnap(sn,pd.u,pd.excl); return b?{per:(sn.wa||sn.periode||'–'),p:b.p,f:b.f}:null; }).filter(Boolean);
       if(_hist.length>=2){
-        det+='<div style="font-weight:700;color:#1F4E79;margin:12px 0 4px;font-size:12px">Preisverlauf \u2013 g\u00fcnstigster Anbieter je Periode</div>';
+        det+='<div style="font-weight:700;color:#1F4E79;margin:12px 0 4px;font-size:12px">ABC \u2013 Preisverlauf (g\u00fcnstigster Anbieter je Periode)</div>';
         det+='<table style="width:100%;border-collapse:collapse;font-size:12px"><tr style="color:#667;text-align:left"><th style="padding:4px 8px">Periode</th><th style="padding:4px 8px">G\u00fcnstigster Anbieter</th><th style="padding:4px 8px;text-align:right">Preis</th><th style="padding:4px 8px;text-align:right">\u0394 Vorperiode</th></tr>';
         var _prev=null;
         _hist.forEach(function(h){ var d=(_prev!=null&&_prev>0)?((h.p-_prev)/_prev*100):null;
           det+='<tr style="border-top:1px solid #e8eef5"><td style="padding:4px 8px;color:#8a9ab0">'+_esc(h.per)+'</td><td style="padding:4px 8px">'+_esc(h.f)+'</td><td style="padding:4px 8px;text-align:right;white-space:nowrap;font-weight:600">'+h.p.toFixed(h.p<1?4:2)+' '+pd.unit+'</td><td style="padding:4px 8px;text-align:right">'+(d==null?'\u2013':'<span style="color:'+(d>0.05?'#c0392b':(d<-0.05?'#1a6b1a':'#8a9ab0'))+'">'+(d>0.05?'\u25b2 +':(d<-0.05?'\u25bc ':'\u2192 '))+d.toLocaleString('de-DE',{maximumFractionDigits:1})+'%</span>')+'</td></tr>';
           _prev=h.p; });
         det+='</table>';
+      }
+      // Vollmund – tatsächliche Einkaufspreise je Monat
+      var _vs=(typeof _mst==='function')?_mst(a):null;
+      if(_vs && _vs.series){ var _vrows=_vs.series.filter(function(x){return x.preis!=null;});
+        if(_vrows.length>=1){ var _eu=_ehShort(_vs.einh);
+          det+='<div style="font-weight:700;color:#1F4E79;margin:12px 0 4px;font-size:12px">Vollmund – Preisverlauf (tatsächliche Einkaufspreise je Monat) · Ø Jahr '+_fmtQ(_vs.avgYear)+' '+_eu+'</div>';
+          det+='<table style="width:100%;border-collapse:collapse;font-size:12px"><tr style="color:#667;text-align:left"><th style="padding:4px 8px">Monat</th><th style="padding:4px 8px;text-align:right">Menge</th><th style="padding:4px 8px;text-align:right">Preis</th><th style="padding:4px 8px;text-align:right">Δ Vormonat</th></tr>';
+          var _vp=null;
+          _vrows.forEach(function(h){ var d=(_vp!=null&&_vp>0)?((h.preis-_vp)/_vp*100):null;
+            det+='<tr style="border-top:1px solid #e8eef5"><td style="padding:4px 8px;color:#8a9ab0">'+h.ym+'</td><td style="padding:4px 8px;text-align:right">'+_fmtQ(h.menge)+' '+_eu+'</td><td style="padding:4px 8px;text-align:right;font-weight:600">'+h.preis.toFixed(h.preis<1?4:2)+' €'+(_eu?'/'+_eu:'')+'</td><td style="padding:4px 8px;text-align:right">'+(d==null?'–':'<span style="color:'+(d>0.05?'#c0392b':(d<-0.05?'#1a6b1a':'#8a9ab0'))+'">'+(d>0.05?'▲ +':(d<-0.05?'▼ ':'→ '))+d.toLocaleString('de-DE',{maximumFractionDigits:1})+'%</span>')+'</td></tr>';
+            _vp=h.preis; });
+          det+='</table>';
+        }
       }
       det+='</td></tr>';
       rows+=det;
@@ -4234,7 +4247,8 @@ async function _loadMonthStats(){
     var lastMi=mis[n-1]; var monthsSince=(latest!=null)?(latest-lastMi):0;
     var einh='',best=-1; Object.keys(o.einh).forEach(function(e){ if(o.einh[e]>best){best=o.einh[e];einh=e;} });
     var py={}; mis.forEach(function(mi){ var yr=Math.floor(mi/12); var pe=py[yr]||(py[yr]={menge:0,betrag:0}); pe.menge+=o.m[mi].menge; pe.betrag+=o.m[mi].betrag; });
-    MS[nid]={avgMonth:avgMonth,avgYear:avgYear,slope:slope,dir:dir,seasonal:seasonal,lastMi:lastMi,monthsSince:monthsSince,einh:einh,nMonths:n,total:totM,totBetrag:totB,perYear:py,avgPreis:(totM>0?totB/totM:null),lastPreis:((o.m[lastMi]&&o.m[lastMi].menge>0)?o.m[lastMi].betrag/o.m[lastMi].menge:null),preisDir:(function(){var pp=[];mis.forEach(function(mi){var mm=o.m[mi];if(mm.menge>0)pp.push(mm.betrag/mm.menge);});var pn=pp.length;if(pn<2)return 0;var sx=0,sy=0,sxx=0,sxy=0;pp.forEach(function(y,ix){sx+=ix;sy+=y;sxx+=ix*ix;sxy+=ix*y;});var den=pn*sxx-sx*sx,sl=den?(pn*sxy-sx*sy)/den:0;var ap=sy/pn,rel=ap>0?sl/ap:0;return rel>0.01?1:(rel<-0.01?-1:0);})()};
+    var _series=mis.map(function(mi){var mm=o.m[mi];var yr=Math.floor(mi/12),mo=(mi%12)+1;return {ym:yr+'-'+(mo<10?'0'+mo:mo),menge:mm.menge,betrag:mm.betrag,preis:(mm.menge>0?mm.betrag/mm.menge:null)};});
+    MS[nid]={avgMonth:avgMonth,avgYear:avgYear,slope:slope,dir:dir,seasonal:seasonal,lastMi:lastMi,monthsSince:monthsSince,einh:einh,nMonths:n,total:totM,totBetrag:totB,perYear:py,series:_series,avgPreis:(totM>0?totB/totM:null),lastPreis:((o.m[lastMi]&&o.m[lastMi].menge>0)?o.m[lastMi].betrag/o.m[lastMi].menge:null),preisDir:(function(){var pp=[];mis.forEach(function(mi){var mm=o.m[mi];if(mm.menge>0)pp.push(mm.betrag/mm.menge);});var pn=pp.length;if(pn<2)return 0;var sx=0,sy=0,sxx=0,sxy=0;pp.forEach(function(y,ix){sx+=ix;sy+=y;sxx+=ix*ix;sxy+=ix*y;});var den=pn*sxx-sx*sx,sl=den?(pn*sxy-sx*sy)/den:0;var ap=sy/pn,rel=ap>0?sl/ap:0;return rel>0.01?1:(rel<-0.01?-1:0);})()};
   });
   window._MSTATS=MS;
   try{ if(typeof render==='function' && (typeof currentView==='undefined'||currentView==='table')) render(); }catch(_e){}
